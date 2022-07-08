@@ -36,7 +36,7 @@ namespace AiCup22
                 if (changed && target.Position.SqrDistance(unit.Position) <= 13 * 13)
                 {
                     Vec2 enemy = target.Position.Subtract(unit.Position);
-                    action = new ActionOrder.Aim(false);
+                    action = new ActionOrder.Aim(true);
                     order = new UnitOrder(unit.Position, unit.Direction, action);
                 }
                 orders.Add(unit.Id, order);
