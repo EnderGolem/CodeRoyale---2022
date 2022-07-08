@@ -47,10 +47,25 @@ namespace AiCup22.Custom
     {
         public UnitOrder Process(Perception perception, int id)
         {
-            ActionOrder action = new ActionOrder.Aim(false);
+            ActionOrder action = new ActionOrder.Aim(true);
             Unit unit = perception.MyUnints[0];
             return new UnitOrder(new Vec2(-unit.Position.X, -unit.Position.Y),
                new Vec2(-unit.Direction.Y, unit.Direction.X), action);
+        }
+    }
+
+
+
+    public class StayShootToEnemy : EndAction
+    {
+        public UnitOrder Process(Perception perception, int id)
+        {
+            ActionOrder action = new ActionOrder.Aim(true);
+            Unit unit = perception.MyUnints[0];
+            Unit target = perception.EnemyUnints[0];
+            Vec2 enemy = target.Position.Subtract(unit.Position);
+            return new UnitOrder(new Vec2(0, 0),
+             enemy, action);
         }
     }
 

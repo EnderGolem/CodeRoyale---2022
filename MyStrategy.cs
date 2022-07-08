@@ -11,12 +11,14 @@ namespace AiCup22
         private Constants _constants;
 
         private List<Unit> _myUnints;
+        private List<Unit> _enemyUnints;
 
 
         public Constants Constants => _constants;
         public Game Game => _game;
         public DebugInterface Debug => _debug;
         public List<Unit> MyUnints => _myUnints;
+        public List<Unit> EnemyUnints => _enemyUnints;
 
         public Perception(Constants consts)
         {
@@ -25,11 +27,12 @@ namespace AiCup22
 
         public void Analyze(Game game, DebugInterface debugInterface)
         {
+            _enemyUnints = new List<Unit>();
             _myUnints = new List<Unit>(); // Потому что, если находиться в конструкторе, то каждый getorder, будет увеличиваться
             foreach (var unit in game.Units)
             {
-                if (unit.PlayerId != game.MyId) continue;
-                    MyUnints.Add(unit);
+                if (unit.PlayerId != game.MyId) { _enemyUnints.Add(unit); continue; }
+                MyUnints.Add(unit);
             }
         }
     }
@@ -43,6 +46,7 @@ namespace AiCup22
     {
         RunToCenterRadar runToCenterRadar;
         RunToCenter runToCenter;
+        StayShootToEnemy stayShootToEnemy;
         /// <summary>
         /// Здесь дожен быть какой - то общий список всех конечных действий на выбор данного мозга
         /// </summary>
@@ -51,11 +55,15 @@ namespace AiCup22
         {
             runToCenterRadar = new RunToCenterRadar();
             runToCenter = new RunToCenter();
+            stayShootToEnemy = new StayShootToEnemy();
         }
 
         public UnitOrder Process(Perception perception)
         {
-            return runToCenterRadar.Process(perception, 0);
+            if (perception.EnemyUnints.Count == 0)
+                return runToCenterRadar.Process(perception, 0);
+            else
+                return stayShootToEnemy.Process(perception, 0);
         }
     }
 
