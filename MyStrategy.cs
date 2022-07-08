@@ -46,23 +46,5 @@ namespace AiCup22
         public void DebugUpdate(DebugInterface debugInterface) { }
         public void Finish() { }
     }
-    public static class Vec2Extensions
-    {
-        public static Vec2 Add(this Vec2 a, Vec2 b)
-        {
-            return new Vec2(a.X - b.X, a.Y - b.Y);
-        }
-        public static Vec2 Subtract(this Vec2 a, Vec2 b)
-        {
-            return new Vec2(a.X - b.X, a.Y - b.Y);
-        }
-        public static Vec2 Multi(this Vec2 a, Vec2 b)
-        {
-            return new Vec2(a.X - b.X, a.Y - b.Y);
-        }
-        public static double SqrDistance(this Vec2 a, Vec2 b)
-        {
-            return (a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y);
-        }
-    }
+    
 }

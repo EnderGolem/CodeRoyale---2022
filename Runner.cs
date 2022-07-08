@@ -20,9 +20,9 @@ namespace AiCup22
             var tokenData = System.Text.Encoding.UTF8.GetBytes(token);
             writer.Write(tokenData.Length);
             writer.Write(tokenData);
-            writer.Write((int) 1);
-            writer.Write((int) 0);
-            writer.Write((int) 1);
+            writer.Write((int)1);
+            writer.Write((int)0);
+            writer.Write((int)1);
             writer.Flush();
         }
         public void Run()
@@ -61,7 +61,6 @@ namespace AiCup22
             int port = args.Length < 2 ? 31001 : int.Parse(args[1]);
             string token = args.Length < 3 ? "0000000000000000" : args[2];
             new Runner(host, port, token).Run();
-            
         }
     }
 }
