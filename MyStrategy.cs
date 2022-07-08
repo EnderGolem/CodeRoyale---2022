@@ -30,15 +30,23 @@ namespace AiCup22
         }
 
         public void Analyze(Game game, DebugInterface debugInterface)
-        { 
+        {
+            _game = game;
+            _debug = debugInterface;
               DebugOutput(game,debugInterface);
 
             _enemyUnints = new List<Unit>();
             _myUnints = new List<Unit>(); // Потому что, если находиться в конструкторе, то каждый getorder, будет увеличиваться
             foreach (var unit in game.Units)
             {
-                if (unit.PlayerId != game.MyId) { _enemyUnints.Add(unit); continue; }
+                if (unit.PlayerId != game.MyId)
+                {
+                    _enemyUnints.Add(unit);
+                    continue;
+                }
+
                 MyUnints.Add(unit);
+            }
         }
 
         private void DebugOutput(Game game, DebugInterface debugInterface)
@@ -101,7 +109,7 @@ namespace AiCup22
             stayShootToEnemy = new StayShootToEnemy();
         }
 
-        public UnitOrder Process(Perception perception)
+        public virtual UnitOrder Process(Perception perception)
         {
             if (perception.EnemyUnints.Count == 0)
                 return runToCenterRadar.Process(perception, 0);
@@ -118,7 +126,7 @@ namespace AiCup22
         public MyStrategy(AiCup22.Model.Constants constants)
         {
             perception = new Perception(constants);
-            brain = new Brain();
+            brain = new GeneralBrain();
         }
 
         public AiCup22.Model.Order GetOrder(AiCup22.Model.Game game, DebugInterface debugInterface)

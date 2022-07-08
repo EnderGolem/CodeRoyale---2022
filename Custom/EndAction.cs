@@ -69,5 +69,36 @@ namespace AiCup22.Custom
         }
     }
 
+    public class RunToDestination
+    {
+        private Vec2 destination;
+        public UnitOrder Process(Perception perception, int id)
+        {
+            Unit unit = perception.MyUnints[0];
+            var dir = destination.Subtract(unit.Position).Nomalize().Multi(perception.Constants.MaxUnitForwardSpeed);
+            return new UnitOrder(dir,dir,null);
+        }
+
+        public void SetDestination(Vec2 dest)
+        {
+            destination = dest;
+        }
+    }
+    
+    public class PickupLoot
+    {
+        private int pickableLootId;
+        public UnitOrder Process(Perception perception, int id)
+        {
+            ActionOrder action = new ActionOrder.Pickup(pickableLootId);
+            //Unit unit = perception.MyUnints[0];
+            return new UnitOrder(new Vec2(), new Vec2(), action);
+        }
+
+        public void SetPickableLootId(int id)
+        {
+            pickableLootId = id;
+        }
+    }
 
 }
