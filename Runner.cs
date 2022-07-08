@@ -13,17 +13,28 @@ namespace AiCup22
         private BinaryWriter writer;
         public Runner(string host, int port, string token)
         {
-            var client = new TcpClient(host, port) { NoDelay = true };
-            var stream = new BufferedStream(client.GetStream());
-            reader = new BinaryReader(stream);
-            writer = new BinaryWriter(stream);
-            var tokenData = System.Text.Encoding.UTF8.GetBytes(token);
-            writer.Write(tokenData.Length);
-            writer.Write(tokenData);
-            writer.Write((int)1);
-            writer.Write((int)0);
-            writer.Write((int)1);
-            writer.Flush();
+            while (true)
+            {
+                try
+                {
+                    var client = new TcpClient(host, port) { NoDelay = true };
+                    var stream = new BufferedStream(client.GetStream());
+                    reader = new BinaryReader(stream);
+                    writer = new BinaryWriter(stream);
+                    var tokenData = System.Text.Encoding.UTF8.GetBytes(token);
+                    writer.Write(tokenData.Length);
+                    writer.Write(tokenData);
+                    writer.Write((int)1);
+                    writer.Write((int)0);
+                    writer.Write((int)1);
+                    writer.Flush();
+                    break;
+                }
+                catch (Exception e)
+                {
+
+                }
+            }
         }
         public void Run()
         {
