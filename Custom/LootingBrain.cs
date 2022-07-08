@@ -2,7 +2,7 @@
 using AiCup22.Custom;
 using AiCup22.Model;
 
-namespace AiCup22
+namespace AiCup22.Custom
 {
     public class LootingBrain : Brain
     {
@@ -26,7 +26,7 @@ namespace AiCup22
             Console.WriteLine(perception.Game.Loot);
             Console.WriteLine(perception.Game.Loot[0]);*/
             double bestPoints = double.MinValue;
-            
+
             for (int i = 0; i < perception.Game.Loot.Length; i++)
             {
 
@@ -41,7 +41,7 @@ namespace AiCup22
 
             Console.WriteLine(perception.Game.Loot[bestLootIndex].Position.Distance(perception.MyUnints[0].Position));
             if (perception.Game.Loot[bestLootIndex].Position.Distance(perception.MyUnints[0].Position) <
-                perception.Constants.UnitRadius/2)
+                perception.Constants.UnitRadius / 2)
             {
                 Console.WriteLine("Start pickup!!!");
                 _pickupLoot.SetPickableLootId(perception.Game.Loot[bestLootIndex].Id);

@@ -1,8 +1,8 @@
 ﻿using AiCup22.Model;
 
-namespace AiCup22
+namespace AiCup22.Custom
 {
-    public class GeneralBrain:Brain
+    public class GeneralBrain : Brain
     {
         private LootingBrain _lootingBrain;
 
