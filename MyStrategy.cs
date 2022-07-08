@@ -3,13 +3,61 @@ using AiCup22.Model;
 
 namespace AiCup22
 {
+    public class Perception
+    {
+        private Game game;
+        private DebugInterface debug;
+        private Constants constants;
+
+        public Constants Constants => constants;
+
+        public Game Game => game;
+
+        public DebugInterface Debug => debug;
+        public Perception(Constants consts)
+        {
+            constants = consts;
+        }
+
+        public void Analyze(Game game, DebugInterface debugInterface)
+        {
+            
+        }
+    }
+
+    public interface Processable
+    {
+        public UnitOrder Process(Perception perception);
+    }
+
+    public class Brain: Processable
+    {
+        /// <summary>
+        /// Здесь дожен быть какой - то общий список всех конечных действий на выбор данного мозга
+        /// </summary>
+        /// <param name="perception"></param>
+        public UnitOrder Process(Perception perception)
+        {
+            return new UnitOrder();
+        }
+    }
+
     public class MyStrategy
     {
         int maxAttackDistance = 25;
-        public MyStrategy(AiCup22.Model.Constants constants) { System.Console.WriteLine(constants.ViewDistance); }
+
+        private Perception perception;
+
+        public MyStrategy(AiCup22.Model.Constants constants)
+        {
+            perception = new Perception(constants);
+            System.Console.WriteLine(constants.ViewDistance);
+        }
 
         public AiCup22.Model.Order GetOrder(AiCup22.Model.Game game, DebugInterface debugInterface)
         {
+            
+            perception.Analyze(game,debugInterface);
             Dictionary<int, AiCup22.Model.UnitOrder> orders = new Dictionary<int, UnitOrder>();
 
             Unit target = new Unit();
