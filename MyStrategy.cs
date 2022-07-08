@@ -24,9 +24,14 @@ namespace AiCup22
 
         public void Analyze(Game game, DebugInterface debugInterface)
         {
+            DebugOutput(game,debugInterface);
+        }
+
+        private void DebugOutput(Game game, DebugInterface debugInterface)
+        {
             if (debugInterface != null)
             {
-                Vec2 offset = new Vec2(-5, 5);
+                Vec2 offset = new Vec2(-5, -20);
                 double textsize = 2;
                 Color textColor = new Color(0, 0, 1, 1);
                 DebugData.PlacedText text = new DebugData.PlacedText();
