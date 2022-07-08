@@ -3,28 +3,42 @@ using System.Drawing;
 using AiCup22.Debugging;
 using AiCup22.Model;
 using Color = AiCup22.Debugging.Color;
+using AiCup22.Custom;
+
 
 namespace AiCup22
 {
     public class Perception
     {
-        private Game game;
-        private DebugInterface debug;
-        private Constants constants;
+        private Game _game;
+        private DebugInterface _debug;
+        private Constants _constants;
 
-        public Constants Constants => constants;
+        private List<Unit> _myUnints;
+        private List<Unit> _enemyUnints;
 
-        public Game Game => game;
 
-        public DebugInterface Debug => debug;
+        public Constants Constants => _constants;
+        public Game Game => _game;
+        public DebugInterface Debug => _debug;
+        public List<Unit> MyUnints => _myUnints;
+        public List<Unit> EnemyUnints => _enemyUnints;
+
         public Perception(Constants consts)
         {
-            constants = consts;
+            _constants = consts;
         }
 
         public void Analyze(Game game, DebugInterface debugInterface)
-        {
-            DebugOutput(game,debugInterface);
+        { 
+              DebugOutput(game,debugInterface);
+
+            _enemyUnints = new List<Unit>();
+            _myUnints = new List<Unit>(); // Потому что, если находиться в конструкторе, то каждый getorder, будет увеличиваться
+            foreach (var unit in game.Units)
+            {
+                if (unit.PlayerId != game.MyId) { _enemyUnints.Add(unit); continue; }
+                MyUnints.Add(unit);
         }
 
         private void DebugOutput(Game game, DebugInterface debugInterface)
@@ -67,67 +81,52 @@ namespace AiCup22
         public UnitOrder Process(Perception perception);
     }
 
-    public class Brain: Processable
+    public class Brain : Processable
     {
+
         private Processable currentState;
+
+        RunToCenterRadar runToCenterRadar;
+        RunToCenter runToCenter;
+        StayShootToEnemy stayShootToEnemy;
+
         /// <summary>
         /// Здесь дожен быть какой - то общий список всех конечных действий на выбор данного мозга
         /// </summary>
         /// <param name="perception"></param>
+        public Brain()
+        {
+            runToCenterRadar = new RunToCenterRadar();
+            runToCenter = new RunToCenter();
+            stayShootToEnemy = new StayShootToEnemy();
+        }
+
         public UnitOrder Process(Perception perception)
         {
-            return new UnitOrder();
+            if (perception.EnemyUnints.Count == 0)
+                return runToCenterRadar.Process(perception, 0);
+            else
+                return stayShootToEnemy.Process(perception, 0);
         }
     }
 
     public class MyStrategy
     {
-        int maxAttackDistance = 25;
-
         private Perception perception;
+        private Brain brain;
 
         public MyStrategy(AiCup22.Model.Constants constants)
         {
             perception = new Perception(constants);
-            System.Console.WriteLine(constants.ViewDistance);
+            brain = new Brain();
         }
 
         public AiCup22.Model.Order GetOrder(AiCup22.Model.Game game, DebugInterface debugInterface)
         {
-            
-            perception.Analyze(game,debugInterface);
+
+            perception.Analyze(game, debugInterface);
             Dictionary<int, AiCup22.Model.UnitOrder> orders = new Dictionary<int, UnitOrder>();
-
-            Unit target = new Unit();
-            bool changed = false;
-            foreach (var unit in game.Units)
-            {
-                if (unit.PlayerId != game.MyId)
-                {
-                    changed = true;
-                    target = unit;
-
-                    continue;
-                }
-                
-                ActionOrder action = new ActionOrder.Aim(false);
-                System.Console.WriteLine(target.Position.SqrDistance(unit.Position));
-                UnitOrder order = new UnitOrder(
-                    new Vec2(-unit.Position.X, -unit.Position.Y), new Vec2(-unit.Position.X, -unit.Position.Y), action);
-                if (changed && target.Position.SqrDistance(unit.Position) < maxAttackDistance * maxAttackDistance)
-                {
-                    Vec2 enemy = target.Position.Subtract(unit.Position);
-                    action = new ActionOrder.Aim(true);
-                    order = new UnitOrder(enemy, enemy, action);
-                }
-                if (changed && target.Position.SqrDistance(unit.Position) <= 13 * 13)
-                {
-                    Vec2 enemy = target.Position.Subtract(unit.Position);
-                    action = new ActionOrder.Aim(true);
-                    order = new UnitOrder(unit.Position, unit.Direction, action);
-                }
-                orders.Add(unit.Id, order);
-            }
+            orders.Add(perception.MyUnints[0].Id, brain.Process(perception));
             return new Order(orders);
         }
 
@@ -137,5 +136,5 @@ namespace AiCup22
         }
         public void Finish() { }
     }
-    
+
 }
