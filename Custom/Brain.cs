@@ -11,8 +11,8 @@ namespace AiCup22.Custom
 
     public class Brain : Processable
     {
-
-        private Processable currentState;
+        protected int id = 0;// Чтобы не забыли об этом
+        protected Processable currentState;
 
         RunToCenterRadar runToCenterRadar;
         RunToCenter runToCenter;
