@@ -8,6 +8,7 @@ namespace AiCup22.Custom
     {
         private RunToDestination _runToDestination;
         private PickupLoot _pickupLoot;
+        private UseShield _useShield;
         private Loot desireLoot;
         private Vec2 desiredDestination;
         private double desiredPoints;
@@ -16,10 +17,14 @@ namespace AiCup22.Custom
         {
             _runToDestination = new RunToDestination();
             _pickupLoot = new PickupLoot();
+            _useShield = new UseShield();
         }
 
         public override UnitOrder Process(Perception perception)
         {
+            if (perception.Game.Loot.Length == 0)   //Проверка, вдруг вообще ничего нет
+                return new UnitOrder(new Vec2(), new Vec2(), null);
+
             int bestLootIndex = -1;
             double bestPoints = double.MinValue;
 
@@ -33,6 +38,13 @@ namespace AiCup22.Custom
                     bestPoints = curPoints;
                     bestLootIndex = i;
                 }
+            }
+            double shieldPoints = perception.MyUnints[id].Shield < 100 ? 300 : -1000; //Чтобы пил, нужна формула, ну или перенести мозгу, но хз..
+            System.Console.WriteLine("ShieldPoints " + shieldPoints);         
+            System.Console.WriteLine("bestPoints " + bestPoints);
+            if (shieldPoints > bestPoints && perception.MyUnints[id].Action == null)
+            {
+                return _useShield.Process(perception, id);
             }
 
             Console.WriteLine(perception.Game.Loot[bestLootIndex].Position.Distance(perception.MyUnints[id].Position));
@@ -52,7 +64,7 @@ namespace AiCup22.Custom
 
         private double CalculateLootValue(Perception perception, Loot loot)
         {
-            
+
             double points = -loot.Position.SqrDistance(perception.MyUnints[id].Position); //Не корректно, лучше вообще работать без минуса
             switch (loot.Item)
             {
@@ -60,7 +72,7 @@ namespace AiCup22.Custom
                     ///Можно также рассмотреть ситуацию когда нет патронов для нашего оружия
                     /// Но рядом есть патроны для другого
                     if ((perception.MyUnints[id].Weapon.HasValue) &&
-                        (weapon.TypeIndex == perception.MyUnints[0].Weapon.Value) ||
+                        (weapon.TypeIndex == perception.MyUnints[id].Weapon.Value) ||
                         (perception.MyUnints[id].Weapon.Value == 2))
                     {
                         points -= 10000000;
@@ -84,7 +96,9 @@ namespace AiCup22.Custom
                     break;
                 case Item.Ammo ammo:
                     if (perception.MyUnints[id].Weapon.HasValue &&
-                        ammo.WeaponTypeIndex == perception.MyUnints[id].Weapon.Value)
+                        ammo.WeaponTypeIndex == perception.MyUnints[id].Weapon.Value &&
+                        //Проверка не максимум ли патронов, временный костыль
+                        perception.MyUnints[id].Ammo[ammo.WeaponTypeIndex] < perception.Constants.Weapons[perception.MyUnints[0].Weapon.Value].MaxInventoryAmmo)
                     {
                         ///Надо написать формулу очков в зависимости от кол-ва патронов и других
                         /// факторов

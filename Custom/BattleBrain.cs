@@ -16,6 +16,8 @@ namespace AiCup22.Custom
         }
         public override UnitOrder Process(Perception perception)
         {
+            if (perception.EnemyUnints.Count == 0)   //Проверка, вдруг вообще ничего нет
+                return new UnitOrder(new Vec2(), new Vec2(), null);
             double bestPoints = double.MinValue;
             int bestEnemyIndex = -1;
             double point = 0;
