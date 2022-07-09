@@ -93,9 +93,15 @@ namespace AiCup22.Custom
     {
         public override UnitOrder Process(Perception perception, DebugInterface debugInterface, int id)
         {
+
+
+            Obstacle? obst = Tools.RaycastObstacle2Point(perception.MyUnints[0].Position,destination,perception.Constants.UnitRadius*2,perception.CloseObstacles.ToArray(),false);
+            if (!obst.HasValue || obst.Value.Position.SqrDistance(perception.MyUnints[0].Position)>obst.Value.Radius*obst.Value.Radius*9)
+
             Console.WriteLine("SteeringRunToDestination Process");
             Obstacle? obst = Tools.RaycastObstacle2Point(perception.MyUnints[0].Position, destination, perception.Constants.UnitRadius * 2, perception.Constants.Obstacles, false);
             if (!obst.HasValue || obst.Value.Position.SqrDistance(perception.MyUnints[0].Position) > obst.Value.Radius * obst.Value.Radius * 9)
+
 
             {
                 return base.Process(perception, debugInterface, id);
@@ -256,6 +262,16 @@ namespace AiCup22.Custom
                 ActionOrder action = new ActionOrder.Aim(true);
                 return new UnitOrder(targetDir, enemy, action);
             }
+        }
+    }
+
+    public class LookAroundAction : EndAction
+    {
+        public UnitOrder Process(Perception perception, int id)
+        {
+            var unit = perception.MyUnints[0];
+            Vec2 dir = new Vec2(-unit.Direction.Y,unit.Direction.X);
+            return new UnitOrder(dir,dir,null);
         }
     }
 

@@ -17,6 +17,9 @@ namespace AiCup22.Custom
         private List<Unit> _myUnints;
         private List<Unit> _enemyUnints;
 
+        private const double obstacleSearchRadius = 80;
+        private const int closeObstaclesRecalculationDelay = 10;
+        private int lastObstacleRecalculationTick = -100;
 
         public Constants Constants => _constants;
         public Game Game => _game;
@@ -24,20 +27,25 @@ namespace AiCup22.Custom
         public List<Unit> MyUnints => _myUnints;
         public List<Unit> EnemyUnints => _enemyUnints;
 
+        public List<Obstacle> CloseObstacles => closeObstacles;
+
         public Dictionary<int, Loot> MemorizedLoot => memorizedLoot;
 
         private Dictionary<int,Loot> memorizedLoot;
+
+        private List<Obstacle> closeObstacles;
         public Perception(Constants consts)
         {
             _constants = consts;
             memorizedLoot = new Dictionary<int, Loot>();
+            closeObstacles = new List<Obstacle>();
         }
 
         public void Analyze(Game game, DebugInterface debugInterface)
         {
             _game = game;
             _debug = debugInterface;
-
+            
             _enemyUnints = new List<Unit>();
             _myUnints = new List<Unit>(); // Потому что, если находится в конструкторе, то каждый getorder, будет увеличиваться
             foreach (var unit in game.Units)
@@ -55,8 +63,25 @@ namespace AiCup22.Custom
             {
                 memorizedLoot.TryAdd(game.Loot[i].Id,game.Loot[i]);
             }
-            
+
+            if (lastObstacleRecalculationTick + closeObstaclesRecalculationDelay <= game.CurrentTick)
+            {
+                CalculateCloseObstacles(_myUnints[0].Position,obstacleSearchRadius);
+            }
+
             DebugOutput(game, debugInterface);
+        }
+
+        private void CalculateCloseObstacles(Vec2 startPosition, double distance)
+        {
+            closeObstacles.Clear();
+            for (int i = 0; i < Constants.Obstacles.Length; i++)
+            {
+                if (_constants.Obstacles[i].Position.SqrDistance(startPosition)<distance*distance)
+                {
+                    closeObstacles.Add(_constants.Obstacles[i]);
+                }
+            }
         }
 
         private void DebugOutput(Game game, DebugInterface debugInterface)
@@ -97,7 +122,12 @@ namespace AiCup22.Custom
                 //Console.WriteLine(memorizedLoot.Count);
                 foreach (var l in memorizedLoot)
                 {
-                    //debugInterface.AddRing(l.Value.Position,1,0.3,new Color(0.8,0.8,0.8,1));
+                    debugInterface.AddRing(l.Value.Position,1,0.3,new Color(0.8,0.8,0.8,1));
+                }
+                
+                foreach (var o in closeObstacles)
+                {
+                    debugInterface.AddRing(o.Position,0.3,0.3,new Color(0.8,0.8,0,1));
                 }
             }
         }
