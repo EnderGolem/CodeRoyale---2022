@@ -14,7 +14,7 @@ namespace AiCup22
 
         public LootingBrain()
         {
-            _runToDestination = new RunToDestination();
+            _runToDestination = new SteeringRunToDestination();
             _pickupLoot = new PickupLoot();
         }
 
