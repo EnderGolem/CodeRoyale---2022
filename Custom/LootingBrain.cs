@@ -23,7 +23,7 @@ namespace AiCup22.Custom
 
         public LootingBrain()
         {
-            _runToDestination = new SteeringRunToDestination();
+            _runToDestination = new RunToDestination();
             _pickupLoot = new PickupLoot();
             _useShield = new UseShield();
         }
@@ -34,6 +34,7 @@ namespace AiCup22.Custom
                 return new UnitOrder(new Vec2(), new Vec2(), null);
 
             int bestLootIndex = -1;
+            Loot bestLoot = new Loot();
             double bestPoints = double.MinValue;
             Unit unit = perception.MyUnints[id];
             List<int> lootToRemove = new List<int>();
@@ -60,6 +61,7 @@ namespace AiCup22.Custom
                 {
                     bestPoints = curPoints;
                     bestLootIndex = loot.Key;
+                    bestLoot = loot.Value;
                 }
             }
             /* double shieldPoints = perception.MyUnints[id].Shield < 100 ? 300 : -1000; //Чтобы пил, нужна формула, ну или перенести мозгу, но хз..
@@ -75,22 +77,21 @@ namespace AiCup22.Custom
             {
                 perception.MemorizedLoot.Remove(lootToRemove[i]);
             }
+            // Console.WriteLine(perception.Game.Loot[bestLootIndex].Position.Distance(perception.MyUnints[id].Position));
 
-           // Console.WriteLine(perception.Game.Loot[bestLootIndex].Position.Distance(perception.MyUnints[id].Position));
-
-            if (perception.MemorizedLoot[bestLootIndex].Position.Distance(perception.MyUnints[id].Position) <
+            if (bestLoot.Position.Distance(perception.MyUnints[id].Position) <
 
                 perception.Constants.UnitRadius / 2)
             {
                 //Console.WriteLine("Start pickup!!!");
-                _pickupLoot.SetPickableLootId(perception.MemorizedLoot[bestLootIndex].Id);
-                perception.MemorizedLoot.Remove(perception.MemorizedLoot[bestLootIndex].Id);
+                _pickupLoot.SetPickableLootId(bestLoot.Id);
+                perception.MemorizedLoot.Remove(bestLoot.Id);
                 return _pickupLoot.Process(perception, id);
             }
             else
             {
-                debugInterface.AddRing(perception.MemorizedLoot[bestLootIndex].Position,1,0.5,new Color(0.5,0.5,0,1));
-                _runToDestination.SetDestination(perception.MemorizedLoot[bestLootIndex].Position);
+                debugInterface.AddRing(bestLoot.Position,1,0.5,new Color(0.5,0.5,0,1));
+                _runToDestination.SetDestination(bestLoot.Position);
                 return _runToDestination.Process(perception, debugInterface,id);
             }
         }
@@ -129,7 +130,7 @@ namespace AiCup22.Custom
 
             //   double points = -loot.Position.SqrDistance(perception.MyUnints[id].Position); //Не корректно, лучше вообще работать без минуса
             double points = 1 / loot.Position.SqrDistance(perception.MyUnints[id].Position);
-            System.Console.WriteLine("Looting Brain Points Disance " + points);
+            //System.Console.WriteLine("Looting Brain Points Disance " + points);
 
             switch (loot.Item)
             {
