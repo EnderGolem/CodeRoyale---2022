@@ -15,7 +15,8 @@ namespace AiCup22.Custom
 
         public override UnitOrder Process(Perception perception,DebugInterface debugInterface)
         {
-            if (false/*perception.MyUnints[id].Weapon.HasValue && perception.MyUnints[0].Weapon.Value == 2*/)
+
+            if (perception.MyUnints[id].Weapon.HasValue && perception.MyUnints[0].Weapon.Value == 2 && perception.EnemyUnints.Count > 0 && perception.MyUnints[id].Ammo[2] > 0)
             {
                 return _battleBrain.Process(perception,debugInterface);
             }

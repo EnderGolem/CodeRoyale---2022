@@ -71,7 +71,7 @@ namespace AiCup22.Custom
         }
     }
 
-    public class RunToDestination:EndAction
+    public class RunToDestination : EndAction
     {
         protected Vec2 destination;
         public virtual UnitOrder Process(Perception perception,DebugInterface debugInterface, int id)
@@ -87,12 +87,14 @@ namespace AiCup22.Custom
         }
     }
 
-    public class SteeringRunToDestination:RunToDestination
+    public class SteeringRunToDestination : RunToDestination
     {
         public override UnitOrder Process(Perception perception,DebugInterface debugInterface, int id)
         {
+
             Obstacle? obst = Tools.RaycastObstacle2Point(perception.MyUnints[0].Position,destination,perception.Constants.UnitRadius*2,perception.Constants.Obstacles,false);
             if (!obst.HasValue || obst.Value.Position.SqrDistance(perception.MyUnints[0].Position)>obst.Value.Radius*obst.Value.Radius*9)
+
             {
                 return base.Process(perception, debugInterface,id);
             }
@@ -123,7 +125,14 @@ namespace AiCup22.Custom
             }
         }
     }
+    public class UseShield
+    {
+        public UnitOrder Process(Perception perception, int id)
+        {
+            return new UnitOrder(new Vec2(), new Vec2(), new ActionOrder.UseShieldPotion());
+        }
 
+    }
     public class PickupLoot
     {
         private int pickableLootId;
@@ -144,25 +153,33 @@ namespace AiCup22.Custom
     public class ShootToPoint
     {
         private Vec2 target;
+        public ShootToPoint()
+        {
+            target = new Vec2();
+        }
         public UnitOrder Process(Perception perception, int id)
         {
             ActionOrder action = new ActionOrder.Aim(true);
             Unit unit = perception.MyUnints[id];
             Vec2 enemy = target.Subtract(unit.Position);
-            return new UnitOrder(new Vec2(), new Vec2(), action);
+            return new UnitOrder(new Vec2(), enemy, action);
         }
 
-        public void SetTarget(Vec2 _trget)
+        public void SetTarget(Vec2 _target)
         {
-            target = _trget;
+            target = _target;
         }
     }
     public class AimingToPoint
     {
         private Vec2 target;
+        public AimingToPoint()
+        {
+            target = new Vec2();
+        }
         public UnitOrder Process(Perception perception, int id)
         {
-            
+
             ActionOrder action = new ActionOrder.Aim(false); //Исправить, не знаю будет ли прицеливаться...
             Unit unit = perception.MyUnints[id];
             Vec2 enemy = target.Subtract(unit.Position);
