@@ -64,14 +64,13 @@ namespace AiCup22.Custom
                     bestLoot = loot.Value;
                 }
             }
-            /* double shieldPoints = perception.MyUnints[id].Shield < 100 ? 300 : -1000; //Чтобы пил, нужна формула, ну или перенести мозгу, но хз..
-             System.Console.WriteLine("ShieldPoints " + shieldPoints);
-             System.Console.WriteLine("bestPoints " + bestPoints);
-             if (shieldPoints > bestPoints && perception.MyUnints[id].Action == null)
-             {
-                 return _useShield.Process(perception, id);
-             }
-            */
+            double shieldPoints = perception.MyUnints[id].Shield < 140 ? 1500 : 0; //Чтобы пил, нужна формула, ну или перенести мозгу, но хз..
+      
+            if (shieldPoints > bestPoints && perception.MyUnints[id].ShieldPotions > 0 && perception.MyUnints[id].Action == null)
+            {
+                return _useShield.Process(perception, id);
+            }
+
 
             for (int i = 0; i < lootToRemove.Count; i++)
             {
