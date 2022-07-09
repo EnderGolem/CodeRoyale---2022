@@ -14,7 +14,8 @@ namespace AiCup22
         }
         public static Vec2 Multi(this Vec2 a, double b)
         {
-            return new Vec2(a.X*b, a.Y*b);
+
+            return new Vec2(a.X * b, a.Y * b);
         }
         public static double SqrDistance(this Vec2 a, Vec2 b)
         {
