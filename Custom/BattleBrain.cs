@@ -30,7 +30,8 @@ namespace AiCup22.Custom
                     bestPoints = point;
                 }
             }
-            if (perception.MyUnints[id].Aim == 1)
+            if (perception.MyUnints[id].Aim == 1 && Tools.RaycastObstacle(perception.MyUnints[id].Position, (perception.EnemyUnints[bestEnemyIndex].Position),
+                                                    perception.Constants.Obstacles,true) == null)
             {
                 _shootToPoing.SetTarget(perception.EnemyUnints[bestEnemyIndex].Position);
                 return _shootToPoing.Process(perception, id);
