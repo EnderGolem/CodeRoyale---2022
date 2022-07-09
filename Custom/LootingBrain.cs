@@ -23,7 +23,7 @@ namespace AiCup22.Custom
 
         public LootingBrain()
         {
-            _runToDestination = new RunToDestination();
+            _runToDestination = new SteeringRunToDestination();
             _pickupLoot = new PickupLoot();
             _useShield = new UseShield();
         }
@@ -56,7 +56,7 @@ namespace AiCup22.Custom
 
                 double curPoints = CalculateLootValue(perception, loot.Value);
 
-            
+                debugInterface.AddPlacedText(loot.Value.Position,Math.Round(curPoints).ToString(),new Vec2(0.5,0.5), 3,new Color(1,0,0.5,1));
                 if (bestPoints < curPoints)
                 {
                     bestPoints = curPoints;
