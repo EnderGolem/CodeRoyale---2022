@@ -1,5 +1,6 @@
 ﻿using System;
 using AiCup22.Custom;
+using AiCup22.Debugging;
 using AiCup22.Model;
 
 namespace AiCup22
@@ -18,7 +19,7 @@ namespace AiCup22
             _pickupLoot = new PickupLoot();
         }
 
-        public override UnitOrder Process(Perception perception)
+        public override UnitOrder Process(Perception perception,DebugInterface debugInterface)
         {
             int bestLootIndex = -1;
             /*Console.WriteLine("GHFIHJGJHKBVKJNSKLDJVBKSDBVKLBSDKLV11111!!!!!!!!!!");
@@ -39,7 +40,7 @@ namespace AiCup22
                 }
             }
 
-            Console.WriteLine(perception.Game.Loot[bestLootIndex].Position.Distance(perception.MyUnints[0].Position));
+            //Console.WriteLine(perception.Game.Loot[bestLootIndex].Position.Distance(perception.MyUnints[0].Position));
             if (perception.Game.Loot[bestLootIndex].Position.Distance(perception.MyUnints[0].Position) <
                 perception.Constants.UnitRadius/2)
             {
@@ -49,6 +50,7 @@ namespace AiCup22
             }
             else
             {
+                debugInterface.AddRing(perception.Game.Loot[bestLootIndex].Position,1,0.5,new Color(0.5,0.5,0,1));
                 _runToDestination.SetDestination(perception.Game.Loot[bestLootIndex].Position);
                 return _runToDestination.Process(perception, 0);
             }

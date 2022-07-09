@@ -59,5 +59,34 @@ namespace AiCup22.Custom
         {
             return new Vec2(a,b);
         }
+
+        public bool IsParallel(Straight s)
+        {
+            if (a*s.b-s.a*b == 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public Vec2? GetIntersection(Straight s)
+        {
+            if (IsParallel(s)) return null;
+
+            double x = (s.c * b - c * s.b) / (a * s.b - s.a * b);
+            double y = -(a * x + c) / b;
+            
+            return new Vec2(x,y);
+        }
+
+        public override string ToString()
+        {
+            return $"{a}x+{b}y+{c}=0";
+        }
     }
+    
+    
 }

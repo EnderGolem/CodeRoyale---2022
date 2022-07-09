@@ -12,9 +12,9 @@ namespace AiCup22
             _lootingBrain = new LootingBrain();
         }
 
-        public override UnitOrder Process(Perception perception)
+        public override UnitOrder Process(Perception perception,DebugInterface debugInterface)
         {
-            return _lootingBrain.Process(perception);
+            return _lootingBrain.Process(perception,debugInterface);
         }
     }
 }

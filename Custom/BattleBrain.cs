@@ -14,7 +14,7 @@ namespace AiCup22.Custom
             _shootToPoing = new ShootToPoint();
             _aimingToPoint = new AimingToPoint();
         }
-        public override UnitOrder Process(Perception perception)
+        public override UnitOrder Process(Perception perception,DebugInterface debugInterface)
         {
             _aimingToPoint.SetTarget(perception.MyUnints[id].Direction);
             return _aimingToPoint.Process(perception, id);

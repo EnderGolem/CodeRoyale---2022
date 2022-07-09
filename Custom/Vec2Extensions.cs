@@ -28,7 +28,7 @@ namespace AiCup22
 
         public static Vec2 Normalize(this Vec2 a)
         {
-            double distance = a.Distance(new Vec2());
+            double distance = a.Distance(new Vec2(0,0));
             a.X = a.X / distance;
             a.Y = a.Y / distance;
             return a;

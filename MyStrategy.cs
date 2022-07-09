@@ -22,7 +22,7 @@ namespace AiCup22
 
             perception.Analyze(game, debugInterface);
             Dictionary<int, AiCup22.Model.UnitOrder> orders = new Dictionary<int, UnitOrder>();
-            orders.Add(perception.MyUnints[0].Id, brain.Process(perception));
+            orders.Add(perception.MyUnints[0].Id, brain.Process(perception,debugInterface));
             return new Order(orders);
         }
 

@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using AiCup22.Custom;
+using AiCup22.Debugging;
 using AiCup22.Model;
 
 namespace AiCup22.Custom
@@ -14,11 +17,11 @@ namespace AiCup22.Custom
 
         public LootingBrain()
         {
-            _runToDestination = new RunToDestination();
+            _runToDestination = new SteeringRunToDestination();
             _pickupLoot = new PickupLoot();
         }
 
-        public override UnitOrder Process(Perception perception)
+        public override UnitOrder Process(Perception perception,DebugInterface debugInterface)
         {
             int bestLootIndex = -1;
             /*Console.WriteLine("GHFIHJGJHKBVKJNSKLDJVBKSDBVKLBSDKLV11111!!!!!!!!!!");
@@ -26,31 +29,52 @@ namespace AiCup22.Custom
             Console.WriteLine(perception.Game.Loot);
             Console.WriteLine(perception.Game.Loot[0]);*/
             double bestPoints = double.MinValue;
-
-            for (int i = 0; i < perception.Game.Loot.Length; i++)
+            Unit unit = perception.MyUnints[id];
+            List<int> lootToRemove = new List<int>();
+            //Console.WriteLine(Tools.IsInside(-10,110,-130));
+            foreach (var loot in perception.MemorizedLoot)
             {
+                if (loot.Value.Position.SqrDistance(unit.Position) > 2000 ||
+                    (Tools.BelongConeOfVision(loot.Value.Position,unit.Position,
+                        unit.Direction,perception.Constants.ViewDistance,
+                        perception.Constants.FieldOfView) &&
+                     perception.Game.Loot.Count(
+                         (Loot l)=>l.Id==loot.Key && 
+                                   l.Position.X == loot.Value.Position.X 
+                                   && l.Position.Y == loot.Value.Position.Y)==0))
+                {
+                    lootToRemove.Add(loot.Key);
+                    continue;
+                }
 
-                double curPoints = CalculateLootValue(perception, perception.Game.Loot[i]);
+                double curPoints = CalculateLootValue(perception, loot.Value);
 
                 if (bestPoints < curPoints)
                 {
                     bestPoints = curPoints;
-                    bestLootIndex = i;
+                    bestLootIndex = loot.Key;
                 }
             }
 
-            Console.WriteLine(perception.Game.Loot[bestLootIndex].Position.Distance(perception.MyUnints[id].Position));
-            if (perception.Game.Loot[bestLootIndex].Position.Distance(perception.MyUnints[id].Position) <
+            for (int i = 0; i < lootToRemove.Count; i++)
+            {
+                perception.MemorizedLoot.Remove(lootToRemove[i]);
+            }
+
+           // Console.WriteLine(perception.Game.Loot[bestLootIndex].Position.Distance(perception.MyUnints[id].Position));
+            if (perception.MemorizedLoot[bestLootIndex].Position.Distance(perception.MyUnints[id].Position) <
                 perception.Constants.UnitRadius / 2)
             {
-                Console.WriteLine("Start pickup!!!");
-                _pickupLoot.SetPickableLootId(perception.Game.Loot[bestLootIndex].Id);
+                //Console.WriteLine("Start pickup!!!");
+                _pickupLoot.SetPickableLootId(perception.MemorizedLoot[bestLootIndex].Id);
+                perception.MemorizedLoot.Remove(perception.MemorizedLoot[bestLootIndex].Id);
                 return _pickupLoot.Process(perception, id);
             }
             else
             {
-                _runToDestination.SetDestination(perception.Game.Loot[bestLootIndex].Position);
-                return _runToDestination.Process(perception, id);
+                debugInterface.AddRing(perception.MemorizedLoot[bestLootIndex].Position,1,0.5,new Color(0.5,0.5,0,1));
+                _runToDestination.SetDestination(perception.MemorizedLoot[bestLootIndex].Position);
+                return _runToDestination.Process(perception, debugInterface,id);
             }
         }
 

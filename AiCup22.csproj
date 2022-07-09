@@ -7,4 +7,9 @@
         <AnalysisLevel>5.0</AnalysisLevel>
     </PropertyGroup>
 
+    <ItemGroup>
+      <Compile Remove="LootingBrain.cs" />
+      <Compile Remove="GeneralBrain.cs" />
+    </ItemGroup>
+
 </Project>
