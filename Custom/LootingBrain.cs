@@ -10,17 +10,18 @@ namespace AiCup22.Custom
     public class LootingBrain : Brain
     {
         private const double eps = 0.000001;
-        private const int kShieldLoot = 120;
-        private const int kAmmoLoot = 400;
-        private const int kBowLoot = 2000;
+        private const int kShieldLoot = 45;
+        private const int kAmmoLoot = 800;
+        private const int kBowLoot = 50000;
 
         private RunToDestination _runToDestination;
         private PickupLoot _pickupLoot;
         private UseShield _useShield;
-        private Loot desireLoot;
-        private Vec2 desiredDestination;
-        private double desiredPoints;
-
+        /* Скрыл, так как мне надоели предупреждения
+           private Loot desireLoot;
+           private Vec2 desiredDestination;
+           private double desiredPoints;
+        */
         public LootingBrain()
         {
             _runToDestination = new RunToDestination();
@@ -28,7 +29,7 @@ namespace AiCup22.Custom
             _useShield = new UseShield();
         }
 
-        public override UnitOrder Process(Perception perception,DebugInterface debugInterface)
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
             if (perception.Game.Loot.Length == 0)   //Проверка, вдруг вообще ничего нет
                 return new UnitOrder(new Vec2(), new Vec2(), null);
@@ -38,17 +39,16 @@ namespace AiCup22.Custom
             double bestPoints = double.MinValue;
             Unit unit = perception.MyUnints[id];
             List<int> lootToRemove = new List<int>();
-            //Console.WriteLine(Tools.IsInside(-10,110,-130));
             foreach (var loot in perception.MemorizedLoot)
             {
                 if (loot.Value.Position.SqrDistance(unit.Position) > 2000 ||
-                    (Tools.BelongConeOfVision(loot.Value.Position,unit.Position,
-                        unit.Direction,perception.Constants.ViewDistance,
+                    (Tools.BelongConeOfVision(loot.Value.Position, unit.Position,
+                        unit.Direction, perception.Constants.ViewDistance,
                         perception.Constants.FieldOfView) &&
                      perception.Game.Loot.Count(
-                         (Loot l)=>l.Id==loot.Key && 
-                                   l.Position.X == loot.Value.Position.X 
-                                   && l.Position.Y == loot.Value.Position.Y)==0))
+                         (Loot l) => l.Id == loot.Key &&
+                                   l.Position.X == loot.Value.Position.X
+                                   && l.Position.Y == loot.Value.Position.Y) == 0))
                 {
                     lootToRemove.Add(loot.Key);
                     continue;
@@ -56,7 +56,7 @@ namespace AiCup22.Custom
 
                 double curPoints = CalculateLootValue(perception, loot.Value);
 
-            
+                debugInterface.AddPlacedText(loot.Value.Position, Math.Ceiling(curPoints).ToString(), new Vec2(0.5, 0.5), 3, new Color(1, 0, 0.5, 1));
                 if (bestPoints < curPoints)
                 {
                     bestPoints = curPoints;
@@ -90,9 +90,9 @@ namespace AiCup22.Custom
             }
             else
             {
-                debugInterface.AddRing(bestLoot.Position,1,0.5,new Color(0.5,0.5,0,1));
+                debugInterface.AddRing(bestLoot.Position, 1, 0.5, new Color(0.5, 0.5, 0, 1));
                 _runToDestination.SetDestination(bestLoot.Position);
-                return _runToDestination.Process(perception, debugInterface,id);
+                return _runToDestination.Process(perception, debugInterface, id);
             }
         }
         private double CalculateAmmoValue(Perception perception, Item.Ammo ammo)
