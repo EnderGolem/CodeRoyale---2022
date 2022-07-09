@@ -44,6 +44,7 @@ namespace AiCup22.Custom
                     bestLootIndex = i;
                 }
             }
+
             System.Console.WriteLine("BEST " + perception.Game.Loot[bestLootIndex].Item + " " + bestPoints);
             System.Console.WriteLine("------------------------------");
             /* double shieldPoints = perception.MyUnints[id].Shield < 100 ? 300 : -1000; //Чтобы пил, нужна формула, ну или перенести мозгу, но хз..
@@ -54,6 +55,7 @@ namespace AiCup22.Custom
                  return _useShield.Process(perception, id);
              }
             */
+
 
             if (perception.Game.Loot[bestLootIndex].Position.Distance(perception.MyUnints[id].Position) <
                 perception.Constants.UnitRadius / 2)
@@ -87,9 +89,11 @@ namespace AiCup22.Custom
         private double CalculateLootValue(Perception perception, Loot loot)
         {
 
+
             //   double points = -loot.Position.SqrDistance(perception.MyUnints[id].Position); //Не корректно, лучше вообще работать без минуса
             double points = 1 / loot.Position.SqrDistance(perception.MyUnints[id].Position);
             System.Console.WriteLine("Looting Brain Points Disance " + points);
+
             switch (loot.Item)
             {
                 case Item.Weapon weapon:
