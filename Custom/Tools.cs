@@ -68,5 +68,70 @@ namespace AiCup22.Custom
                 return hitObstacles.OrderBy((Obstacle o) => startPoint.SqrDistance(o.Position)).First();
             }
         }
+        /// <summary>
+        /// Обнаружение препятствий по 2-м точкам
+        /// </summary>
+        /// <param name="startPoint"></param>
+        /// <param name="endPoint"></param>
+        /// <param name="width">Ширина юнита</param>
+        /// <param name="obstacles"></param>
+        /// <param name="ignoreLowObstacles"></param>
+        /// <returns></returns>
+        public static Obstacle? RaycastObstacle2Point(Vec2 startPoint, Vec2 endPoint,double width, Obstacle[] obstacles,
+            bool ignoreLowObstacles)
+        {
+            Straight s = new Straight();
+            var normal = endPoint.Subtract(startPoint);
+            s.SetByNormalAndPoint(normal, startPoint);
+            var directive = s.GetDirective().Normalize();
+            var point1 = startPoint.Add(directive.Multi(width / 2));
+            var point2 = startPoint.Add(directive.Multi(-width / 2));
+            var o = RaycastObstacle(point1, endPoint, obstacles, ignoreLowObstacles);
+            if (o.HasValue)
+            {
+                return o;
+            }
+            o = RaycastObstacle(point2, endPoint, obstacles, ignoreLowObstacles);
+            return o;
+        }
+        /// <summary>
+        /// Определяет принадлежит ли точка полю обзора
+        /// </summary>
+        /// <param name="point"></param>
+        /// <param name="startPos"></param>
+        /// <param name="viewDistance"></param>
+        /// <param name="viewAngle"></param>
+        /// <returns></returns>
+        public static bool BelongConeOfVision(Vec2 point,Vec2 startPos,Vec2 viewDirection, double viewDistance, double viewAngle)
+        {
+            var pointAngle = AngleToPoint(startPos, point);
+            var viewDirAngle = AngleToPoint(new Vec2(0, 0), viewDirection);
+            Console.WriteLine($"Point angle: {pointAngle}");
+            Console.WriteLine($"View angle: {viewDirAngle}");
+            Console.WriteLine($"View angle: {viewAngle}");
+            Console.WriteLine(IsInside(viewDirAngle,viewAngle,pointAngle));
+            if (!IsInside(viewDirAngle,viewAngle,pointAngle))
+            {
+                return false;
+            }
+
+            return startPos.Distance(point)<viewDistance;
+        }
+        
+        public static double AngleToPoint(Vec2 yourPosition, Vec2 point)
+        {
+            return (Math.Atan2(point.Y - yourPosition.Y,
+                point.X - yourPosition.X) * (180 / Math.PI));
+        }
+        
+        public static double AngleDiff(double angle1, double angle2)
+        {
+            return ((((angle1 - angle2) % 360) + 540) % 360) - 180;
+        }
+
+        public static bool IsInside(double rayAngle, double alpha, double pointAngle)
+        {
+            return (AngleDiff(pointAngle, rayAngle - alpha) > 0 && AngleDiff(pointAngle, rayAngle + alpha) < 0);
+        }
     }
 }

@@ -14,7 +14,7 @@ namespace AiCup22.Custom
             _shootToPoing = new ShootToPoint();
             _aimingToPoint = new AimingToPoint();
         }
-        public override UnitOrder Process(Perception perception)
+        public override UnitOrder Process(Perception perception,DebugInterface debugInterface)
         {
             if (perception.EnemyUnints.Count == 0)   //Проверка, вдруг вообще ничего нет
                 return new UnitOrder(new Vec2(), new Vec2(), null);

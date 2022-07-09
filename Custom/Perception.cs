@@ -24,16 +24,19 @@ namespace AiCup22.Custom
         public List<Unit> MyUnints => _myUnints;
         public List<Unit> EnemyUnints => _enemyUnints;
 
+        public Dictionary<int, Loot> MemorizedLoot => memorizedLoot;
+
+        private Dictionary<int,Loot> memorizedLoot;
         public Perception(Constants consts)
         {
             _constants = consts;
+            memorizedLoot = new Dictionary<int, Loot>();
         }
 
         public void Analyze(Game game, DebugInterface debugInterface)
         {
             _game = game;
             _debug = debugInterface;
-            DebugOutput(game, debugInterface);
 
             _enemyUnints = new List<Unit>();
             _myUnints = new List<Unit>(); // Потому что, если находиться в конструкторе, то каждый getorder, будет увеличиваться
@@ -47,6 +50,13 @@ namespace AiCup22.Custom
 
                 MyUnints.Add(unit);
             }
+
+            for (int i = 0; i < game.Loot.Length; i++)
+            {
+                memorizedLoot.TryAdd(game.Loot[i].Id,game.Loot[i]);
+            }
+            
+            DebugOutput(game, debugInterface);
         }
 
         private void DebugOutput(Game game, DebugInterface debugInterface)
@@ -84,6 +94,11 @@ namespace AiCup22.Custom
                 
                 debugInterface.AddRing(game.Zone.CurrentCenter,game.Zone.CurrentRadius,1,new Color(1,0,0,1));
                 debugInterface.AddRing(game.Zone.NextCenter,game.Zone.NextRadius,1,new Color(0,1,0,1));
+                Console.WriteLine(memorizedLoot.Count);
+                foreach (var l in memorizedLoot)
+                {
+                    debugInterface.AddRing(l.Value.Position,1,0.3,new Color(0.8,0.8,0.8,1));
+                }
             }
         }
     }

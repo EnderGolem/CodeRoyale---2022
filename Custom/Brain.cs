@@ -6,7 +6,7 @@ namespace AiCup22.Custom
 {
     public interface Processable
     {
-        public UnitOrder Process(Perception perception);
+        public UnitOrder Process(Perception perception,DebugInterface debugInterface);
     }
 
     public class Brain : Processable
@@ -29,7 +29,7 @@ namespace AiCup22.Custom
             stayShootToEnemy = new StayShootToEnemy();
         }
 
-        public virtual UnitOrder Process(Perception perception)
+        public virtual UnitOrder Process(Perception perception,DebugInterface debugInterface)
         {
             if (perception.EnemyUnints.Count == 0)
                 return runToCenterRadar.Process(perception, 0);

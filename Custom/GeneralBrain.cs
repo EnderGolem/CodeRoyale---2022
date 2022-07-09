@@ -13,14 +13,15 @@ namespace AiCup22.Custom
             _battleBrain = new BattleBrain();
         }
 
-        public override UnitOrder Process(Perception perception)
+        public override UnitOrder Process(Perception perception,DebugInterface debugInterface)
         {
+
             if (perception.MyUnints[id].Weapon.HasValue && perception.MyUnints[0].Weapon.Value == 2 && perception.EnemyUnints.Count > 0 && perception.MyUnints[id].Ammo[2] > 0)
             {
-                return _battleBrain.Process(perception);
+                return _battleBrain.Process(perception,debugInterface);
             }
             else
-                return _lootingBrain.Process(perception);
+                return _lootingBrain.Process(perception,debugInterface);
         }
     }
 }
