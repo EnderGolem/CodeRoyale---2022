@@ -74,40 +74,48 @@ namespace AiCup22.Custom
     public class RunToDestination : EndAction
     {
         protected Vec2 destination;
-        public virtual UnitOrder Process(Perception perception,DebugInterface debugInterface, int id)
+        public virtual UnitOrder Process(Perception perception, DebugInterface debugInterface, int id)
         {
+            Console.WriteLine("RunToDestination Process");
             Unit unit = perception.MyUnints[0];
             var dir = destination.Subtract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed);
             return new UnitOrder(dir, dir, null);
         }
 
-        public void SetDestination(Vec2 dest)
+        public virtual void SetDestination(Vec2 dest)
         {
+            Console.WriteLine("RunToDestination SetDestination");
             destination = dest;
         }
     }
 
     public class SteeringRunToDestination : RunToDestination
     {
-        public override UnitOrder Process(Perception perception,DebugInterface debugInterface, int id)
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface, int id)
         {
+
 
             Obstacle? obst = Tools.RaycastObstacle2Point(perception.MyUnints[0].Position,destination,perception.Constants.UnitRadius*2,perception.CloseObstacles.ToArray(),false);
             if (!obst.HasValue || obst.Value.Position.SqrDistance(perception.MyUnints[0].Position)>obst.Value.Radius*obst.Value.Radius*9)
 
+            Console.WriteLine("SteeringRunToDestination Process");
+            Obstacle? obst = Tools.RaycastObstacle2Point(perception.MyUnints[0].Position, destination, perception.Constants.UnitRadius * 2, perception.Constants.Obstacles, false);
+            if (!obst.HasValue || obst.Value.Position.SqrDistance(perception.MyUnints[0].Position) > obst.Value.Radius * obst.Value.Radius * 9)
+
+
             {
-                return base.Process(perception, debugInterface,id);
+                return base.Process(perception, debugInterface, id);
             }
             else
             {
                 Unit unit = perception.MyUnints[0];
                 var dir = destination.Subtract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed);
                 Straight perpS = new Straight();
-                perpS.SetByNormalAndPoint(dir,obst.Value.Position);
-                var dirS = new Straight(dir,unit.Position);
+                perpS.SetByNormalAndPoint(dir, obst.Value.Position);
+                var dirS = new Straight(dir, unit.Position);
                 var intersectPoint = dirS.GetIntersection(perpS);
                 var perpDir = obst.Value.Position.Subtract(intersectPoint.Value);
-                var targetPos = obst.Value.Position.Add(perpDir.Normalize().Multi(obst.Value.Radius + 3*perception.Constants.UnitRadius));
+                var targetPos = obst.Value.Position.Add(perpDir.Normalize().Multi(obst.Value.Radius + 3 * perception.Constants.UnitRadius));
                 var targetDir = targetPos.Subtract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed);
                 /*Console.WriteLine($"Прямая перпендикулярная цели: {perpS}");
                 Console.WriteLine($"Прямая до цели: {dirS}");
@@ -116,11 +124,11 @@ namespace AiCup22.Custom
                 Console.WriteLine($"Перпендикулярный вектор: {perpDir}");
                 Console.WriteLine($"Целевая позиция: {targetPos}");
                 Console.WriteLine($"Целевой вектор: {targetDir}");*/
-                debugInterface.AddRing(intersectPoint.Value,1,0.5,new Color(1,0,0,1));
-                debugInterface.AddRing(targetPos,1,0.5,new Color(0,0.5,0.5,1));
-                debugInterface.AddSegment(obst.Value.Position,obst.Value.Position.Add(perpDir.Normalize()),0.5,new Color(0,0,1,1));
-                debugInterface.AddSegment(unit.Position,destination,0.5,new Color(0,1,0,1));
-                debugInterface.AddSegment(obst.Value.Position,targetPos,0.5,new Color(1,0,0,1));
+                debugInterface.AddRing(intersectPoint.Value, 1, 0.5, new Color(1, 0, 0, 1));
+                debugInterface.AddRing(targetPos, 1, 0.5, new Color(0, 0.5, 0.5, 1));
+                debugInterface.AddSegment(obst.Value.Position, obst.Value.Position.Add(perpDir.Normalize()), 0.5, new Color(0, 0, 1, 1));
+                debugInterface.AddSegment(unit.Position, destination, 0.5, new Color(0, 1, 0, 1));
+                debugInterface.AddSegment(obst.Value.Position, targetPos, 0.5, new Color(1, 0, 0, 1));
                 return new UnitOrder(targetDir, dir, null);
             }
         }
@@ -139,8 +147,6 @@ namespace AiCup22.Custom
         public UnitOrder Process(Perception perception, int id)
         {
             ActionOrder action = new ActionOrder.Pickup(pickableLootId);
-
-            //Unit unit = perception.MyUnints[0];
             return new UnitOrder(new Vec2(), new Vec2(), action);
         }
 
@@ -149,46 +155,113 @@ namespace AiCup22.Custom
             pickableLootId = id;
         }
     }
-
-    public class ShootToPoint
+    public class AimingToPoint
     {
-        private Vec2 target;
-        public ShootToPoint()
+        protected Vec2 target;
+        public AimingToPoint()
         {
             target = new Vec2();
         }
-        public UnitOrder Process(Perception perception, int id)
+        public virtual UnitOrder Process(Perception perception, int id)
+        {
+
+            ActionOrder action = new ActionOrder.Aim(false);
+            Unit unit = perception.MyUnints[id];
+            Vec2 enemy = target.Subtract(unit.Position);
+            return new UnitOrder(new Vec2(), enemy, action);
+        }
+        public virtual void SetTarget(Vec2 _target)
+        {
+            target = _target;
+        }
+    }
+
+
+    public class ShootToPoint : AimingToPoint
+    {
+        public override UnitOrder Process(Perception perception, int id)
         {
             ActionOrder action = new ActionOrder.Aim(true);
             Unit unit = perception.MyUnints[id];
             Vec2 enemy = target.Subtract(unit.Position);
             return new UnitOrder(new Vec2(), enemy, action);
         }
-
-        public void SetTarget(Vec2 _target)
+    }
+    public class SteeringAimToDestination : SteeringRunToDestination
+    {
+        protected Vec2 target;
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface, int id)
         {
-            target = _target;
+
+            Obstacle? obst = Tools.RaycastObstacle2Point(perception.MyUnints[0].Position, destination, perception.Constants.UnitRadius * 2, perception.Constants.Obstacles, false);
+            if (!obst.HasValue || obst.Value.Position.SqrDistance(perception.MyUnints[0].Position) > obst.Value.Radius * obst.Value.Radius * 9)
+
+            {
+                return base.Process(perception, debugInterface, id);
+            }
+            else
+            {
+
+                Unit unit = perception.MyUnints[0];
+                var dir = destination.Subtract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed);
+                Straight perpS = new Straight();
+                perpS.SetByNormalAndPoint(dir, obst.Value.Position);
+                var dirS = new Straight(dir, unit.Position);
+                var intersectPoint = dirS.GetIntersection(perpS);
+                var perpDir = obst.Value.Position.Subtract(intersectPoint.Value);
+                var targetPos = obst.Value.Position.Add(perpDir.Normalize().Multi(obst.Value.Radius + 3 * perception.Constants.UnitRadius));
+                var targetDir = targetPos.Subtract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed);
+
+                debugInterface.AddRing(intersectPoint.Value, 1, 0.5, new Color(1, 0, 0, 1));
+                debugInterface.AddRing(targetPos, 1, 0.5, new Color(0, 0.5, 0.5, 1));
+                debugInterface.AddSegment(obst.Value.Position, obst.Value.Position.Add(perpDir.Normalize()), 0.5, new Color(0, 0, 1, 1));
+                debugInterface.AddSegment(unit.Position, destination, 0.5, new Color(0, 1, 0, 1));
+                debugInterface.AddSegment(obst.Value.Position, targetPos, 0.5, new Color(1, 0, 0, 1));
+
+                var enemy = perception.MyUnints[id].Position.Subtract(target);
+                ActionOrder action = new ActionOrder.Aim(false);
+                return new UnitOrder(targetDir, enemy, action);
+            }
+        }
+        public virtual void SetTarget(Vec2 targ)
+        {
+            target = targ;
         }
     }
-    public class AimingToPoint
+    public class SteeringShootToDestination : SteeringAimToDestination
     {
-        private Vec2 target;
-        public AimingToPoint()
-        {
-            target = new Vec2();
-        }
-        public UnitOrder Process(Perception perception, int id)
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface, int id)
         {
 
-            ActionOrder action = new ActionOrder.Aim(false); //Исправить, не знаю будет ли прицеливаться...
-            Unit unit = perception.MyUnints[id];
-            Vec2 enemy = target.Subtract(unit.Position);
-            return new UnitOrder(new Vec2(), enemy, action);
-        }
+            Obstacle? obst = Tools.RaycastObstacle2Point(perception.MyUnints[0].Position, destination, perception.Constants.UnitRadius * 2, perception.Constants.Obstacles, false);
+            if (!obst.HasValue || obst.Value.Position.SqrDistance(perception.MyUnints[0].Position) > obst.Value.Radius * obst.Value.Radius * 9)
 
-        public void SetTarget(Vec2 _target)
-        {
-            target = _target;
+            {
+                return base.Process(perception, debugInterface, id);
+            }
+            else
+            {
+
+                Unit unit = perception.MyUnints[0];
+                var dir = destination.Subtract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed);
+                Straight perpS = new Straight();
+                perpS.SetByNormalAndPoint(dir, obst.Value.Position);
+                var dirS = new Straight(dir, unit.Position);
+                var intersectPoint = dirS.GetIntersection(perpS);
+                var perpDir = obst.Value.Position.Subtract(intersectPoint.Value);
+                var targetPos = obst.Value.Position.Add(perpDir.Normalize().Multi(obst.Value.Radius + 3 * perception.Constants.UnitRadius));
+                var targetDir = targetPos.Subtract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed);
+
+                debugInterface.AddRing(intersectPoint.Value, 1, 0.5, new Color(1, 0, 0, 1));
+                debugInterface.AddRing(targetPos, 1, 0.5, new Color(0, 0.5, 0.5, 1));
+                debugInterface.AddSegment(obst.Value.Position, obst.Value.Position.Add(perpDir.Normalize()), 0.5, new Color(0, 0, 1, 1));
+                debugInterface.AddSegment(unit.Position, destination, 0.5, new Color(0, 1, 0, 1));
+                debugInterface.AddSegment(obst.Value.Position, targetPos, 0.5, new Color(1, 0, 0, 1));
+
+                var enemy = perception.MyUnints[id].Position.Subtract(target);
+                ActionOrder action = new ActionOrder.Aim(true);
+                return new UnitOrder(targetDir, enemy, action);
+            }
         }
     }
 
