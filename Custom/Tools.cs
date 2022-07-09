@@ -106,10 +106,10 @@ namespace AiCup22.Custom
         {
             var pointAngle = AngleToPoint(startPos, point);
             var viewDirAngle = AngleToPoint(new Vec2(0, 0), viewDirection);
-            Console.WriteLine($"Point angle: {pointAngle}");
+            /*Console.WriteLine($"Point angle: {pointAngle}");
             Console.WriteLine($"View angle: {viewDirAngle}");
             Console.WriteLine($"View angle: {viewAngle}");
-            Console.WriteLine(IsInside(viewDirAngle,viewAngle,pointAngle));
+            Console.WriteLine(IsInside(viewDirAngle,viewAngle,pointAngle));*/
             if (!IsInside(viewDirAngle,viewAngle,pointAngle))
             {
                 return false;
