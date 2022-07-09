@@ -96,6 +96,8 @@ namespace AiCup22.Custom
             }
             else
             {
+                Unit unit = perception.MyUnints[0];
+                var dir = destination.Subtract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed);
                 return new UnitOrder(new Vec2(), new Vec2(), new ActionOrder.UseShieldPotion());
             }
         }
