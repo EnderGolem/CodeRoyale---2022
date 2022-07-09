@@ -118,4 +118,38 @@ namespace AiCup22.Custom
         }
     }
 
+    public class ShootToPoint
+    {
+        private Vec2 target;
+        public UnitOrder Process(Perception perception, int id)
+        {
+            ActionOrder action = new ActionOrder.Aim(true);
+            Unit unit = perception.MyUnints[id];
+            Vec2 enemy = target.Subtract(unit.Position);
+            return new UnitOrder(new Vec2(), new Vec2(), action);
+        }
+
+        public void SetTarget(Vec2 _trget)
+        {
+            target = _trget;
+        }
+    }
+    public class AimingToPoint
+    {
+        private Vec2 target;
+        public UnitOrder Process(Perception perception, int id)
+        {
+            
+            ActionOrder action = new ActionOrder.Aim(false); //Исправить, не знаю будет ли прицеливаться...
+            Unit unit = perception.MyUnints[id];
+            Vec2 enemy = target.Subtract(unit.Position);
+            return new UnitOrder(new Vec2(), enemy, action);
+        }
+
+        public void SetTarget(Vec2 _target)
+        {
+            target = _target;
+        }
+    }
+
 }
