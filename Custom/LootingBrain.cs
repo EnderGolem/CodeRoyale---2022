@@ -6,6 +6,10 @@ namespace AiCup22.Custom
 {
     public class LootingBrain : Brain
     {
+        private const int kShieldLoot = 120;
+        private const int kAmmoLoot = 400;
+        private const int kBowLoot = 2000;
+
         private RunToDestination _runToDestination;
         private PickupLoot _pickupLoot;
         private UseShield _useShield;
@@ -33,21 +37,26 @@ namespace AiCup22.Custom
 
                 double curPoints = CalculateLootValue(perception, perception.Game.Loot[i]);
 
+                System.Console.WriteLine(perception.Game.Loot[i].Item + " " + curPoints);
                 if (bestPoints < curPoints)
                 {
                     bestPoints = curPoints;
                     bestLootIndex = i;
                 }
             }
-            double shieldPoints = perception.MyUnints[id].Shield < 100 ? 300 : -1000; //Чтобы пил, нужна формула, ну или перенести мозгу, но хз..
-            System.Console.WriteLine("ShieldPoints " + shieldPoints);         
-            System.Console.WriteLine("bestPoints " + bestPoints);
-            if (shieldPoints > bestPoints && perception.MyUnints[id].Action == null)
-            {
-                return _useShield.Process(perception, id);
-            }
 
-            Console.WriteLine(perception.Game.Loot[bestLootIndex].Position.Distance(perception.MyUnints[id].Position));
+            System.Console.WriteLine("BEST " + perception.Game.Loot[bestLootIndex].Item + " " + bestPoints);
+            System.Console.WriteLine("------------------------------");
+            /* double shieldPoints = perception.MyUnints[id].Shield < 100 ? 300 : -1000; //Чтобы пил, нужна формула, ну или перенести мозгу, но хз..
+             System.Console.WriteLine("ShieldPoints " + shieldPoints);
+             System.Console.WriteLine("bestPoints " + bestPoints);
+             if (shieldPoints > bestPoints && perception.MyUnints[id].Action == null)
+             {
+                 return _useShield.Process(perception, id);
+             }
+            */
+
+
             if (perception.Game.Loot[bestLootIndex].Position.Distance(perception.MyUnints[id].Position) <
                 perception.Constants.UnitRadius / 2)
             {
@@ -61,11 +70,30 @@ namespace AiCup22.Custom
                 return _runToDestination.Process(perception, id);
             }
         }
-
+        private double CalculateAmmoValue(Perception perception, Item.Ammo ammo)
+        {
+            double procentage = perception.MyUnints[id].Ammo[ammo.WeaponTypeIndex] / perception.Constants.Weapons[ammo.WeaponTypeIndex].MaxInventoryAmmo * 100;
+            double points = procentage != 0 ? kAmmoLoot / procentage : 10000;
+            return points;
+        }
+        private double CalculateShieldValue(Perception perception, Item.ShieldPotions potions)
+        {
+            double procentage = perception.MyUnints[id].ShieldPotions / perception.Constants.MaxShieldPotionsInInventory * 100;
+            double points = procentage != 0 ? (kShieldLoot * potions.Amount) / procentage : 10000;
+            if ((double)perception.MyUnints[id].Shield > 1)
+                points *= (-0.005 * (perception.Constants.MaxShield / (double)perception.MyUnints[id].Shield)) + 2;
+            else
+                points *= 2;
+            return points;
+        }
         private double CalculateLootValue(Perception perception, Loot loot)
         {
 
-            double points = -loot.Position.SqrDistance(perception.MyUnints[id].Position); //Не корректно, лучше вообще работать без минуса
+
+            //   double points = -loot.Position.SqrDistance(perception.MyUnints[id].Position); //Не корректно, лучше вообще работать без минуса
+            double points = 1 / loot.Position.SqrDistance(perception.MyUnints[id].Position);
+            System.Console.WriteLine("Looting Brain Points Disance " + points);
+
             switch (loot.Item)
             {
                 case Item.Weapon weapon:
@@ -75,34 +103,33 @@ namespace AiCup22.Custom
                         (weapon.TypeIndex == perception.MyUnints[id].Weapon.Value) ||
                         (perception.MyUnints[id].Weapon.Value == 2))
                     {
-                        points -= 10000000;
+                        points -= 1000;
                     }
                     else
                     {
                         switch (weapon.TypeIndex)
                         {
                             case 0:
-                                points += 0;
+                                points *= 1;
                                 break;
                             case 1:
-                                points += 0;
+                                points *= 1;
                                 break;
                             case 2:
-                                points += 200;
+                                points *= kBowLoot;
                                 break;
                         }
+
                     }
 
                     break;
                 case Item.Ammo ammo:
                     if (perception.MyUnints[id].Weapon.HasValue &&
-                        ammo.WeaponTypeIndex == perception.MyUnints[id].Weapon.Value &&
-                        //Проверка не максимум ли патронов, временный костыль
-                        perception.MyUnints[id].Ammo[ammo.WeaponTypeIndex] < perception.Constants.Weapons[perception.MyUnints[0].Weapon.Value].MaxInventoryAmmo)
+                        ammo.WeaponTypeIndex == 2) //ТОЛЬКО ПАТРОНЫ ДЛЯ ЛУКА
                     {
                         ///Надо написать формулу очков в зависимости от кол-ва патронов и других
                         /// факторов
-                        points += 50;
+                        points *= CalculateAmmoValue(perception, ammo);
                     }
                     else
                     {
@@ -111,7 +138,7 @@ namespace AiCup22.Custom
 
                     break;
                 case Item.ShieldPotions potion:
-                    points += 100;
+                    points *= CalculateShieldValue(perception, potion);
                     break;
             }
 
