@@ -41,5 +41,17 @@ namespace AiCup22
         {
             return System.Math.Abs(a.X - b.X) < eps && System.Math.Abs(a.Y - b.Y) < eps;
         }
+        public static bool CheckPerpendicular(this Vec2 a, Vec2 b)
+        {
+            return (a.X * b.X + a.Y * b.Y) == 0;
+        }
+        public static Vec2 FindPerpendicularWithX(this Vec2 a, double X)
+        {
+            return new Vec2(X, -a.X * X / a.Y);
+        }
+        public static Vec2 FindPerpendicularWithY(this Vec2 a, double Y)
+        {
+            return new Vec2(-a.Y * Y / a.X, Y);
+        }
     }
 }
