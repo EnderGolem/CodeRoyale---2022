@@ -6,6 +6,10 @@ namespace AiCup22.Custom
 {
     public class LootingBrain : Brain
     {
+        private const int kShieldLoot = 120;
+        private const int kAmmoLoot = 400;
+        private const int kBowLoot = 2000;
+
         private RunToDestination _runToDestination;
         private PickupLoot _pickupLoot;
         private UseShield _useShield;
@@ -32,7 +36,7 @@ namespace AiCup22.Custom
             {
 
                 double curPoints = CalculateLootValue(perception, perception.Game.Loot[i]);
-                
+
                 System.Console.WriteLine(perception.Game.Loot[i].Item + " " + curPoints);
                 if (bestPoints < curPoints)
                 {
@@ -40,7 +44,7 @@ namespace AiCup22.Custom
                     bestLootIndex = i;
                 }
             }
-            System.Console.WriteLine(perception.Game.Loot[bestLootIndex].Item + " " + bestPoints);
+            System.Console.WriteLine("BEST " + perception.Game.Loot[bestLootIndex].Item + " " + bestPoints);
             System.Console.WriteLine("------------------------------");
             /* double shieldPoints = perception.MyUnints[id].Shield < 100 ? 300 : -1000; //Чтобы пил, нужна формула, ну или перенести мозгу, но хз..
              System.Console.WriteLine("ShieldPoints " + shieldPoints);
@@ -64,49 +68,20 @@ namespace AiCup22.Custom
                 return _runToDestination.Process(perception, id);
             }
         }
-        /*
-        0 100 
-        20 70 
-        40 50 
-        60 20 
-        100 0
-       */
         private double CalculateAmmoValue(Perception perception, Item.Ammo ammo)
         {
-
             double procentage = perception.MyUnints[id].Ammo[ammo.WeaponTypeIndex] / perception.Constants.Weapons[ammo.WeaponTypeIndex].MaxInventoryAmmo * 100;
-            double points = 1;
-
-            if (0 <= procentage && procentage < 20)
-                points *= -1.5 * procentage + 100;
-            else if (procentage < 40)
-                points *= -procentage + 90;
-            else if (procentage < 60)
-                points *= -1.5 * procentage + 110;
-            else
-                points *= -0.5 * procentage + 50;
-
+            double points = procentage != 0 ? kAmmoLoot / procentage : 10000;
             return points;
         }
-        /*
-        0 80
-        20 65
-        40 55
-        60 20
-        100 0
-        */
-        private double CalculateShieldValue(Perception perception)
+        private double CalculateShieldValue(Perception perception, Item.ShieldPotions potions)
         {
             double procentage = perception.MyUnints[id].ShieldPotions / perception.Constants.MaxShieldPotionsInInventory * 100;
-            double points = 1;
-            if (0 <= procentage && procentage < 20)
-                points *= -0.75 * procentage + 80;
-            else if (procentage < 40)
-                points *= -0.5 * procentage + 75;
-            else if (procentage < 60)
-                points *= -1.75 * procentage + 125;
+            double points = procentage != 0 ? (kShieldLoot * potions.Amount) / procentage : 10000;
+            if ((double)perception.MyUnints[id].Shield > 1)
+                points *= (-0.005 * (perception.Constants.MaxShield / (double)perception.MyUnints[id].Shield)) + 2;
             else
-                points *= -0.5 * procentage + 50;
+                points *= 2;
             return points;
         }
         private double CalculateLootValue(Perception perception, Loot loot)
@@ -137,7 +112,7 @@ namespace AiCup22.Custom
                                 points *= 1;
                                 break;
                             case 2:
-                                points *= 200;
+                                points *= kBowLoot;
                                 break;
                         }
 
@@ -146,9 +121,7 @@ namespace AiCup22.Custom
                     break;
                 case Item.Ammo ammo:
                     if (perception.MyUnints[id].Weapon.HasValue &&
-                        ammo.WeaponTypeIndex == perception.MyUnints[id].Weapon.Value &&
-                        //Проверка не максимум ли патронов, временный костыль
-                        perception.MyUnints[id].Ammo[ammo.WeaponTypeIndex] < perception.Constants.Weapons[perception.MyUnints[0].Weapon.Value].MaxInventoryAmmo)
+                        ammo.WeaponTypeIndex == 2) //ТОЛЬКО ПАТРОНЫ ДЛЯ ЛУКА
                     {
                         ///Надо написать формулу очков в зависимости от кол-ва патронов и других
                         /// факторов
@@ -161,7 +134,7 @@ namespace AiCup22.Custom
 
                     break;
                 case Item.ShieldPotions potion:
-                    points *= CalculateShieldValue(perception);
+                    points *= CalculateShieldValue(perception, potion);
                     break;
             }
 
