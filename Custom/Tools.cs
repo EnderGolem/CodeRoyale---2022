@@ -16,7 +16,7 @@ namespace AiCup22.Custom
             return zone.CurrentRadius - zone.CurrentCenter.Distance(position);
         }
         /// <summary>
-        /// Возвращает первое препятствие на пряиой из стартовой точки к конечной, если оно существует
+        /// Возвращает первое препятствие на прямой из стартовой точки к конечной, если оно существует
         /// И null в противном случае
         /// </summary>
         /// <param name="startPoint"></param>
