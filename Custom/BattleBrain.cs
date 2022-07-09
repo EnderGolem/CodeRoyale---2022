@@ -16,8 +16,31 @@ namespace AiCup22.Custom
         }
         public override UnitOrder Process(Perception perception)
         {
-            _aimingToPoint.SetTarget(perception.MyUnints[id].Direction);
+            double bestPoints = double.MinValue;
+            int bestEnemyIndex = -1;
+            double point = 0;
+            for (int i = 0; i < perception.EnemyUnints.Count; i++)
+            {
+                point = CalculateEnemyValue(perception, perception.EnemyUnints[0]);
+                if (bestPoints < point)
+                {
+                    bestEnemyIndex = i;
+                    bestPoints = point;
+                }
+            }
+            if (perception.MyUnints[id].Aim == 1)
+            {
+                _shootToPoing.SetTarget(perception.EnemyUnints[bestEnemyIndex].Position);
+                return _shootToPoing.Process(perception, id);
+            }
+            _aimingToPoint.SetTarget(perception.EnemyUnints[bestEnemyIndex].Position);
             return _aimingToPoint.Process(perception, id);
+        }
+        double CalculateEnemyValue(Perception perception, Unit enemy)
+        {
+            double points = -enemy.Position.SqrDistance(perception.MyUnints[id].Position);  //Не корректно, лучше вообще работать без минуса
+            //Высчитывается ценность противника
+            return points;
         }
     }
 }

@@ -21,10 +21,6 @@ namespace AiCup22.Custom
         public override UnitOrder Process(Perception perception)
         {
             int bestLootIndex = -1;
-            /*Console.WriteLine("GHFIHJGJHKBVKJNSKLDJVBKSDBVKLBSDKLV11111!!!!!!!!!!");
-            Console.WriteLine(perception.Game);
-            Console.WriteLine(perception.Game.Loot);
-            Console.WriteLine(perception.Game.Loot[0]);*/
             double bestPoints = double.MinValue;
 
             for (int i = 0; i < perception.Game.Loot.Length; i++)
@@ -56,7 +52,8 @@ namespace AiCup22.Custom
 
         private double CalculateLootValue(Perception perception, Loot loot)
         {
-            double points = -loot.Position.SqrDistance(perception.MyUnints[id].Position);
+            
+            double points = -loot.Position.SqrDistance(perception.MyUnints[id].Position); //Не корректно, лучше вообще работать без минуса
             switch (loot.Item)
             {
                 case Item.Weapon weapon:
