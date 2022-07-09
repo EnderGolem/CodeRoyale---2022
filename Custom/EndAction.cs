@@ -91,6 +91,8 @@ namespace AiCup22.Custom
         public UnitOrder Process(Perception perception, int id)
         {
             ActionOrder action = new ActionOrder.Pickup(pickableLootId);
+
+            //Unit unit = perception.MyUnints[0];
             return new UnitOrder(new Vec2(), new Vec2(), action);
         }
 
