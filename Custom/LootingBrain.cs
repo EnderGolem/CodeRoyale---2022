@@ -55,16 +55,13 @@ namespace AiCup22.Custom
 
                 double curPoints = CalculateLootValue(perception, loot.Value);
 
-                System.Console.WriteLine(perception.Game.Loot[i].Item + " " + curPoints
-                    + " Zone " + Tools.CurrentZoneDistance(perception.Game.Zone, perception.Game.Loot[i].Position));
+            
                 if (bestPoints < curPoints)
                 {
                     bestPoints = curPoints;
                     bestLootIndex = loot.Key;
                 }
             }
-            System.Console.WriteLine("BEST " + perception.Game.Loot[bestLootIndex].Item + " " + bestPoints);
-            System.Console.WriteLine("------------------------------");
             /* double shieldPoints = perception.MyUnints[id].Shield < 100 ? 300 : -1000; //Чтобы пил, нужна формула, ну или перенести мозгу, но хз..
              System.Console.WriteLine("ShieldPoints " + shieldPoints);
              System.Console.WriteLine("bestPoints " + bestPoints);
