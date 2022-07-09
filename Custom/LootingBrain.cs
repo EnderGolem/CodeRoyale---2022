@@ -6,6 +6,7 @@ namespace AiCup22.Custom
 {
     public class LootingBrain : Brain
     {
+        private const double eps = 0.000001;
         private const int kShieldLoot = 120;
         private const int kAmmoLoot = 400;
         private const int kBowLoot = 2000;
@@ -37,7 +38,8 @@ namespace AiCup22.Custom
 
                 double curPoints = CalculateLootValue(perception, perception.Game.Loot[i]);
 
-                System.Console.WriteLine(perception.Game.Loot[i].Item + " " + curPoints);
+                System.Console.WriteLine(perception.Game.Loot[i].Item + " " + curPoints
+                    + " Zone " + Tools.CurrentZoneDistance(perception.Game.Zone, perception.Game.Loot[i].Position));
                 if (bestPoints < curPoints)
                 {
                     bestPoints = curPoints;
@@ -73,18 +75,31 @@ namespace AiCup22.Custom
         private double CalculateAmmoValue(Perception perception, Item.Ammo ammo)
         {
             double procentage = perception.MyUnints[id].Ammo[ammo.WeaponTypeIndex] / perception.Constants.Weapons[ammo.WeaponTypeIndex].MaxInventoryAmmo * 100;
+            if (procentage == 100)
+                return 1;
             double points = procentage != 0 ? kAmmoLoot / procentage : 10000;
             return points;
         }
         private double CalculateShieldValue(Perception perception, Item.ShieldPotions potions)
         {
             double procentage = perception.MyUnints[id].ShieldPotions / perception.Constants.MaxShieldPotionsInInventory * 100;
+            if (procentage == 100)
+                return 1;
             double points = procentage != 0 ? (kShieldLoot * potions.Amount) / procentage : 10000;
             if ((double)perception.MyUnints[id].Shield > 1)
                 points *= (-0.005 * (perception.Constants.MaxShield / (double)perception.MyUnints[id].Shield)) + 2;
             else
                 points *= 2;
+
             return points;
+        }
+        private double CalculateZoneValue(Perception perception, Vec2 vec2)
+        {
+            var distance = Tools.CurrentZoneDistance(perception.Game.Zone, vec2);
+
+            if (distance < 0)
+                return -1;
+            return 20 / (-distance - 4) + 5;
         }
         private double CalculateLootValue(Perception perception, Loot loot)
         {
@@ -103,7 +118,7 @@ namespace AiCup22.Custom
                         (weapon.TypeIndex == perception.MyUnints[id].Weapon.Value) ||
                         (perception.MyUnints[id].Weapon.Value == 2))
                     {
-                        points -= 1000;
+                        points = eps;
                     }
                     else
                     {
@@ -133,7 +148,7 @@ namespace AiCup22.Custom
                     }
                     else
                     {
-                        points -= 10000000;
+                        points = eps;
                     }
 
                     break;
@@ -141,7 +156,7 @@ namespace AiCup22.Custom
                     points *= CalculateShieldValue(perception, potion);
                     break;
             }
-
+            points *= CalculateZoneValue(perception, loot.Position);
             return points;
         }
     }
