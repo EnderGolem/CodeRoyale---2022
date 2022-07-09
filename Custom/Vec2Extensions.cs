@@ -26,7 +26,7 @@ namespace AiCup22
             return System.Math.Sqrt(a.SqrDistance(b));
         }
 
-        public static Vec2 Nomalize(this Vec2 a)
+        public static Vec2 Normalize(this Vec2 a)
         {
             double distance = a.Distance(new Vec2());
             a.X = a.X / distance;

@@ -80,6 +80,10 @@ namespace AiCup22.Custom
                 debugInterface.Add(new DebugData.PlacedText(debugTextPos.Subtract(new Vec2(0, 3 * textsize / 2)),
                     $"Velocity: {player.Velocity}",
                     new Vec2(0.5, 0.5), textsize, textColor));
+                
+                
+                debugInterface.AddRing(game.Zone.CurrentCenter,game.Zone.CurrentRadius,1,new Color(1,0,0,1));
+                debugInterface.AddRing(game.Zone.NextCenter,game.Zone.NextRadius,1,new Color(0,1,0,1));
             }
         }
     }

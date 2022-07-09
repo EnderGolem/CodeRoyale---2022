@@ -69,19 +69,35 @@ namespace AiCup22.Custom
         }
     }
 
-    public class RunToDestination
+    public class RunToDestination:EndAction
     {
-        private Vec2 destination;
-        public UnitOrder Process(Perception perception, int id)
+        protected Vec2 destination;
+        public virtual UnitOrder Process(Perception perception, int id)
         {
             Unit unit = perception.MyUnints[0];
-            var dir = destination.Subtract(unit.Position).Nomalize().Multi(perception.Constants.MaxUnitForwardSpeed);
+            var dir = destination.Subtract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed);
             return new UnitOrder(dir, dir, null);
         }
 
         public void SetDestination(Vec2 dest)
         {
             destination = dest;
+        }
+    }
+
+    public class SteeringRunToDestination:RunToDestination
+    {
+        public override UnitOrder Process(Perception perception, int id)
+        {
+            Obstacle? obst = Tools.RaycastObstacle(perception.MyUnints[0].Position,destination,perception.Constants.Obstacles,false);
+            if (!obst.HasValue)
+            {
+                return base.Process(perception, id);
+            }
+            else
+            {
+                return new UnitOrder(new Vec2(), new Vec2(), new ActionOrder.UseShieldPotion());
+            }
         }
     }
 
