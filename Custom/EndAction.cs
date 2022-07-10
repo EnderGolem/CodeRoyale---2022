@@ -4,17 +4,57 @@ using AiCup22.Model;
 
 namespace AiCup22.Custom
 {
-    public class EndAction
+    public class EndAction:Processable
     {
-        public UnitOrder Process(Perception perception, ref int id)
+        private int _lastActivationTick;
+        private int _lastDeactivationTick;
+        private bool _isActive;
+
+        public int LastActivationTick
         {
-            throw new System.NotImplementedException();
+            get => _lastActivationTick;
+            set => _lastActivationTick = value;
+        }
+
+        public int LastDeactivationTick
+        {
+            get => _lastDeactivationTick;
+            set => _lastDeactivationTick = value;
+        }
+
+        public bool IsActive
+        {
+            get => _isActive;
+            set => _isActive = value;
+        }
+
+        public void Activate(int currentGameTick)
+        {
+            if (!IsActive)
+            {
+                IsActive = true;
+                LastActivationTick = currentGameTick;
+            }
+        }
+
+        public void Deactivate(int currentGameTick)
+        {
+            if (IsActive)
+            {
+                IsActive = false;
+                LastDeactivationTick = currentGameTick;
+            }
+        }
+
+        public virtual UnitOrder Process(Perception perception, DebugInterface debugInterface)
+        {
+           return new UnitOrder();
         }
     }
 
     public class RunToCenter : EndAction
     {
-        public UnitOrder Process(Perception perception, int id)
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
             ActionOrder action = new ActionOrder.Aim(false);
             Unit unit = perception.MyUnints[0];
@@ -25,7 +65,7 @@ namespace AiCup22.Custom
 
     public class RunShootToCenter : EndAction
     {
-        public UnitOrder Process(Perception perception, int id)
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
             ActionOrder action = new ActionOrder.Aim(false);
             Unit unit = perception.MyUnints[0];
@@ -36,7 +76,7 @@ namespace AiCup22.Custom
 
     public class RunToCenterRadar : EndAction
     {
-        public UnitOrder Process(Perception perception, int id)
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
             ActionOrder action = new ActionOrder.Aim(false);
             Unit unit = perception.MyUnints[0];
@@ -47,7 +87,7 @@ namespace AiCup22.Custom
 
     public class RunShootToCenterRadar : EndAction
     {
-        public UnitOrder Process(Perception perception, int id)
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
             ActionOrder action = new ActionOrder.Aim(true);
             Unit unit = perception.MyUnints[0];
@@ -60,7 +100,7 @@ namespace AiCup22.Custom
 
     public class StayShootToEnemy : EndAction
     {
-        public UnitOrder Process(Perception perception, int id)
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
             ActionOrder action = new ActionOrder.Aim(true);
             Unit unit = perception.MyUnints[0];
@@ -74,7 +114,7 @@ namespace AiCup22.Custom
     public class RunToDestination : EndAction
     {
         protected Vec2 destination;
-        public virtual UnitOrder Process(Perception perception,DebugInterface debugInterface, int id)
+        public override UnitOrder Process(Perception perception,DebugInterface debugInterface)
         {
             Unit unit = perception.MyUnints[0];
             var dir = destination.Subtract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed);
@@ -89,14 +129,14 @@ namespace AiCup22.Custom
 
     public class SteeringRunToDestination : RunToDestination
     {
-        public override UnitOrder Process(Perception perception,DebugInterface debugInterface, int id)
+        public override UnitOrder Process(Perception perception,DebugInterface debugInterface)
         {
 
             Obstacle? obst = Tools.RaycastObstacle2Point(perception.MyUnints[0].Position,destination,perception.Constants.UnitRadius*2,perception.CloseObstacles.ToArray(),false);
             if (!obst.HasValue || obst.Value.Position.SqrDistance(perception.MyUnints[0].Position)>obst.Value.Radius*obst.Value.Radius*9)
 
             {
-                return base.Process(perception, debugInterface,id);
+                return base.Process(perception, debugInterface);
             }
             else
             {
@@ -125,18 +165,18 @@ namespace AiCup22.Custom
             }
         }
     }
-    public class UseShield
+    public class UseShield:EndAction
     {
-        public UnitOrder Process(Perception perception, int id)
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
             return new UnitOrder(new Vec2(), new Vec2(), new ActionOrder.UseShieldPotion());
         }
 
     }
-    public class PickupLoot
+    public class PickupLoot:EndAction
     {
         private int pickableLootId;
-        public UnitOrder Process(Perception perception, int id)
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
             ActionOrder action = new ActionOrder.Pickup(pickableLootId);
 
@@ -150,17 +190,17 @@ namespace AiCup22.Custom
         }
     }
 
-    public class ShootToPoint
+    public class ShootToPoint:EndAction
     {
         private Vec2 target;
         public ShootToPoint()
         {
             target = new Vec2();
         }
-        public UnitOrder Process(Perception perception, int id)
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
             ActionOrder action = new ActionOrder.Aim(true);
-            Unit unit = perception.MyUnints[id];
+            Unit unit = perception.MyUnints[0];
             Vec2 enemy = target.Subtract(unit.Position);
             return new UnitOrder(new Vec2(), enemy, action);
         }
@@ -170,18 +210,18 @@ namespace AiCup22.Custom
             target = _target;
         }
     }
-    public class AimingToPoint
+    public class AimingToPoint:EndAction
     {
         private Vec2 target;
         public AimingToPoint()
         {
             target = new Vec2();
         }
-        public UnitOrder Process(Perception perception, int id)
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
 
             ActionOrder action = new ActionOrder.Aim(false); //Исправить, не знаю будет ли прицеливаться...
-            Unit unit = perception.MyUnints[id];
+            Unit unit = perception.MyUnints[0];
             Vec2 enemy = target.Subtract(unit.Position);
             return new UnitOrder(new Vec2(), enemy, action);
         }
@@ -194,7 +234,7 @@ namespace AiCup22.Custom
 
     public class LookAroundAction : EndAction
     {
-        public UnitOrder Process(Perception perception, int id)
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
             var unit = perception.MyUnints[0];
             Vec2 dir = new Vec2(-unit.Direction.Y,unit.Direction.X);

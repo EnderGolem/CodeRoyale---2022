@@ -9,15 +9,21 @@ namespace AiCup22.Custom
 
         ShootToPoint _shootToPoing;
         AimingToPoint _aimingToPoint;
+        private LookAroundAction _lookAroundAction;
         public BattleBrain()
         {
             _shootToPoing = new ShootToPoint();
             _aimingToPoint = new AimingToPoint();
+            _lookAroundAction = new LookAroundAction();
+            allStates.Add(_shootToPoing);
+            allStates.Add(_aimingToPoint);
+            allStates.Add(_lookAroundAction);
         }
-        public override UnitOrder Process(Perception perception,DebugInterface debugInterface)
+
+        protected override Processable ChooseNewState(Perception perception, DebugInterface debugInterface)
         {
             if (perception.EnemyUnints.Count == 0)   //Проверка, вдруг вообще ничего нет
-                return new UnitOrder(new Vec2(), new Vec2(), null);
+                return _lookAroundAction;
             double bestPoints = double.MinValue;
             int bestEnemyIndex = -1;
             double point = 0;
@@ -31,14 +37,15 @@ namespace AiCup22.Custom
                 }
             }
             if (perception.MyUnints[id].Aim == 1 && Tools.RaycastObstacle(perception.MyUnints[id].Position, (perception.EnemyUnints[bestEnemyIndex].Position),
-                                                    perception.Constants.Obstacles,true) == null)
+                perception.Constants.Obstacles,true) == null)
             {
                 _shootToPoing.SetTarget(perception.EnemyUnints[bestEnemyIndex].Position);
-                return _shootToPoing.Process(perception, id);
+                return _shootToPoing;
             }
             _aimingToPoint.SetTarget(perception.EnemyUnints[bestEnemyIndex].Position);
-            return _aimingToPoint.Process(perception, id);
+            return _aimingToPoint;
         }
+        
         double CalculateEnemyValue(Perception perception, Unit enemy)
         {
             double points = -enemy.Position.SqrDistance(perception.MyUnints[id].Position);  //Не корректно, лучше вообще работать без минуса

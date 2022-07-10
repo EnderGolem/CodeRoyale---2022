@@ -17,6 +17,7 @@ namespace AiCup22.Custom
         private RunToDestination _runToDestination;
         private PickupLoot _pickupLoot;
         private UseShield _useShield;
+        private LookAroundAction _lookAroundAction;
         private Loot desireLoot;
         private Vec2 desiredDestination;
         private double desiredPoints;
@@ -26,12 +27,15 @@ namespace AiCup22.Custom
             _runToDestination = new SteeringRunToDestination();
             _pickupLoot = new PickupLoot();
             _useShield = new UseShield();
+            allStates.Add(_runToDestination);
+            allStates.Add(_pickupLoot);
+            allStates.Add(_useShield);
         }
 
-        public override UnitOrder Process(Perception perception,DebugInterface debugInterface)
+        protected override Processable ChooseNewState(Perception perception, DebugInterface debugInterface)
         {
             if (perception.Game.Loot.Length == 0)   //Проверка, вдруг вообще ничего нет
-                return new UnitOrder(new Vec2(), new Vec2(), null);
+                return _lookAroundAction;
 
             int bestLootIndex = -1;
             Loot bestLoot = new Loot();
@@ -86,15 +90,16 @@ namespace AiCup22.Custom
                 //Console.WriteLine("Start pickup!!!");
                 _pickupLoot.SetPickableLootId(bestLoot.Id);
                 perception.MemorizedLoot.Remove(bestLoot.Id);
-                return _pickupLoot.Process(perception, id);
+                return _pickupLoot;
             }
             else
             {
                 debugInterface.AddRing(bestLoot.Position,1,0.5,new Color(0.5,0.5,0,1));
                 _runToDestination.SetDestination(bestLoot.Position);
-                return _runToDestination.Process(perception, debugInterface,id);
+                return _runToDestination;
             }
         }
+        
         private double CalculateAmmoValue(Perception perception, Item.Ammo ammo)
         {
             double procentage = perception.MyUnints[id].Ammo[ammo.WeaponTypeIndex] / perception.Constants.Weapons[ammo.WeaponTypeIndex].MaxInventoryAmmo * 100;
