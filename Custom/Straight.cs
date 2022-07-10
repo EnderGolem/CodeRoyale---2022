@@ -37,6 +37,11 @@ namespace AiCup22.Custom
             c = directive.X * point.Y - directive.Y * point.X;
         }
 
+        /// <summary>
+        /// Устанавливает уравнение прямой по нормали и точки, которой принаддежит уравнение этой прямой   , а правильно ли?
+        /// </summary>
+        /// <param name="directive"></param>
+        /// <param name="point"></param>
         public void SetByNormalAndPoint(Vec2 normal, Vec2 point)
         {
             a = normal.X;
