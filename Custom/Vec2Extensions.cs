@@ -65,5 +65,16 @@ namespace AiCup22
         {
             return a.Add(b.Substract(a).Multi(-1));
         }
+        public static Vec2 GetRandomVec()
+        {
+            System.Random rnd = new System.Random();
+            return new Vec2(rnd.Next(), rnd.Next());
+        }
+        public static Vec2 GetRandomVecNormalize()
+        {
+            return GetRandomVec().Normalize();
+        }
+
     }
+
 }
