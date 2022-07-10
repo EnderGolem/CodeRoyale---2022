@@ -212,7 +212,21 @@ namespace AiCup22.Custom
             target = _target;
         }
     }
-    
+    public class RunToDestinationDirection : RunToDestination
+    {
+        protected Vec2 direction;
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
+        {
+            Unit unit = perception.MyUnints[0];
+            var dir = destination.Subtract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed);
+            var enemy = direction.Subtract(unit.Position);
+            return new UnitOrder(dir, enemy, null);
+        }
+        public virtual void SetDirection(Vec2 dir) //Измени везде название тут
+        {
+            direction = dir;
+        }
+    }
     public class ShootToPoint : AimingToPoint
     {
         public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
