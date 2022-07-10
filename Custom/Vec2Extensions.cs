@@ -6,9 +6,9 @@ namespace AiCup22
     {
         public static Vec2 Add(this Vec2 a, Vec2 b)
         {
-            return new Vec2(a.X - b.X, a.Y - b.Y);
+            return new Vec2(a.X + b.X, a.Y + b.Y);
         }
-        public static Vec2 Subtract(this Vec2 a, Vec2 b)
+        public static Vec2 Substract(this Vec2 a, Vec2 b)
         {
             return new Vec2(a.X - b.X, a.Y - b.Y);
         }
@@ -28,7 +28,9 @@ namespace AiCup22
 
         public static Vec2 Normalize(this Vec2 a)
         {
-            double distance = a.Distance(new Vec2(0,0));
+            double distance = a.Distance(new Vec2(0, 0));
+            if (distance == 0) //Математически такое не должно быть, но в коде такое может передаться
+                return a;
             a.X = a.X / distance;
             a.Y = a.Y / distance;
             return a;
@@ -53,5 +55,26 @@ namespace AiCup22
         {
             return new Vec2(-a.Y * Y / a.X, Y);
         }
+        /// <summary>
+        /// Находит "Зеркальное" отображение точки b относительно a. 
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        public static Vec2 FindMirrorPoint(this Vec2 a, Vec2 b)
+        {
+            return a.Add(b.Substract(a).Multi(-1));
+        }
+        public static Vec2 GetRandomVec()
+        {
+            System.Random rnd = new System.Random();
+            return new Vec2(rnd.Next(), rnd.Next());
+        }
+        public static Vec2 GetRandomVecNormalize()
+        {
+            return GetRandomVec().Normalize();
+        }
+
     }
+
 }

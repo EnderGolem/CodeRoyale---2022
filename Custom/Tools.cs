@@ -32,26 +32,26 @@ namespace AiCup22.Custom
 
             for (int i = 0; i < obstacles.Length; i++)
             {
-                if(ignoreLowObstacles && obstacles[i].CanShootThrough)
+                if (ignoreLowObstacles && obstacles[i].CanShootThrough)
                     continue;
                 Vec2 sp = startPoint;
                 Vec2 ep = endPoint;
-                sp = sp.Subtract(obstacles[i].Position);
-                ep = ep.Subtract(obstacles[i].Position);
+                sp = sp.Substract(obstacles[i].Position);
+                ep = ep.Substract(obstacles[i].Position);
 
-                Vec2 d = ep.Subtract(sp);
-                
-                double a = d.X*d.X + d.Y*d.Y;
-                double b = 2*(sp.X*d.X + sp.Y*d.Y);
-                double c = sp.X*sp.X + sp.Y*sp.Y - obstacles[i].Radius*obstacles[i].Radius;
+                Vec2 d = ep.Substract(sp);
+
+                double a = d.X * d.X + d.Y * d.Y;
+                double b = 2 * (sp.X * d.X + sp.Y * d.Y);
+                double c = sp.X * sp.X + sp.Y * sp.Y - obstacles[i].Radius * obstacles[i].Radius;
 
                 bool flag;
                 if (-b < 0)
                     flag = (c < 0);
-                else if (-b < (2*a))
-                 flag = ((4*a*c - b*b) < 0);
+                else if (-b < (2 * a))
+                    flag = ((4 * a * c - b * b) < 0);
                 else
-                flag = (a+b+c < 0);
+                    flag = (a + b + c < 0);
 
                 if (flag)
                 {
@@ -77,22 +77,30 @@ namespace AiCup22.Custom
         /// <param name="obstacles"></param>
         /// <param name="ignoreLowObstacles"></param>
         /// <returns></returns>
-        public static Obstacle? RaycastObstacle2Point(Vec2 startPoint, Vec2 endPoint,double width, Obstacle[] obstacles,
-            bool ignoreLowObstacles)
+        public static Obstacle? RaycastObstacle2Point(Vec2 startPoint, Vec2 endPoint, double width, Obstacle[] obstacles,
+            bool ignoreLowObstacles, DebugInterface debugInterface = null)
         {
             Straight s = new Straight();
-            var normal = endPoint.Subtract(startPoint);
+            var normal = endPoint.Substract(startPoint);
             s.SetByNormalAndPoint(normal, startPoint);
             var directive = s.GetDirective().Normalize();
-            var point1 = startPoint.Add(directive.Multi(width / 2));
-            var point2 = startPoint.Add(directive.Multi(-width / 2));
-            var o = RaycastObstacle(point1, endPoint, obstacles, ignoreLowObstacles);
-            if (o.HasValue)
+
+            var point1 = startPoint.Substract(directive.Multi(width / 2));
+            var point2 = startPoint.Substract(directive.Multi(-width / 2));
+            var o1 = RaycastObstacle(point1, endPoint, obstacles, ignoreLowObstacles);
+            var o2 = RaycastObstacle(point2, endPoint, obstacles, ignoreLowObstacles);
+            if (debugInterface != null)
             {
-                return o;
+                debugInterface.AddSegment(point1, endPoint, 0.2, new Debugging.Color(1, 0, 1, 0.5)); //Фиолетовый
+                debugInterface.AddSegment(point2, endPoint, 0.2, new Debugging.Color(0, 1, 1, 0.5)); //Синий
             }
-            o = RaycastObstacle(point2, endPoint, obstacles, ignoreLowObstacles);
-            return o;
+            if (!o1.HasValue)
+                return o2;
+            if (!o2.HasValue)
+                return o1;
+            if( o1.Value.Position.SqrDistance(startPoint) < o2.Value.Position.SqrDistance(startPoint))            
+                return o1;            
+            return o2;
         }
         /// <summary>
         /// Определяет принадлежит ли точка полю обзора
@@ -102,15 +110,16 @@ namespace AiCup22.Custom
         /// <param name="viewDistance"></param>
         /// <param name="viewAngle"></param>
         /// <returns></returns>
-        public static bool BelongConeOfVision(Vec2 point,Vec2 startPos,Vec2 viewDirection, double viewDistance, double viewAngle)
+        public static bool BelongConeOfVision(Vec2 point, Vec2 startPos, Vec2 viewDirection, double viewDistance, double viewAngle)
         {
             if (!BelongDirection(point,startPos,viewDirection,viewAngle))
             {
                 return false;
             }
 
-            return startPos.Distance(point)<viewDistance;
+            return startPos.Distance(point) < viewDistance;
         }
+
 
         public static bool BelongDirection(Vec2 point,Vec2 startPos,Vec2 viewDirection, double viewAngle)
         {
@@ -125,7 +134,7 @@ namespace AiCup22.Custom
             return (Math.Atan2(point.Y - yourPosition.Y,
                 point.X - yourPosition.X) * (180 / Math.PI));
         }
-        
+
         public static double AngleDiff(double angle1, double angle2)
         {
             return ((((angle1 - angle2) % 360) + 540) % 360) - 180;
