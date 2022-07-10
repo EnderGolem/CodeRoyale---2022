@@ -12,7 +12,6 @@ namespace AiCup22.Custom
         private LookAroundAction _lookAroundAction;
         private SteeringRunToDestination _steeringRunToDestination;
         private AimToDestinationDirection _aimToDestinationDirection;
-
         private SteeringShootToDestinationDirection _steeringShootToDestinationDirection;
         private SteeringAimToDestinationDirection _steeringAimToDestinationDirection;
         public BattleBrain()
@@ -20,15 +19,11 @@ namespace AiCup22.Custom
             _lookAroundAction = new LookAroundAction();
             _steeringRunToDestination = new SteeringRunToDestination();
             _aimToDestinationDirection = new AimToDestinationDirection();
-
             _steeringAimToDestinationDirection = new SteeringAimToDestinationDirection();
             _steeringShootToDestinationDirection = new SteeringShootToDestinationDirection();
-
-
             allStates.Add(_lookAroundAction);
             allStates.Add(_steeringRunToDestination);
             allStates.Add(_aimToDestinationDirection);
-
             allStates.Add(_steeringAimToDestinationDirection);
             allStates.Add(_steeringShootToDestinationDirection);
         }
@@ -63,7 +58,6 @@ namespace AiCup22.Custom
             //_steeringAimToDestinationDirection.SetDirection(enemy.Position);
             //return _steeringAimToDestinationDirection;
 
-
             debugInterface.AddRing(perception.MyUnints[id].Position, safeZone, 0.5, new Color(0, 1, 0.5, 1));
             var enemy = perception.EnemyUnints[bestEnemyIndex];
 
@@ -86,7 +80,6 @@ namespace AiCup22.Custom
                 _steeringAimToDestinationDirection.SetDirection(enemy.Position);
                 return _steeringAimToDestinationDirection;
             }
-
             else  //Отступаем
             {
                 System.Console.WriteLine("RUUUUN id: " + id);
