@@ -59,10 +59,9 @@ namespace AiCup22
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <returns></returns>
-        public static Vec2 FindMirror(this Vec2 a, Vec2 b)
+        public static Vec2 FindMirrorPoint(this Vec2 a, Vec2 b)
         {
-            return a.Substract(a.Substract(b).Multi(-1));
-
+            return a.Add(b.Substract(a).Multi(-1));
         }
     }
 }
