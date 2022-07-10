@@ -102,17 +102,17 @@ namespace AiCup22.Custom
                     }
                 }
 
-                Vec2 debugTextPos = debugInterface.GetState().Camera.Center.Add(offset);
+                Vec2 debugTextPos = debugInterface.GetState().Camera.Center.Substract(offset);
                 debugInterface.Add(new DebugData.PlacedText(debugTextPos,
                     $"Health: {player.Health}",
                     new Vec2(0.5, 0.5), textsize, textColor));
-                debugInterface.Add(new DebugData.PlacedText(debugTextPos.Subtract(new Vec2(0, textsize / 2)),
+                debugInterface.Add(new DebugData.PlacedText(debugTextPos.Substract(new Vec2(0, textsize / 2)),
                     $"Shield: {player.Shield}",
                     new Vec2(0.5, 0.5), textsize, textColor));
-                debugInterface.Add(new DebugData.PlacedText(debugTextPos.Subtract(new Vec2(0, 2 * textsize / 2)),
+                debugInterface.Add(new DebugData.PlacedText(debugTextPos.Substract(new Vec2(0, 2 * textsize / 2)),
                     $"Potions: {player.ShieldPotions}",
                     new Vec2(0.5, 0.5), textsize, textColor));
-                debugInterface.Add(new DebugData.PlacedText(debugTextPos.Subtract(new Vec2(0, 3 * textsize / 2)),
+                debugInterface.Add(new DebugData.PlacedText(debugTextPos.Substract(new Vec2(0, 3 * textsize / 2)),
                     $"Velocity: {player.Velocity}",
                     new Vec2(0.5, 0.5), textsize, textColor));
                 
