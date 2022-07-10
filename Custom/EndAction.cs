@@ -97,20 +97,6 @@ namespace AiCup22.Custom
     }
 
 
-
-    public class StayShootToEnemy : EndAction
-    {
-        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
-        {
-            ActionOrder action = new ActionOrder.Aim(true);
-            Unit unit = perception.MyUnints[0];
-            Unit target = perception.EnemyUnints[0];
-            Vec2 enemy = target.Position.Subtract(unit.Position);
-            return new UnitOrder(new Vec2(0, 0),
-             enemy, action);
-        }
-    }
-
     public class RunToDestination : EndAction
     {
         protected Vec2 destination;
@@ -192,26 +178,6 @@ namespace AiCup22.Custom
         }
     }
 
-    public class AimingToPoint : EndAction
-    {
-        protected Vec2 target;
-        public AimingToPoint()
-        {
-            target = new Vec2();
-        }
-        public virtual UnitOrder Process(Perception perception, DebugInterface debugInterface)
-        {
-
-            ActionOrder action = new ActionOrder.Aim(false);
-            Unit unit = perception.MyUnints[0];
-            Vec2 enemy = target.Subtract(unit.Position);
-            return new UnitOrder(new Vec2(), enemy, action);
-        }
-        public virtual void SetTarget(Vec2 _target)
-        {
-            target = _target;
-        }
-    }
     public class RunToDestinationDirection : RunToDestination
     {
         protected Vec2 direction;
@@ -250,17 +216,6 @@ namespace AiCup22.Custom
             return new UnitOrder(dir, enemy, action);
         }
 
-    }
-
-    public class ShootToPoint : AimingToPoint
-    {
-        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
-        {
-            ActionOrder action = new ActionOrder.Aim(true);
-            Unit unit = perception.MyUnints[0];
-            Vec2 enemy = target.Subtract(unit.Position);
-            return new UnitOrder(new Vec2(), enemy, action);
-        }
     }
     public class SteeringAimToDestination : SteeringRunToDestination
     {
