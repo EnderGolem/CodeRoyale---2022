@@ -4,7 +4,7 @@ using AiCup22.Model;
 
 namespace AiCup22.Custom
 {
-    public class EndAction:Processable
+    public class EndAction : Processable
     {
         private int _lastActivationTick;
         private int _lastDeactivationTick;
@@ -48,7 +48,7 @@ namespace AiCup22.Custom
 
         public virtual UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
-           return new UnitOrder();
+            return new UnitOrder();
         }
     }
 
@@ -115,7 +115,7 @@ namespace AiCup22.Custom
     {
         protected Vec2 destination;
 
-        public override UnitOrder Process(Perception perception,DebugInterface debugInterface)
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
             Console.WriteLine("RunToDestination Process");
             Unit unit = perception.MyUnints[0];
@@ -133,7 +133,7 @@ namespace AiCup22.Custom
     public class SteeringRunToDestination : RunToDestination
     {
 
-        public override UnitOrder Process(Perception perception,DebugInterface debugInterface)
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
 
             Console.WriteLine("SteeringRunToDestination Process");
@@ -169,7 +169,7 @@ namespace AiCup22.Custom
             }
         }
     }
-    public class UseShield:EndAction
+    public class UseShield : EndAction
     {
         public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
@@ -177,7 +177,7 @@ namespace AiCup22.Custom
         }
 
     }
-    public class PickupLoot:EndAction
+    public class PickupLoot : EndAction
     {
         private int pickableLootId;
         public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
@@ -192,7 +192,7 @@ namespace AiCup22.Custom
         }
     }
 
-    public class AimingToPoint:EndAction
+    public class AimingToPoint : EndAction
     {
         protected Vec2 target;
         public AimingToPoint()
@@ -227,6 +227,31 @@ namespace AiCup22.Custom
             direction = dir;
         }
     }
+    public class AimToDestinationDirection : RunToDestinationDirection
+    {
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
+        {
+            Unit unit = perception.MyUnints[0];
+            var dir = destination.Subtract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed).Multi(-1);
+            var enemy = direction.Subtract(unit.Position);
+            ActionOrder action = new ActionOrder.Aim(false);
+            return new UnitOrder(dir, enemy, action);
+        }
+
+    }
+    public class ShootToDestinationDirection : RunToDestinationDirection
+    {
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
+        {
+            Unit unit = perception.MyUnints[0];
+            var dir = destination.Subtract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed).Multi(-1);
+            var enemy = direction.Subtract(unit.Position);
+            ActionOrder action = new ActionOrder.Aim(true);
+            return new UnitOrder(dir, enemy, action);
+        }
+
+    }
+
     public class ShootToPoint : AimingToPoint
     {
         public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
