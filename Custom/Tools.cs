@@ -36,10 +36,10 @@ namespace AiCup22.Custom
                     continue;
                 Vec2 sp = startPoint;
                 Vec2 ep = endPoint;
-                sp = sp.Subtract(obstacles[i].Position);
-                ep = ep.Subtract(obstacles[i].Position);
+                sp = sp.Substract(obstacles[i].Position);
+                ep = ep.Substract(obstacles[i].Position);
 
-                Vec2 d = ep.Subtract(sp);
+                Vec2 d = ep.Substract(sp);
 
                 double a = d.X * d.X + d.Y * d.Y;
                 double b = 2 * (sp.X * d.X + sp.Y * d.Y);
@@ -81,12 +81,12 @@ namespace AiCup22.Custom
             bool ignoreLowObstacles, DebugInterface debugInterface = null)
         {
             Straight s = new Straight();
-            var normal = endPoint.Subtract(startPoint);
+            var normal = endPoint.Substract(startPoint);
             s.SetByNormalAndPoint(normal, startPoint);
             var directive = s.GetDirective().Normalize();
 
-            var point1 = startPoint.Add(directive.Multi(width / 2));
-            var point2 = startPoint.Add(directive.Multi(-width / 2));
+            var point1 = startPoint.Substract(directive.Multi(width / 2));
+            var point2 = startPoint.Substract(directive.Multi(-width / 2));
             var o1 = RaycastObstacle(point1, endPoint, obstacles, ignoreLowObstacles);
             var o2 = RaycastObstacle(point2, endPoint, obstacles, ignoreLowObstacles);
             if (debugInterface != null)
