@@ -133,17 +133,13 @@ namespace AiCup22.Custom
                 perpS.SetByNormalAndPoint(dir, obst.Value.Position);
                 var dirS = new Straight(dir, unit.Position);
                 var intersectPoint = dirS.GetIntersection(perpS);
-
-                var perpDir = obst.Value.Position.Subtract(intersectPoint.Value);
-                var targetPos = obst.Value.Position.Add(perpDir.Normalize().Multi(obst.Value.Radius + 3 * perception.Constants.UnitRadius));
-                var targetDir = targetPos.Subtract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed);
-               /* Console.WriteLine($"Прямая перпендикулярная цели: {perpS}");
-                Console.WriteLine($"Прямая до цели: {dirS}");
-                Console.WriteLine($"Точка пересечения: {intersectPoint}");
-                Console.WriteLine($"Центр препятствия: {obst.Value.Position}");
-                Console.WriteLine($"Перпендикулярный вектор: {perpDir}");
-                Console.WriteLine($"Целевая позиция: {targetPos}");
-                Console.WriteLine($"Целевой вектор: {targetDir}");*/
+                /* Console.WriteLine($"Прямая перпендикулярная цели: {perpS}");
+                 Console.WriteLine($"Прямая до цели: {dirS}");
+                 Console.WriteLine($"Точка пересечения: {intersectPoint}");
+                 Console.WriteLine($"Центр препятствия: {obst.Value.Position}");
+                 Console.WriteLine($"Перпендикулярный вектор: {perpDir}");
+                 Console.WriteLine($"Целевая позиция: {targetPos}");
+                 Console.WriteLine($"Целевой вектор: {targetDir}");*/
                 
 
                 var perpDir = obst.Value.Position.Substract(intersectPoint.Value);
