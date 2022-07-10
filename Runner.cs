@@ -30,7 +30,7 @@ namespace AiCup22
                     writer.Flush();
                     break;
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
 
                 }

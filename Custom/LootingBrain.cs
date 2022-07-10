@@ -10,9 +10,9 @@ namespace AiCup22.Custom
     public class LootingBrain : Brain
     {
         private const double eps = 0.000001;
-        private const int kShieldLoot = 120;
-        private const int kAmmoLoot = 400;
-        private const int kBowLoot = 2000;
+        private const int kShieldLoot = 45;
+        private const int kAmmoLoot = 800;
+        private const int kBowLoot = 50000;
 
         private RunToDestination _runToDestination;
         private PickupLoot _pickupLoot;
@@ -22,6 +22,12 @@ namespace AiCup22.Custom
         private Vec2 desiredDestination;
         private double desiredPoints;
 
+
+        /* Скрыл, так как мне надоели предупреждения
+           private Loot desireLoot;
+           private Vec2 desiredDestination;
+           private double desiredPoints;
+        */
         public LootingBrain()
         {
             _runToDestination = new SteeringRunToDestination();
@@ -31,6 +37,7 @@ namespace AiCup22.Custom
             allStates.Add(_pickupLoot);
             allStates.Add(_useShield);
         }
+
 
         protected override Processable ChooseNewState(Perception perception, DebugInterface debugInterface)
         {
@@ -42,17 +49,16 @@ namespace AiCup22.Custom
             double bestPoints = double.MinValue;
             Unit unit = perception.MyUnints[id];
             List<int> lootToRemove = new List<int>();
-            //Console.WriteLine(Tools.IsInside(-10,110,-130));
             foreach (var loot in perception.MemorizedLoot)
             {
                 if (loot.Value.Position.SqrDistance(unit.Position) > 2000 ||
-                    (Tools.BelongConeOfVision(loot.Value.Position,unit.Position,
-                        unit.Direction,perception.Constants.ViewDistance,
+                    (Tools.BelongConeOfVision(loot.Value.Position, unit.Position,
+                        unit.Direction, perception.Constants.ViewDistance,
                         perception.Constants.FieldOfView) &&
                      perception.Game.Loot.Count(
-                         (Loot l)=>l.Id==loot.Key && 
-                                   l.Position.X == loot.Value.Position.X 
-                                   && l.Position.Y == loot.Value.Position.Y)==0))
+                         (Loot l) => l.Id == loot.Key &&
+                                   l.Position.X == loot.Value.Position.X
+                                   && l.Position.Y == loot.Value.Position.Y) == 0))
                 {
                     lootToRemove.Add(loot.Key);
                     continue;
@@ -60,7 +66,9 @@ namespace AiCup22.Custom
 
                 double curPoints = CalculateLootValue(perception, loot.Value);
 
+
                 debugInterface.AddPlacedText(loot.Value.Position,Math.Round(curPoints).ToString(),new Vec2(0.5,0.5), 3,new Color(1,0,0.5,1));
+
                 if (bestPoints < curPoints)
                 {
                     bestPoints = curPoints;
@@ -68,14 +76,13 @@ namespace AiCup22.Custom
                     bestLoot = loot.Value;
                 }
             }
-            /* double shieldPoints = perception.MyUnints[id].Shield < 100 ? 300 : -1000; //Чтобы пил, нужна формула, ну или перенести мозгу, но хз..
-             System.Console.WriteLine("ShieldPoints " + shieldPoints);
-             System.Console.WriteLine("bestPoints " + bestPoints);
-             if (shieldPoints > bestPoints && perception.MyUnints[id].Action == null)
-             {
-                 return _useShield.Process(perception, id);
-             }
-            */
+            double shieldPoints = perception.MyUnints[id].Shield < 140 ? 1500 : 0; //Чтобы пил, нужна формула, ну или перенести мозгу, но хз..
+      
+            if (shieldPoints > bestPoints && perception.MyUnints[id].ShieldPotions > 0 && perception.MyUnints[id].Action == null)
+            {
+                return _useShield;
+            }
+
 
             for (int i = 0; i < lootToRemove.Count; i++)
             {
@@ -94,8 +101,9 @@ namespace AiCup22.Custom
             }
             else
             {
-                debugInterface.AddRing(bestLoot.Position,1,0.5,new Color(0.5,0.5,0,1));
+                debugInterface.AddRing(bestLoot.Position, 1, 0.5, new Color(0.5, 0.5, 0, 1));
                 _runToDestination.SetDestination(bestLoot.Position);
+
                 return _runToDestination;
             }
         }

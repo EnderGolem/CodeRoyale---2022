@@ -98,6 +98,7 @@ namespace AiCup22.Custom
             }
 
             value += healthValueKoefBattle * unit.Health + shieldValueKoefBattle * unit.Shield;
+            value -= 1000;
             return value;
         }
         
