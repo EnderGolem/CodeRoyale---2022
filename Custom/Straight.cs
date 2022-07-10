@@ -82,7 +82,16 @@ namespace AiCup22.Custom
             if (IsParallel(s)) return null;
 
             double x = (s.c * b - c * s.b) / (a * s.b - s.a * b);
-            double y = -(a * x + c) / b;
+            double y = 0;
+            if (b != 0)
+            {
+                y = -(a * x + c) / b;
+            }
+            else
+            {
+                y = -(s.a * x + s.c) / s.b;
+            }
+            
             
             return new Vec2(x,y);
         }
