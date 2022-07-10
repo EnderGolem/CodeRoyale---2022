@@ -7,15 +7,15 @@ namespace AiCup22.Custom
 {
     public interface Processable
     {
-        public int LastActivationTick { get;  set; }
+        public int LastActivationTick { get; set; }
 
-        public int LastDeactivationTick { get;set; }
+        public int LastDeactivationTick { get; set; }
         public bool IsActive { get; set; }
         public void Activate(int currentGameTick);
 
         public void Deactivate(int currentGameTick);
 
-        public UnitOrder Process(Perception perception,DebugInterface debugInterface);
+        public UnitOrder Process(Perception perception, DebugInterface debugInterface);
     }
 
     public class Brain : Processable
@@ -25,9 +25,6 @@ namespace AiCup22.Custom
 
         protected List<Processable> allStates;
 
-        RunToCenterRadar runToCenterRadar;
-        RunToCenter runToCenter;
-        StayShootToEnemy stayShootToEnemy;
 
         /// <summary>
         /// Здесь дожен быть какой - то общий список всех конечных действий на выбор данного мозга
@@ -35,9 +32,6 @@ namespace AiCup22.Custom
         /// <param name="perception"></param>
         public Brain()
         {
-            runToCenterRadar = new RunToCenterRadar();
-            runToCenter = new RunToCenter();
-            stayShootToEnemy = new StayShootToEnemy();
             allStates = new List<Processable>();
         }
 
@@ -47,12 +41,9 @@ namespace AiCup22.Custom
 
         public bool IsActive { get; set; }
 
-        public virtual UnitOrder Process(Perception perception,DebugInterface debugInterface)
+        public virtual UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
-            if (perception.EnemyUnints.Count == 0)
-                return runToCenterRadar.Process(perception, 0);
-            else
-                return stayShootToEnemy.Process(perception, 0);
+            throw new System.NotImplementedException();
         }
 
         public void Activate(int currentGameTick)
