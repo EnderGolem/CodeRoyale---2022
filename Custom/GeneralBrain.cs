@@ -75,7 +75,7 @@ namespace AiCup22.Custom
             }
             else
             {
-                return perception.Game.CurrentTick - _radarBrain.LastDeactivationTick+50;
+                return perception.Game.CurrentTick - _radarBrain.LastDeactivationTick + 50;
             }
         }
         
@@ -98,7 +98,8 @@ namespace AiCup22.Custom
             }
 
             value += healthValueKoefBattle * unit.Health + shieldValueKoefBattle * unit.Shield;
-            value -= 1000;
+            value -= 150;
+
             return value;
         }
         
