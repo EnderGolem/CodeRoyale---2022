@@ -17,12 +17,6 @@ namespace AiCup22.Custom
         private RunToDestination _runToDestination;
         private PickupLoot _pickupLoot;
         private UseShield _useShield;
-        private LookAroundAction _lookAroundAction;
-        private Loot desireLoot;
-        private Vec2 desiredDestination;
-        private double desiredPoints;
-
-
         /* Скрыл, так как мне надоели предупреждения
            private Loot desireLoot;
            private Vec2 desiredDestination;
@@ -33,16 +27,12 @@ namespace AiCup22.Custom
             _runToDestination = new SteeringRunToDestination();
             _pickupLoot = new PickupLoot();
             _useShield = new UseShield();
-            allStates.Add(_runToDestination);
-            allStates.Add(_pickupLoot);
-            allStates.Add(_useShield);
         }
 
-
-        protected override Processable ChooseNewState(Perception perception, DebugInterface debugInterface)
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
             if (perception.Game.Loot.Length == 0)   //Проверка, вдруг вообще ничего нет
-                return _lookAroundAction;
+                return new UnitOrder(new Vec2(), new Vec2(), null);
 
             int bestLootIndex = -1;
             Loot bestLoot = new Loot();
@@ -80,7 +70,7 @@ namespace AiCup22.Custom
       
             if (shieldPoints > bestPoints && perception.MyUnints[id].ShieldPotions > 0 && perception.MyUnints[id].Action == null)
             {
-                return _useShield;
+                return _useShield.Process(perception, id);
             }
 
 
@@ -97,17 +87,15 @@ namespace AiCup22.Custom
                 //Console.WriteLine("Start pickup!!!");
                 _pickupLoot.SetPickableLootId(bestLoot.Id);
                 perception.MemorizedLoot.Remove(bestLoot.Id);
-                return _pickupLoot;
+                return _pickupLoot.Process(perception, id);
             }
             else
             {
                 debugInterface.AddRing(bestLoot.Position, 1, 0.5, new Color(0.5, 0.5, 0, 1));
                 _runToDestination.SetDestination(bestLoot.Position);
-
-                return _runToDestination;
+                return _runToDestination.Process(perception, debugInterface, id);
             }
         }
-        
         private double CalculateAmmoValue(Perception perception, Item.Ammo ammo)
         {
             double procentage = perception.MyUnints[id].Ammo[ammo.WeaponTypeIndex] / perception.Constants.Weapons[ammo.WeaponTypeIndex].MaxInventoryAmmo * 100;
