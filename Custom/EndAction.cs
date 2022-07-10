@@ -299,6 +299,11 @@ namespace AiCup22.Custom
         {
             var unit = perception.MyUnints[0];
             Vec2 dir = new Vec2(-unit.Direction.Y, unit.Direction.X);
+            if (perception.MyUnints[0].Shield < 150)
+            {
+                ActionOrder action = new ActionOrder.UseShieldPotion();
+                return new UnitOrder(dir, dir, action);
+            }
             return new UnitOrder(dir, dir, null);
         }
     }
