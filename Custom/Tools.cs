@@ -104,20 +104,22 @@ namespace AiCup22.Custom
         /// <returns></returns>
         public static bool BelongConeOfVision(Vec2 point,Vec2 startPos,Vec2 viewDirection, double viewDistance, double viewAngle)
         {
-            var pointAngle = AngleToPoint(startPos, point);
-            var viewDirAngle = AngleToPoint(new Vec2(0, 0), viewDirection);
-            /*Console.WriteLine($"Point angle: {pointAngle}");
-            Console.WriteLine($"View angle: {viewDirAngle}");
-            Console.WriteLine($"View angle: {viewAngle}");
-            Console.WriteLine(IsInside(viewDirAngle,viewAngle,pointAngle));*/
-            if (!IsInside(viewDirAngle,viewAngle,pointAngle))
+            if (!BelongDirection(point,startPos,viewDirection,viewAngle))
             {
                 return false;
             }
 
             return startPos.Distance(point)<viewDistance;
         }
-        
+
+        public static bool BelongDirection(Vec2 point,Vec2 startPos,Vec2 viewDirection, double viewAngle)
+        {
+            var pointAngle = AngleToPoint(startPos, point);
+            var viewDirAngle = AngleToPoint(new Vec2(0, 0), viewDirection);
+
+            return IsInside(viewDirAngle, viewAngle, pointAngle);
+        }
+
         public static double AngleToPoint(Vec2 yourPosition, Vec2 point)
         {
             return (Math.Atan2(point.Y - yourPosition.Y,

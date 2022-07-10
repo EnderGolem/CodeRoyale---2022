@@ -27,18 +27,46 @@ namespace AiCup22.Custom
         public List<Unit> MyUnints => _myUnints;
         public List<Unit> EnemyUnints => _enemyUnints;
 
+        protected Vec2[] directions;
+       /// <summary>
+       /// Веса направлений
+       /// </summary>
+        protected List<double> directionDangers;
+
         public List<Obstacle> CloseObstacles => closeObstacles;
 
+        public Vec2[] Directions => directions;
+
+        public List<double> DirectionDangers => directionDangers;
         public Dictionary<int, Loot> MemorizedLoot => memorizedLoot;
 
+        public Dictionary<int, (int,double, Unit)> MemorizedEnemies => memorizedEnemies;
+
         private Dictionary<int,Loot> memorizedLoot;
+        /// <summary>
+        /// Список запомненных противников
+        /// ключ - Id юнита
+        /// значение - (последний тик в котором юнит был виден,рассчитанная опасность противника, сам юнит) 
+        /// </summary>
+        private Dictionary<int, (int, double ,Unit)> memorizedEnemies;
 
         private List<Obstacle> closeObstacles;
         public Perception(Constants consts)
         {
             _constants = consts;
             memorizedLoot = new Dictionary<int, Loot>();
+            memorizedEnemies = new Dictionary<int, (int,double, Unit)>();
             closeObstacles = new List<Obstacle>();
+            directions = new Vec2[8];
+            directions[0] = new Vec2(1,0);
+            directions[1] = new Vec2(0.5,0.5);
+            directions[2] = new Vec2(0,1);
+            directions[3] = new Vec2(-0.5,0.5);
+            directions[4] = new Vec2(-1,0);
+            directions[5] = new Vec2(-0.5,-0.5);
+            directions[6] = new Vec2(0,-1);
+            directions[7] = new Vec2(0.5,-0.5);
+            directionDangers = new List<double>(directions.Length);
         }
 
         public void Analyze(Game game, DebugInterface debugInterface)
@@ -53,6 +81,7 @@ namespace AiCup22.Custom
                 if (unit.PlayerId != game.MyId)
                 {
                     _enemyUnints.Add(unit);
+                    memorizedEnemies[unit.Id] = (game.CurrentTick,EstimateEnemyDanger(unit),unit);
                     continue;
                 }
 
@@ -68,7 +97,7 @@ namespace AiCup22.Custom
             {
                 CalculateCloseObstacles(_myUnints[0].Position,obstacleSearchRadius);
             }
-
+            EstimateDirections(game,debugInterface);
             DebugOutput(game, debugInterface);
         }
 
@@ -80,6 +109,50 @@ namespace AiCup22.Custom
                 if (_constants.Obstacles[i].Position.SqrDistance(startPosition)<distance*distance)
                 {
                     closeObstacles.Add(_constants.Obstacles[i]);
+                }
+            }
+        }
+
+        public double EstimateEnemyDanger(Unit unit)
+        {
+            double weaponDanger = (unit.Weapon+1)*50 ?? 0;
+            double ammoDanger = weaponDanger*unit.Ammo[unit.Weapon.Value]/_constants.Weapons[unit.Weapon.Value].MaxInventoryAmmo;
+            double healthDanger = unit.Health;
+            double shieldDanger = unit.Shield;
+            return weaponDanger + ammoDanger + healthDanger + shieldDanger;
+        }
+
+        protected void EstimateDirections(Game game, DebugInterface debugInterface)
+        {
+            directionDangers.Clear();
+            for (int i = 0; i < directions.Length; i++)
+            {
+                directionDangers.Add(0);
+            }
+            
+            foreach (var enemy in MemorizedEnemies)
+            {
+                if (game.CurrentTick - enemy.Value.Item1 > 200)
+                {
+                    continue;
+                }
+
+                for (int i = 0; i < directions.Length; i++)
+                {
+                    if (Tools.BelongDirection(enemy.Value.Item3.Position,
+                        _myUnints[0].Position, directions[i].Multi(-1), 180/directions.Length))
+                    {
+                        directionDangers[i] += enemy.Value.Item2;
+                        break;
+                    }
+                }
+            }
+            
+            for (int i = 0; i < directions.Length; i++)
+            {
+                if (Tools.CurrentZoneDistance(game.Zone,_myUnints[0].Position.Add(directions[i].Normalize().Multi(30)))<0)
+                {
+                    directionDangers[i] += 500;
                 }
             }
         }
@@ -128,6 +201,21 @@ namespace AiCup22.Custom
                 foreach (var o in closeObstacles)
                 {
                     debugInterface.AddRing(o.Position,0.3,0.3,new Color(0.8,0.8,0,1));
+                }
+
+                foreach (var enemy in memorizedEnemies)
+                {
+                    debugInterface.AddRing(enemy.Value.Item3.Position,0.3,0.3,new Color(1,0,0,1));
+                    debugInterface.AddPlacedText(enemy.Value.Item3.Position,
+                        enemy.Value.Item2.ToString(),new Vec2(0.5,0.5), 5,new Color(1,0,0,1));
+                }
+
+                for (int i = 0; i < directions.Length; i++)
+                {
+                    Console.WriteLine($"{i}. {directionDangers[i]}");
+                    Debug.AddPlacedText(_myUnints[0].Position.Add(directions[i].Multi(30)),
+                        directionDangers[i].ToString(),
+                        new Vec2(0.5,0.5),5,new Color(1,0.2,1,0.7) );
                 }
             }
         }

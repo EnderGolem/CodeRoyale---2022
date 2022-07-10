@@ -14,15 +14,18 @@ namespace AiCup22.Custom
         private LootingBrain _lootingBrain;
         private BattleBrain _battleBrain;
         private RadarBrain _radarBrain;
+        private StaySafeBrain _staySafe;
 
         public GeneralBrain()
         {
             _lootingBrain = new LootingBrain();
             _battleBrain = new BattleBrain();
             _radarBrain = new RadarBrain();
+            _staySafe = new StaySafeBrain();
             allStates.Add(_lootingBrain);
             allStates.Add(_battleBrain);
             allStates.Add(_radarBrain);
+            allStates.Add(_staySafe);
         }
 
         protected override Processable ChooseNewState(Perception perception, DebugInterface debugInterface)
@@ -71,7 +74,7 @@ namespace AiCup22.Custom
         {
             if (_radarBrain.IsActive)
             {
-                return 200 - (perception.Game.CurrentTick - _radarBrain.LastActivationTick);
+                return 200 - 3*(perception.Game.CurrentTick - _radarBrain.LastActivationTick);
             }
             else
             {
@@ -98,7 +101,7 @@ namespace AiCup22.Custom
             }
 
             value += healthValueKoefBattle * unit.Health + shieldValueKoefBattle * unit.Shield;
-            value -= 1000;
+            
             return value;
         }
         
