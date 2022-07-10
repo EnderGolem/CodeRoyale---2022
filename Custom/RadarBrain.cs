@@ -8,11 +8,13 @@ namespace AiCup22.Custom
         public RadarBrain()
         {
             _lookAroundAction = new LookAroundAction();
+            allStates.Add(_lookAroundAction);
         }
 
-        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
+        protected override Processable ChooseNewState(Perception perception, DebugInterface debugInterface)
         {
-            return _lookAroundAction.Process(perception,0);
+            return _lookAroundAction;
         }
+        
     }
 }

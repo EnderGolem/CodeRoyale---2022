@@ -10,20 +10,28 @@ namespace AiCup22.Custom
 
         ShootToPoint _shootToPoing;
         AimingToPoint _aimingToPoint;
+        private LookAroundAction _lookAroundAction;
         SteeringRunToDestination _steeringRunToDestination;
         SteeringAimToDestination _steeringAimToDestination;
-
+        
         public BattleBrain()
         {
             _shootToPoing = new ShootToPoint();
             _aimingToPoint = new AimingToPoint();
+            _lookAroundAction = new LookAroundAction();
             _steeringRunToDestination = new SteeringRunToDestination();
             _steeringAimToDestination = new SteeringAimToDestination();
+            allStates.Add(_shootToPoing);
+            allStates.Add(_aimingToPoint);
+            allStates.Add(_lookAroundAction);
+            allStates.Add(_steeringAimToDestination);
+            allStates.Add(_steeringRunToDestination);
         }
-        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
+
+        protected override Processable ChooseNewState(Perception perception, DebugInterface debugInterface)
         {
             if (perception.EnemyUnints.Count == 0)   //Проверка, вдруг вообще ничего нет
-                return new UnitOrder(new Vec2(), new Vec2(), null);
+                return _lookAroundAction;
             double bestPoints = double.MinValue;
             int bestEnemyIndex = -1;
             double point = 0;
@@ -37,11 +45,19 @@ namespace AiCup22.Custom
                     bestPoints = point;
                 }
             }
+            if (perception.MyUnints[id].Aim == 1 && Tools.RaycastObstacle(perception.MyUnints[id].Position, (perception.EnemyUnints[bestEnemyIndex].Position),
+                    perception.Constants.Obstacles,true) == null)
+            {
+                _shootToPoing.SetTarget(perception.EnemyUnints[bestEnemyIndex].Position);
+                return _shootToPoing;
+            }
+            _aimingToPoint.SetTarget(perception.EnemyUnints[bestEnemyIndex].Position);
+            return _aimingToPoint;
 
             debugInterface.AddRing(perception.MyUnints[id].Position, 30, 0.5, new Color(0, 1, 0.5, 1));
 
             //Надо бы хранить состояния еще, чтобы была возможно, стрелять по убегающему, не переходя в режим догоняния
-            if (perception.MyUnints[id].Position.SqrDistance(perception.EnemyUnints[bestEnemyIndex].Position) > 35 * 35) //Приблежаемся, возможно нужно стрелять
+            /*if (perception.MyUnints[id].Position.SqrDistance(perception.EnemyUnints[bestEnemyIndex].Position) > 35 * 35) //Приблежаемся, возможно нужно стрелять
             {
                 _steeringRunToDestination.SetDestination(perception.EnemyUnints[bestEnemyIndex].Position);
                 return _steeringRunToDestination.Process(perception, debugInterface, id);
@@ -75,12 +91,12 @@ namespace AiCup22.Custom
                  _steeringAimToDestination.SetTarget(perception.EnemyUnints[bestEnemyIndex].Position);
                  _steeringAimToDestination.SetDestination(new Vec2(-perception.MyUnints[id].Direction.X, -perception.MyUnints[id].Direction.Y)); //Возможно отсупать от движения противника
                  return _steeringAimToDestination.Process(perception, debugInterface, id);
-               */
+               
                 throw new System.NotImplementedException();
-            }
-
-
+            }*/
+            
         }
+        
         double CalculateEnemyValue(Perception perception, Unit enemy)
         {
             double points = 1 / enemy.Position.SqrDistance(perception.MyUnints[id].Position);

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using AiCup22.Custom;
+using AiCup22.Debugging;
 using AiCup22.Model;
 
 namespace AiCup22.Custom
@@ -21,6 +22,7 @@ namespace AiCup22.Custom
     public class Brain : Processable
     {
         protected int id = 0;// Чтобы не забыли об этом
+        protected Processable previousState;
         protected Processable currentState;
 
         protected List<Processable> allStates;
@@ -32,7 +34,11 @@ namespace AiCup22.Custom
         /// <param name="perception"></param>
         public Brain()
         {
+            previousState = null;
+            currentState = null;
             allStates = new List<Processable>();
+            LastActivationTick = -1000;
+            LastDeactivationTick = -1000;
         }
 
         public int LastActivationTick { get; set; }
@@ -40,10 +46,25 @@ namespace AiCup22.Custom
         public int LastDeactivationTick { get; set; }
 
         public bool IsActive { get; set; }
-
-        public virtual UnitOrder Process(Perception perception, DebugInterface debugInterface)
+        
+        protected virtual Processable ChooseNewState(Perception perception, DebugInterface debugInterface)
         {
-            throw new System.NotImplementedException();
+            return null;
+        }
+
+        public UnitOrder Process(Perception perception,DebugInterface debugInterface)
+        {
+            Activate(perception.Game.CurrentTick);
+            var newState = ChooseNewState(perception,debugInterface);
+            if (currentState != newState)
+            {
+                currentState?.Deactivate(perception.Game.CurrentTick);
+                previousState = currentState;
+            }
+            
+            currentState = newState;
+            
+            return currentState.Process(perception, debugInterface);
         }
 
         public void Activate(int currentGameTick)
