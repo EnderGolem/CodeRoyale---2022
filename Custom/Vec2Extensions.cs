@@ -6,9 +6,9 @@ namespace AiCup22
     {
         public static Vec2 Add(this Vec2 a, Vec2 b)
         {
-            return new Vec2(a.X - b.X, a.Y - b.Y);
+            return new Vec2(a.X + b.X, a.Y + b.Y);
         }
-        public static Vec2 Subtract(this Vec2 a, Vec2 b)
+        public static Vec2 Substract(this Vec2 a, Vec2 b)
         {
             return new Vec2(a.X - b.X, a.Y - b.Y);
         }
@@ -28,7 +28,7 @@ namespace AiCup22
 
         public static Vec2 Normalize(this Vec2 a)
         {
-            double distance = a.Distance(new Vec2(0,0));
+            double distance = a.Distance(new Vec2(0, 0));
             a.X = a.X / distance;
             a.Y = a.Y / distance;
             return a;
@@ -52,6 +52,17 @@ namespace AiCup22
         public static Vec2 FindPerpendicularWithY(this Vec2 a, double Y)
         {
             return new Vec2(-a.Y * Y / a.X, Y);
+        }
+        /// <summary>
+        /// Находит "Зеркальное" отображение точки b относительно a. 
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        public static Vec2 FindMirror(this Vec2 a, Vec2 b)
+        {
+            return a.Substract(a.Substract(b).Multi(-1));
+
         }
     }
 }
