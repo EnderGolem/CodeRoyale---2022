@@ -12,8 +12,6 @@ namespace AiCup22.Custom
         AimingToPoint _aimingToPoint;
         SteeringRunToDestination _steeringRunToDestination;
         SteeringAimToDestination _steeringAimToDestination;
-        SteeringShootToDestination _steeringShootToDestination;
-        RunToDestinationDirection _runToDestinationDirection;
 
         public BattleBrain()
         {
@@ -21,8 +19,6 @@ namespace AiCup22.Custom
             _aimingToPoint = new AimingToPoint();
             _steeringRunToDestination = new SteeringRunToDestination();
             _steeringAimToDestination = new SteeringAimToDestination();
-            _steeringShootToDestination = new SteeringShootToDestination();
-            _runToDestinationDirection = new RunToDestinationDirection();
         }
         public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
@@ -65,21 +61,22 @@ namespace AiCup22.Custom
             else  //Отступаем
             {
                 System.Console.WriteLine("RUUUUN");
-                var unit = perception.MyUnints[id];
-                _runToDestinationDirection.SetTarget(perception.EnemyUnints[bestEnemyIndex].Position);
-                _runToDestinationDirection.SetDestination(unit.Position.Subtract(unit.Velocity));
-                return _runToDestinationDirection.Process(perception, debugInterface, id);
-                /*  if (perception.MyUnints[id].Aim == 1 && Tools.RaycastObstacle(perception.MyUnints[id].Position, (perception.EnemyUnints[bestEnemyIndex].Position),
-                                                      perception.Constants.Obstacles, true) == null)
-                  {
-                      _steeringShootToDestination.SetTarget(perception.EnemyUnints[bestEnemyIndex].Position);
-                      _steeringShootToDestination.SetDestination(new Vec2(-perception.MyUnints[id].Direction.X, -perception.MyUnints[id].Direction.Y)); //Возможно отсупать от движения противника
-                      return _steeringShootToDestination.Process(perception, debugInterface, id);
-                  }
-                  _steeringAimToDestination.SetTarget(perception.EnemyUnints[bestEnemyIndex].Position);
-                  _steeringAimToDestination.SetDestination(new Vec2(-perception.MyUnints[id].Direction.X, -perception.MyUnints[id].Direction.Y)); //Возможно отсупать от движения противника
-                  return _steeringAimToDestination.Process(perception, debugInterface, id);
-                */
+                /* var unit = perception.MyUnints[id];
+               _runToDestinationDirection.SetTarget(perception.EnemyUnints[bestEnemyIndex].Position);
+               _runToDestinationDirection.SetDestination(unit.Position.Subtract(unit.Velocity));
+               return _runToDestinationDirection.Process(perception, debugInterface, id);
+               if (perception.MyUnints[id].Aim == 1 && Tools.RaycastObstacle(perception.MyUnints[id].Position, (perception.EnemyUnints[bestEnemyIndex].Position),
+                                                     perception.Constants.Obstacles, true) == null)
+                 {
+                     _steeringShootToDestination.SetTarget(perception.EnemyUnints[bestEnemyIndex].Position);
+                     _steeringShootToDestination.SetDestination(new Vec2(-perception.MyUnints[id].Direction.X, -perception.MyUnints[id].Direction.Y)); //Возможно отсупать от движения противника
+                     return _steeringShootToDestination.Process(perception, debugInterface, id);
+                 }
+                 _steeringAimToDestination.SetTarget(perception.EnemyUnints[bestEnemyIndex].Position);
+                 _steeringAimToDestination.SetDestination(new Vec2(-perception.MyUnints[id].Direction.X, -perception.MyUnints[id].Direction.Y)); //Возможно отсупать от движения противника
+                 return _steeringAimToDestination.Process(perception, debugInterface, id);
+               */
+                throw new System.NotImplementedException();
             }
 
 
