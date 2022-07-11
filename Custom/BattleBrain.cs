@@ -69,14 +69,20 @@ namespace AiCup22.Custom
             }
             else if (safeZone * safeZone < perception.MyUnints[id].Position.SqrDistance(perception.EnemyUnints[bestEnemyIndex].Position)) //Стреляем
             {
+                int maxSafeIndex = perception.FindIndexMaxSafeDirection();
+
                 if (perception.MyUnints[id].Aim == 1 && Tools.RaycastObstacle(perception.MyUnints[id].Position, (perception.EnemyUnints[bestEnemyIndex].Position),
                                                    perception.Constants.Obstacles, true) == null)
                 {
-                    _steeringShootToDestinationDirection.SetDestination(perception.MyUnints[id].Position.Add(Vec2Extensions.GetRandomVecNormalize()));
+                    _steeringShootToDestinationDirection.SetDestination(perception.MyUnints[id].Position);
+                    if (perception.DirectionDangers[maxSafeIndex] > 400)  //Чтобы постоянно не отходил
+                        _steeringShootToDestinationDirection.SetDestination(perception.MyUnints[id].Position.Add(perception.Directions[maxSafeIndex]));
                     _steeringShootToDestinationDirection.SetDirection(enemy.Position);
                     return _steeringShootToDestinationDirection;
                 }
-                _steeringAimToDestinationDirection.SetDestination(perception.MyUnints[id].Position.Add(Vec2Extensions.GetRandomVecNormalize()));
+                _steeringAimToDestinationDirection.SetDestination(perception.MyUnints[id].Position);
+                if (perception.DirectionDangers[maxSafeIndex] > 400)
+                    _steeringAimToDestinationDirection.SetDestination(perception.MyUnints[id].Position.Add(perception.Directions[maxSafeIndex]));
                 _steeringAimToDestinationDirection.SetDirection(enemy.Position);
                 return _steeringAimToDestinationDirection;
             }

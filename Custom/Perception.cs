@@ -128,7 +128,8 @@ namespace AiCup22.Custom
             //Рассчет сделать исходя из скорости, позиции, урона и еще можно добавить погрешность на жизнь(пуля может не долететь)
             double distance = 1 / MyUnints[0].Position.SqrDistance(bullet.Position);
             double damageDanger = 50;
-            return distance * damageDanger * 500; // ХУЕЕЕТА
+
+            return distance * damageDanger * 1500; // ХУЕЕЕТА
         }
 
         protected void EstimateDirections(Game game, DebugInterface debugInterface)
@@ -159,25 +160,40 @@ namespace AiCup22.Custom
             foreach (var bullet in game.Projectiles)
             {
                 if (bullet.ShooterPlayerId != game.MyId)
-                    for (int i = 0; i < directions.Length / 2; i++)
+                    for (int i = 0; i < directions.Length; i++)
                     {
                         if (Tools.BelongDirection(bullet.Position,
-                            _myUnints[0].Position, directions[(i + 6) % 8], 180 / directions.Length))
+                            _myUnints[0].Position, directions[i], 180 / directions.Length))
                         {
-                            directionDangers[i] += EstimateBulletDanger(bullet);
-                            directionDangers[i + 4] += EstimateBulletDanger(bullet);
+                            //Просчет, куда надо идти и в какую сторону безопасней
+                            var id1 = (i + 6) % 8;  //Типо -2
+                            var id2 = (i + 2) % 8;
+                            var lineBullet = new Straight(bullet.Velocity, bullet.Position);
+                            var lineDirection = new Straight(directions[id1], MyUnints[0].Position);
+                            var point = lineBullet.GetIntersection(lineDirection);
+                            if (point.Value.SqrDistance(MyUnints[0].Position.Add(directions[id1])) > point.Value.SqrDistance(MyUnints[0].Position.Add(directions[id2])))
+                                directionDangers[id1] += EstimateBulletDanger(bullet);
+                            else
+                                directionDangers[id2] += EstimateBulletDanger(bullet);
                             System.Console.WriteLine("EstimateBulletDanger " + EstimateBulletDanger(bullet));
+                            System.Console.WriteLine("Point 1 distance: " + point.Value.SqrDistance(MyUnints[0].Position.Add(directions[id1])));
+                            System.Console.WriteLine("Point 2 distance: " + point.Value.SqrDistance(MyUnints[0].Position.Add(directions[id2])));
+
+                            debugInterface.AddCircle(MyUnints[0].Position.Add(directions[id1]), 0.1, new Color(0, 1, 0, 1));
+                            debugInterface.AddCircle(MyUnints[0].Position.Add(directions[id2]), 0.1, new Color(0, 1, 0, 1));
+                            debugInterface.AddCircle(point.Value, 0.1, new Color(0, 0, 1, 1));
+                            debugInterface.AddSegment(bullet.Position, bullet.Position.Add(bullet.Velocity), 0.1, new Color(0.7, 0.3, 0, 0.8));
                             break;
                         }
                     }
             }
-            for (int i = 0; i < directions.Length; i++)
-            {
-                if (Tools.CurrentZoneDistance(game.Zone, _myUnints[0].Position.Add(directions[i].Normalize().Multi(30))) < 0)
-                {
-                    directionDangers[i] += 500;
-                }
-            }
+            //for (int i = 0; i < directions.Length; i++) //Расскомитить
+            //{
+            //    if (Tools.CurrentZoneDistance(game.Zone, _myUnints[0].Position.Add(directions[i].Normalize().Multi(30))) < 0)
+            //    {
+            //        directionDangers[i] += 500;
+            //    }
+            //}
         }
         public int FindIndexMaxSafeDirection()
         {
