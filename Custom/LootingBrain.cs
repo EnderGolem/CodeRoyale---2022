@@ -10,7 +10,7 @@ namespace AiCup22.Custom
     public class LootingBrain : Brain
     {
         protected const double eps = Koefficient.eps;
-        protected const int ShieldLoot = Koefficient.Looting.ShieldLoot ;
+        protected const int ShieldLoot = Koefficient.Looting.ShieldLoot;
         protected const int AmmoLoot = Koefficient.Looting.AmmoLoot;
         protected const int BowLoot = Koefficient.Looting.BowLoot;
 
@@ -66,8 +66,8 @@ namespace AiCup22.Custom
 
                 double curPoints = CalculateLootValue(perception, loot.Value);
 
-
-                debugInterface.AddPlacedText(loot.Value.Position, Math.Round(curPoints).ToString(), new Vec2(0, 0), 1, new Color(1, 0, 0.5, 1));
+                if (debugInterface != null)
+                    debugInterface.AddPlacedText(loot.Value.Position, Math.Round(curPoints).ToString(), new Vec2(0, 0), 1, new Color(1, 0, 0.5, 1));
 
                 if (bestPoints < curPoints)
                 {
@@ -101,7 +101,10 @@ namespace AiCup22.Custom
             }
             else
             {
-                debugInterface.AddRing(bestLoot.Position, 1, 0.5, new Color(0.5, 0.5, 0, 1));
+                if (debugInterface != null)
+                {
+                    debugInterface.AddRing(bestLoot.Position, 1, 0.5, new Color(0.5, 0.5, 0, 1));
+                }
                 _runToDestination.SetDestination(bestLoot.Position);
 
                 return _runToDestination;
