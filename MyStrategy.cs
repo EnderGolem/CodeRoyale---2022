@@ -1,36 +1,13 @@
-using System.Collections.Generic;
-using AiCup22.Model;
-using AiCup22.Custom;
-
-
 namespace AiCup22
 {
-
     public class MyStrategy
     {
-        private Perception perception;
-        private Brain brain;
-
-        public MyStrategy(AiCup22.Model.Constants constants)
-        {
-            perception = new Perception(constants);
-            brain = new GeneralBrain();
-        }
-
+        public MyStrategy(AiCup22.Model.Constants constants) {}
         public AiCup22.Model.Order GetOrder(AiCup22.Model.Game game, DebugInterface debugInterface)
         {
-
-            perception.Analyze(game, debugInterface);
-            Dictionary<int, AiCup22.Model.UnitOrder> orders = new Dictionary<int, UnitOrder>();
-            orders.Add(perception.MyUnints[0].Id, brain.Process(perception,debugInterface));
-            return new Order(orders);
+            return new AiCup22.Model.Order(new System.Collections.Generic.Dictionary<int, AiCup22.Model.UnitOrder>());
         }
-
-        public void DebugUpdate(DebugInterface debugInterface)
-        {
-
-        }
-        public void Finish() { }
+        public void DebugUpdate(int displayedTick, DebugInterface debugInterface) {}
+        public void Finish() {}
     }
-
 }
