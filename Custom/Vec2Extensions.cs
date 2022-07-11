@@ -25,6 +25,11 @@ namespace AiCup22
         {
             return System.Math.Sqrt(a.SqrDistance(b));
         }
+        
+        public static double Length(this Vec2 a)
+        {
+            return a.Distance(new Vec2(0, 0));
+        }
 
         public static Vec2 Normalize(this Vec2 a)
         {

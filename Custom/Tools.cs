@@ -144,5 +144,15 @@ namespace AiCup22.Custom
         {
             return (AngleDiff(pointAngle, rayAngle - alpha) > 0 && AngleDiff(pointAngle, rayAngle + alpha) < 0);
         }
+
+        public static double TicksToTime(int ticks, double ticksPerSecond)
+        {
+            return (double)ticks / ticksPerSecond;
+        }
+
+        public static int TimeToTicks(double time, double ticksPerSecond)
+        {
+            return (int)Math.Ceiling(time * ticksPerSecond);
+        }
     }
 }

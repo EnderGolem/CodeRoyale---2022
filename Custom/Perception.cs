@@ -5,6 +5,7 @@ using Color = AiCup22.Debugging.Color;
 using System.Drawing;
 using AiCup22.Debugging;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace AiCup22.Custom
 {
@@ -40,9 +41,16 @@ namespace AiCup22.Custom
         public List<double> DirectionDangers => directionDangers;
         public Dictionary<int, Loot> MemorizedLoot => memorizedLoot;
 
+        public Dictionary<int, MemorizedProjectile> MemorizedProjectiles => memorizedProjectiles;
+
         public Dictionary<int, (int, double, Unit)> MemorizedEnemies => memorizedEnemies;
 
         private Dictionary<int, Loot> memorizedLoot;
+        /// <summary>
+        /// Массив запомненных пуль
+        /// Ключ - ид пули
+        /// </summary>
+        private Dictionary<int, MemorizedProjectile> memorizedProjectiles;
         /// <summary>
         /// Список запомненных противников
         /// ключ - Id юнита
@@ -56,6 +64,7 @@ namespace AiCup22.Custom
             _constants = consts;
             memorizedLoot = new Dictionary<int, Loot>();
             memorizedEnemies = new Dictionary<int, (int, double, Unit)>();
+            memorizedProjectiles = new Dictionary<int, MemorizedProjectile>();
             closeObstacles = new List<Obstacle>();
             directions = new Vec2[8];
             directions[0] = new Vec2(1, 0);
@@ -73,7 +82,7 @@ namespace AiCup22.Custom
         {
             _game = game;
             _debug = debugInterface;
-
+            
             _enemyUnints = new List<Unit>();
             _myUnints = new List<Unit>(); // Потому что, если находится в конструкторе, то каждый getorder, будет увеличиваться
             foreach (var unit in game.Units)
@@ -91,6 +100,41 @@ namespace AiCup22.Custom
             for (int i = 0; i < game.Loot.Length; i++)
             {
                 memorizedLoot.TryAdd(game.Loot[i].Id, game.Loot[i]);
+            }
+
+            List<int> memProjToRemove = new List<int>();
+
+            foreach (var projectile in memorizedProjectiles)
+            {
+                projectile.Value.CalculateActualPosition(this);
+               if ((Tools.BelongConeOfVision(projectile.Value.actualPosition, _myUnints[0].Position,
+                        _myUnints[0].Direction, Constants.ViewDistance,
+                        (1-_myUnints[0].Aim)*Constants.FieldOfView) &&
+                    Game.Projectiles.Count(p => p.Id == projectile.Value.projData.Id) == 0)
+                   ||projectile.Value.IsExpired(this)
+                   ||projectile.Value.actualPosition.Distance(MyUnints[0].Position) < Constants.UnitRadius)
+                {
+                    memProjToRemove.Add(projectile.Key);
+                }
+            }
+
+            for (int i = 0; i < memProjToRemove.Count; i++)
+            {
+                memorizedProjectiles.Remove(memProjToRemove[i]);
+            }
+            
+            for (int i = 0; i < game.Projectiles.Length; i++)
+            {
+                if (!memorizedProjectiles.ContainsKey(game.Projectiles[i].Id))
+                {
+                    memorizedProjectiles[game.Projectiles[i].Id] = new MemorizedProjectile(game.Projectiles[i],this);
+                }
+                else
+                {
+                    var mem = memorizedProjectiles[game.Projectiles[i].Id];
+                    mem.lastSeenTick = game.CurrentTick;
+                    mem.projData = game.Projectiles[i];
+                }
             }
 
             if (lastObstacleRecalculationTick + closeObstaclesRecalculationDelay <= game.CurrentTick)
@@ -226,6 +270,7 @@ namespace AiCup22.Custom
             return maxSafeIndex;
 
         }
+        
 
         private void DebugOutput(Game game, DebugInterface debugInterface)
         {
@@ -279,6 +324,14 @@ namespace AiCup22.Custom
                         enemy.Value.Item2.ToString(), new Vec2(0, 0), 2, new Color(1, 0, 0, 1));
                 }
 
+                foreach (var projectile in memorizedProjectiles)
+                {
+                    debugInterface.AddCircle(projectile.Value.actualPosition,0.3,new Color(1,0,0,1));
+                    Debug.AddPlacedText(projectile.Value.actualPosition,
+                        projectile.Key.ToString(),
+                        new Vec2(0, 0), 3, new Color(1, 0.2, 1, 0.7));
+                }
+
                 for (int i = 0; i < directions.Length; i++)
                 {
                     Console.WriteLine($"{i}. {directionDangers[i]}");
@@ -287,6 +340,51 @@ namespace AiCup22.Custom
                         new Vec2(0, 0), 3, new Color(1, 0.2, 1, 0.7));
                 }
             }
+        }
+        
+    }
+
+    public class MemorizedProjectile
+    {
+        public int lastSeenTick;
+        public Vec2 estimatedDeathPosition;
+        public Vec2 actualPosition;
+        public Projectile projData;
+
+        public MemorizedProjectile(Projectile proj,Perception perception)
+        {
+            lastSeenTick = perception.Game.CurrentTick;
+            actualPosition = proj.Position;
+            projData = proj;
+            CalculateProjectileDeathPosition(proj,perception.CloseObstacles);
+        }
+        
+        public void CalculateProjectileDeathPosition(Projectile proj, List<Obstacle> closeObstacles)
+        {
+            estimatedDeathPosition = proj.Position.Add(proj.Velocity.Multi(proj.LifeTime));
+            var ob = Tools.RaycastObstacle(proj.Position, estimatedDeathPosition,closeObstacles.ToArray(),true);
+            if (ob.HasValue)
+            {
+                var s = new Straight(proj.Velocity,proj.Position);
+                var perpS = new Straight();
+                perpS.SetByNormalAndPoint(proj.Velocity,ob.Value.Position);
+                estimatedDeathPosition = s.GetIntersection(perpS).Value;
+            }
+        }
+
+        public void CalculateActualPosition(Perception perception)
+        {
+            actualPosition = projData.Position.Add(projData.Velocity.Multi(Tools.TicksToTime(perception.Game.CurrentTick - lastSeenTick,perception.Constants.TicksPerSecond)));
+        }
+
+        public bool IsExpired(Perception perception)
+        {
+            if (Tools.TimeToTicks(projData.Position.Distance(estimatedDeathPosition)/projData.Velocity.Length(),perception.Constants.TicksPerSecond) + lastSeenTick < perception.Game.CurrentTick)
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }
