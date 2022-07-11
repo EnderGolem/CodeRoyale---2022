@@ -160,7 +160,15 @@ namespace AiCup22.Custom
         {
             return new UnitOrder(new Vec2(), new Vec2(), new ActionOrder.UseShieldPotion());
         }
-
+    }
+    public class UseShieldToDestination : RunToDestinationDirection
+    {
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
+        {
+            var order = base.Process(perception, debugInterface);
+            order.Action = new ActionOrder.UseShieldPotion();
+            return order;
+        }
     }
     public class PickupLoot : EndAction
     {
