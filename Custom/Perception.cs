@@ -116,10 +116,19 @@ namespace AiCup22.Custom
         public double EstimateEnemyDanger(Unit unit)
         {
             double weaponDanger = (unit.Weapon + 1) * 50 ?? 0;
-            double ammoDanger = weaponDanger * unit.Ammo[unit.Weapon.Value] / _constants.Weapons[unit.Weapon.Value].MaxInventoryAmmo;
+            double ammoDanger = weaponDanger * unit.Ammo[unit.Weapon.Value] / _constants.Weapons[unit.Weapon.Value].MaxInventoryAmmo; //Тут точно балансить
             double healthDanger = unit.Health;
             double shieldDanger = unit.Shield;
-            return weaponDanger + ammoDanger + healthDanger + shieldDanger;
+            return weaponDanger + ammoDanger + healthDanger + shieldDanger; // ХУЕЕЕТА
+        }
+
+
+        public double EstimateBulletDanger(Projectile bullet)
+        {
+            //Рассчет сделать исходя из скорости, позиции, урона и еще можно добавить погрешность на жизнь(пуля может не долететь)
+            double distance = 1 / MyUnints[0].Position.SqrDistance(bullet.Position);
+            double damageDanger = 50;
+            return distance * damageDanger * 500; // ХУЕЕЕТА
         }
 
         protected void EstimateDirections(Game game, DebugInterface debugInterface)
@@ -130,7 +139,7 @@ namespace AiCup22.Custom
                 directionDangers.Add(0);
             }
 
-            foreach (var enemy in MemorizedEnemies)
+            foreach (var enemy in MemorizedEnemies) //Можно вроде бы просчитывать быстрее и более корректней.
             {
                 if (game.CurrentTick - enemy.Value.Item1 > 200)
                 {
@@ -147,7 +156,21 @@ namespace AiCup22.Custom
                     }
                 }
             }
-
+            foreach (var bullet in game.Projectiles)
+            {
+                if (bullet.ShooterPlayerId != game.MyId)
+                    for (int i = 0; i < directions.Length / 2; i++)
+                    {
+                        if (Tools.BelongDirection(bullet.Position,
+                            _myUnints[0].Position, directions[(i + 6) % 8], 180 / directions.Length))
+                        {
+                            directionDangers[i] += EstimateBulletDanger(bullet);
+                            directionDangers[i + 4] += EstimateBulletDanger(bullet);
+                            System.Console.WriteLine("EstimateBulletDanger " + EstimateBulletDanger(bullet));
+                            break;
+                        }
+                    }
+            }
             for (int i = 0; i < directions.Length; i++)
             {
                 if (Tools.CurrentZoneDistance(game.Zone, _myUnints[0].Position.Add(directions[i].Normalize().Multi(30))) < 0)
@@ -155,6 +178,18 @@ namespace AiCup22.Custom
                     directionDangers[i] += 500;
                 }
             }
+        }
+        public int FindIndexMaxSafeDirection()
+        {
+            int maxSafeIndex = 0;
+            for (int i = 0; i < DirectionDangers.Count; i++)
+            {
+                if (DirectionDangers[i] > DirectionDangers[maxSafeIndex])
+                {
+                    maxSafeIndex = i;
+                }
+            }
+            return maxSafeIndex;
         }
 
         private void DebugOutput(Game game, DebugInterface debugInterface)
@@ -214,7 +249,7 @@ namespace AiCup22.Custom
                     Console.WriteLine($"{i}. {directionDangers[i]}");
                     Debug.AddPlacedText(_myUnints[0].Position.Add(directions[i].Multi(30)),
                         directionDangers[i].ToString(),
-                        new Vec2(0, 0), 2, new Color(1, 0.2, 1, 0.7));
+                        new Vec2(0, 0), 3, new Color(1, 0.2, 1, 0.7));
                 }
             }
         }
