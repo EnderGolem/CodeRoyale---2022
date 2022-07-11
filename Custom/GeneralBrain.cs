@@ -6,10 +6,10 @@ namespace AiCup22.Custom
 {
     public class GeneralBrain : Brain
     {
-        protected const double healthValueKoefBattle = 1;
-        protected const double shieldValueKoefBattle = 1;
-        protected const double maxAmmoValueConst = 100;
-        protected const double maxPotionsValueLoot = 100;
+        protected const double healthValueBattle = Koefficient.healthValueBattle;
+        protected const double shieldValueBattle = Koefficient.shieldValuefBattle;
+        protected const double maxAmmoValue = Koefficient.maxAmmoValue;
+        protected const double maxPotionsValueLoot = Koefficient.maxPotionsValueLoot;
         
         private LootingBrain _lootingBrain;
         private BattleBrain _battleBrain;
@@ -46,7 +46,7 @@ namespace AiCup22.Custom
             stateValues[1] = CalculateBattleValue(perception, debugInterface);
             stateValues[0] = CalculateLootingValue(perception, debugInterface);
             Vec2 offset = new Vec2(-20,10);
-            var textSize = 2;
+            var textSize = 3;
             debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0,0)),
                 $"Radar: {stateValues[2]}",
                 new Vec2(0.5,0.5), textSize,new Color(0,0,1,1));
@@ -123,10 +123,11 @@ namespace AiCup22.Custom
             }
             else
             {
-                value += (unit.Weapon.Value * 50) + maxAmmoValueConst * unit.Ammo[unit.Weapon.Value]/perception.Constants.Weapons[unit.Weapon.Value].MaxInventoryAmmo;
+                value += (unit.Weapon.Value * 50) + maxAmmoValue * 
+                    unit.Ammo[unit.Weapon.Value]/perception.Constants.Weapons[unit.Weapon.Value].MaxInventoryAmmo;
             }
 
-            value += healthValueKoefBattle * unit.Health + shieldValueKoefBattle * unit.Shield;
+            value += healthValueBattle * unit.Health + shieldValueBattle * unit.Shield;
 
             value -= 150;
 
@@ -137,7 +138,7 @@ namespace AiCup22.Custom
         {
             Unit unit = perception.MyUnints[0];
             double value = 0;
-            if (!unit.Weapon.HasValue)
+            if (!unit.Weapon.HasValue) //???
             {
                 value += 100;
             }
@@ -145,13 +146,13 @@ namespace AiCup22.Custom
             {
                 
                 double weaponValue = unit.Weapon.Value * 100;
-                double ammoValue = maxAmmoValueConst *
+                double ammoValue = maxAmmoValue *
                                    ((double) (unit.Ammo[unit.Weapon.Value]) / perception.Constants
                                        .Weapons[unit.Weapon.Value].MaxInventoryAmmo); 
-                Console.WriteLine($"Weapon value: {unit.Weapon.Value * 50} AmmoValue: {ammoValue}");
                 double potionsValue = maxPotionsValueLoot * ((double)unit.ShieldPotions /
                                       perception.Constants.MaxShieldPotionsInInventory);
                 value += (450 - weaponValue - ammoValue - potionsValue);
+                Console.WriteLine($"Weapon value: {unit.Weapon.Value * 50} AmmoValue: {ammoValue}");
             }
 
             //value += healthValueKoefBattle * unit.Health + shieldValueKoefBattle * unit.Shield;
