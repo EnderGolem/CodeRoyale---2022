@@ -4,12 +4,6 @@
         <OutputType>Exe</OutputType>
         <TargetFramework>net5.0</TargetFramework>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <AnalysisLevel>5.0</AnalysisLevel>
     </PropertyGroup>
-
-    <ItemGroup>
-      <Compile Remove="LootingBrain.cs" />
-      <Compile Remove="GeneralBrain.cs" />
-    </ItemGroup>
 
 </Project>

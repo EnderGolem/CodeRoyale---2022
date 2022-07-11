@@ -34,14 +34,14 @@ namespace AiCup22.Custom
             double battleValue = CalculateBattleValue(perception, debugInterface);
             double lootingValue = CalculateLootingValue(perception, debugInterface);
             Vec2 offset = new Vec2(-20,10);
-            var textSize = 2;
+            var textSize = 3;
             debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0,0)),
                 $"Radar: {radarValue}",
                 new Vec2(0.5,0.5), textSize,new Color(0,0,1,1));
-            debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0,2)),
+            debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0,3)),
                 $"Battle: {battleValue}",
                 new Vec2(0.5,0.5), textSize,new Color(1,0,0,1));
-            debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0,4)),
+            debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0,6)),
                 $"Looting {lootingValue}",
                 new Vec2(0.5,0.5), textSize,new Color(0,1,0,1));
 

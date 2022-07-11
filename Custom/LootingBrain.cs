@@ -67,7 +67,7 @@ namespace AiCup22.Custom
                 double curPoints = CalculateLootValue(perception, loot.Value);
 
 
-                debugInterface.AddPlacedText(loot.Value.Position,Math.Round(curPoints).ToString(),new Vec2(0.5,0.5), 3,new Color(1,0,0.5,1));
+                debugInterface.AddPlacedText(loot.Value.Position, Math.Round(curPoints).ToString(), new Vec2(0, 0), 1, new Color(1, 0, 0.5, 1));
 
                 if (bestPoints < curPoints)
                 {
@@ -77,7 +77,7 @@ namespace AiCup22.Custom
                 }
             }
             double shieldPoints = perception.MyUnints[id].Shield < 140 ? 1500 : 0; //Чтобы пил, нужна формула, ну или перенести мозгу, но хз..
-      
+
             if (shieldPoints > bestPoints && perception.MyUnints[id].ShieldPotions > 0 && perception.MyUnints[id].Action == null)
             {
                 return _useShield;
@@ -107,7 +107,7 @@ namespace AiCup22.Custom
                 return _runToDestination;
             }
         }
-        
+
         private double CalculateAmmoValue(Perception perception, Item.Ammo ammo)
         {
             double procentage = perception.MyUnints[id].Ammo[ammo.WeaponTypeIndex] / perception.Constants.Weapons[ammo.WeaponTypeIndex].MaxInventoryAmmo * 100;
