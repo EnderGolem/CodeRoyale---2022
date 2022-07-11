@@ -38,7 +38,7 @@ namespace AiCup22.Custom
             for (int i = 0; i < perception.EnemyUnints.Count; i++)
             {
                 point = CalculateEnemyValue(perception, perception.EnemyUnints[i]);
-                debugInterface.AddPlacedText(perception.EnemyUnints[i].Position, (point).ToString(), new Vec2(0.5, 0.5), 3, new Color(0, 1, 0.5, 1));
+                debugInterface.AddPlacedText(perception.EnemyUnints[i].Position, (point).ToString(), new Vec2(0, 0), 2, new Color(0, 1, 0.5, 1));
                 if (bestPoints < point)
                 {
                     bestEnemyIndex = i;
