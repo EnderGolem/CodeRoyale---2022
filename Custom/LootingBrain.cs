@@ -9,10 +9,10 @@ namespace AiCup22.Custom
 {
     public class LootingBrain : Brain
     {
-        private const double eps = 0.000001;
-        private const int kShieldLoot = 45;
-        private const int kAmmoLoot = 800;
-        private const int kBowLoot = 50000;
+        protected const double eps = Koefficient.eps;
+        protected const int ShieldLoot = Koefficient.Looting.ShieldLoot ;
+        protected const int AmmoLoot = Koefficient.Looting.AmmoLoot;
+        protected const int BowLoot = Koefficient.Looting.BowLoot;
 
         private RunToDestination _runToDestination;
         private PickupLoot _pickupLoot;
@@ -113,7 +113,7 @@ namespace AiCup22.Custom
             double procentage = perception.MyUnints[id].Ammo[ammo.WeaponTypeIndex] / perception.Constants.Weapons[ammo.WeaponTypeIndex].MaxInventoryAmmo * 100;
             if (procentage == 100)
                 return 1;
-            double points = procentage != 0 ? kAmmoLoot / procentage : 10000;
+            double points = procentage != 0 ? AmmoLoot / procentage : 10000;
             return points;
         }
         private double CalculateShieldValue(Perception perception, Item.ShieldPotions potions)
@@ -121,7 +121,7 @@ namespace AiCup22.Custom
             double procentage = perception.MyUnints[id].ShieldPotions / perception.Constants.MaxShieldPotionsInInventory * 100;
             if (procentage == 100)
                 return 1;
-            double points = procentage != 0 ? (kShieldLoot * potions.Amount) / procentage : 10000;
+            double points = procentage != 0 ? (ShieldLoot * potions.Amount) / procentage : 10000;
             if ((double)perception.MyUnints[id].Shield > 1)
                 points *= (-0.005 * (perception.Constants.MaxShield / (double)perception.MyUnints[id].Shield)) + 2;
             else
@@ -167,7 +167,7 @@ namespace AiCup22.Custom
                                 points *= 1;
                                 break;
                             case 2:
-                                points *= kBowLoot;
+                                points *= BowLoot;
                                 break;
                         }
 
