@@ -140,7 +140,7 @@ namespace AiCup22.Custom
                 for (int i = 0; i < directions.Length; i++)
                 {
                     if (Tools.BelongDirection(enemy.Value.Item3.Position,
-                        _myUnints[0].Position, directions[i].Multi(-1), 180 / directions.Length))
+                        _myUnints[0].Position, directions[i], 180/directions.Length))
                     {
                         directionDangers[i] += enemy.Value.Item2;
                         break;
@@ -152,9 +152,24 @@ namespace AiCup22.Custom
             {
                 if (Tools.CurrentZoneDistance(game.Zone, _myUnints[0].Position.Add(directions[i].Normalize().Multi(30))) < 0)
                 {
-                    directionDangers[i] += 500;
+                    directionDangers[i] += Math.Pow(30-Tools.CurrentZoneDistance(game.Zone,_myUnints[0].Position),2);
                 }
             }
+            
+            double[] add = new double[directions.Length];
+            for (int i = 0; i < directions.Length; i++)
+            {
+                int prev = (i==0)?7:i - 1;
+                int next = (i + 1) % Directions.Length;
+                add[prev] += directionDangers[i] * 0.5;
+                add[next] += directionDangers[i] * 0.5;
+            }
+
+            for (int i = 0; i < add.Length; i++)
+            {
+                directionDangers[i] += add[i];
+            }
+
         }
 
         private void DebugOutput(Game game, DebugInterface debugInterface)
