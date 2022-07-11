@@ -11,11 +11,14 @@ namespace AiCup22.Custom
 
         public const double eps = 0.000001;
         //GeneralBrain
-        public const double healthValueBattle = 1;
-        public const double shieldValuefBattle = 1;
-        public const double maxAmmoValue = 100;
+        public const double healthValueBattle = 2000;
+        public const double shieldValuefBattle = 3000;
+        public const double WeaponValueBattle = 1000;
+        public const double maxAmmoValue = 150;
         public const double maxPotionsValueLoot = 100;
+        public const double PunishmentForLeavingBattle = 500;
 
+        public const double bowValue = 3000;
 
         public static class Looting
         {
