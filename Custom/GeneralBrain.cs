@@ -10,7 +10,7 @@ namespace AiCup22.Custom
         protected const double shieldValueBattle = Koefficient.shieldValuefBattle;
         protected const double maxAmmoValue = Koefficient.maxAmmoValue;
         protected const double maxPotionsValueLoot = Koefficient.maxPotionsValueLoot;
-        
+
         private LootingBrain _lootingBrain;
         private BattleBrain _battleBrain;
         private RadarBrain _radarBrain;
@@ -39,6 +39,7 @@ namespace AiCup22.Custom
             
             /*double radarValue = CalculateRadarValue(perception, debugInterface);
             double battleValue = CalculateBattleValue(perception, debugInterface);
+
             double lootingValue = CalculateLootingValue(perception, debugInterface);*/
 
             stateValues[3] = CalculateStaySafeValue(perception, debugInterface);
@@ -64,6 +65,7 @@ namespace AiCup22.Custom
             double bestValue = double.MinValue;
 
             for (int i = 0; i < stateValues.Length; i++)
+
             {
                 if (stateValues[i]>bestValue)
                 {
@@ -74,7 +76,7 @@ namespace AiCup22.Custom
 
             return allStates[bestState];
             //return _radarBrain;
-            if ((!_radarBrain.IsActive && perception.Game.CurrentTick-_radarBrain.LastDeactivationTick>100)
+            if ((!_radarBrain.IsActive && perception.Game.CurrentTick - _radarBrain.LastDeactivationTick > 100)
                 || (_radarBrain.IsActive && perception.Game.CurrentTick - _radarBrain.LastActivationTick < 200))
             {
                 return _radarBrain;
@@ -85,46 +87,54 @@ namespace AiCup22.Custom
                 return _battleBrain;
             }
             else
-                return  _lootingBrain;
+                return _lootingBrain;
         }
 
         protected virtual double CalculateRadarValue(Perception perception, DebugInterface debugInterface)
         {
+
             if (_radarBrain.IsActive)
             {
+
                // return 200 - 3*(perception.Game.CurrentTick - _radarBrain.LastActivationTick);
-               if (perception.Game.CurrentTick - _radarBrain.LastActivationTick < 30)
+               if (perception.Game.CurrentTick - _radarBrain.LastActivationTick < 30) //Возможно формула
                {
-                   return 10000;
+                   return 170;
                }
                else
                {
                    return -10000;
                }
+
             }
             else
             {
-                return perception.Game.CurrentTick - _radarBrain.LastDeactivationTick + 50;
+                var result = (perception.Game.CurrentTick - _radarBrain.LastDeactivationTick + 50) / 5;
+                return result < 180 ? result : 180;
             }
         }
-        
+
         protected virtual double CalculateBattleValue(Perception perception, DebugInterface debugInterface)
         {
             Unit unit = perception.MyUnints[0];
             double value = 0;
-            if (perception.EnemyUnints.Count==0)
+            if (perception.EnemyUnints.Count == 0)
             {
                 return -100000;
             }
+            if (unit.Ammo[unit.Weapon.Value] == 0) //ВРЕМЕННО, но к этому моменту стоит прислушаться
+            {
+                return -100000;
+            }
+            if (!unit.Weapon.HasValue)
 
-            if (!unit.Weapon.HasValue || unit.Ammo[unit.Weapon.Value]==0)
             {
                 value -= 10000;
             }
             else
             {
-                value += (unit.Weapon.Value * 50) + maxAmmoValue * 
-                    unit.Ammo[unit.Weapon.Value]/perception.Constants.Weapons[unit.Weapon.Value].MaxInventoryAmmo;
+                value += (unit.Weapon.Value * 50) + maxAmmoValue *
+                    unit.Ammo[unit.Weapon.Value] / perception.Constants.Weapons[unit.Weapon.Value].MaxInventoryAmmo;
             }
 
             value += healthValueBattle * unit.Health + shieldValueBattle * unit.Shield;
@@ -133,7 +143,7 @@ namespace AiCup22.Custom
 
             return value;
         }
-        
+
         protected virtual double CalculateLootingValue(Perception perception, DebugInterface debugInterface)
         {
             Unit unit = perception.MyUnints[0];
@@ -144,11 +154,11 @@ namespace AiCup22.Custom
             }
             else
             {
-                
+
                 double weaponValue = unit.Weapon.Value * 100;
                 double ammoValue = maxAmmoValue *
-                                   ((double) (unit.Ammo[unit.Weapon.Value]) / perception.Constants
-                                       .Weapons[unit.Weapon.Value].MaxInventoryAmmo); 
+                                   ((double)(unit.Ammo[unit.Weapon.Value]) / perception.Constants
+                                       .Weapons[unit.Weapon.Value].MaxInventoryAmmo);
                 double potionsValue = maxPotionsValueLoot * ((double)unit.ShieldPotions /
                                       perception.Constants.MaxShieldPotionsInInventory);
                 value += (450 - weaponValue - ammoValue - potionsValue);

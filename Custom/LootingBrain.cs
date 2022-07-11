@@ -16,7 +16,7 @@ namespace AiCup22.Custom
 
         private RunToDestination _runToDestination;
         private PickupLoot _pickupLoot;
-        private UseShield _useShield;
+        private UseShieldToDestination _useShieldToDestination;
         private LookAroundAction _lookAroundAction;
         private Loot desireLoot;
         private Vec2 desiredDestination;
@@ -32,10 +32,10 @@ namespace AiCup22.Custom
         {
             _runToDestination = new SteeringRunToDestination();
             _pickupLoot = new PickupLoot();
-            _useShield = new UseShield();
+            _useShieldToDestination = new UseShieldToDestination();
             allStates.Add(_runToDestination);
             allStates.Add(_pickupLoot);
-            allStates.Add(_useShield);
+            allStates.Add(_useShieldToDestination);
         }
 
 
@@ -80,7 +80,9 @@ namespace AiCup22.Custom
 
             if (shieldPoints > bestPoints && perception.MyUnints[id].ShieldPotions > 0 && perception.MyUnints[id].Action == null)
             {
-                return _useShield;
+                _useShieldToDestination.SetDestination(perception.MyUnints[0].Position.Add(perception.Directions[perception.FindIndexMaxSafeDirection()]));
+                _useShieldToDestination.SetDirection(perception.MyUnints[0].Direction);
+                return _useShieldToDestination;
             }
 
 
@@ -88,13 +90,11 @@ namespace AiCup22.Custom
             {
                 perception.MemorizedLoot.Remove(lootToRemove[i]);
             }
-            // Console.WriteLine(perception.Game.Loot[bestLootIndex].Position.Distance(perception.MyUnints[id].Position));
 
             if (bestLoot.Position.Distance(perception.MyUnints[id].Position) <
 
                 perception.Constants.UnitRadius / 2)
             {
-                //Console.WriteLine("Start pickup!!!");
                 _pickupLoot.SetPickableLootId(bestLoot.Id);
                 perception.MemorizedLoot.Remove(bestLoot.Id);
                 return _pickupLoot;
