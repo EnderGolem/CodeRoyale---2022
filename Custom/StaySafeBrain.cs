@@ -17,7 +17,7 @@ namespace AiCup22.Custom
         {
             int safestDir = -1;
             double minDanger = double.MaxValue;
-            for (int i = 0; i < perception.Directions.Length; i++)
+            for (int i = 0; i < perception.Directions.Length; i++) //Мне кажется тут ошибка т.к. сейчас DirectionDangers указывает опасность в дргую сторону
             {
                 int prev = (i==0)?7:i - 1;
                 int next = (i + 1) % perception.Directions.Length;

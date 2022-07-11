@@ -98,7 +98,7 @@ namespace AiCup22.Custom
 
         public override string ToString()
         {
-            return $"{a}x+{b}y+{c}=0";
+            return $"Straight: {a}x+{b}y+{c}=0";
         }
     }
     
