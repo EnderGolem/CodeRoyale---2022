@@ -119,7 +119,7 @@ namespace AiCup22.Custom
             Vec2 estimatedEnemyPosition = enemy.Position.Add(enemy.Velocity.Multi(estimatedFlyTime));
 
 
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 100; i++) //Тут был раньше 5!
             {
                 estimatedFlyTime = estimatedEnemyPosition.Distance(shotPosition) / bulletSpeed;
                 estimatedEnemyPosition = enemy.Position.Add(enemy.Velocity.Multi(estimatedFlyTime));
