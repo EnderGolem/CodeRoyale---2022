@@ -38,27 +38,18 @@ namespace AiCup22.Custom
             for (int i = 0; i < perception.EnemyUnints.Count; i++)
             {
                 point = CalculateEnemyValue(perception, perception.EnemyUnints[i]);
-                debugInterface.AddPlacedText(perception.EnemyUnints[i].Position, (point).ToString(), new Vec2(0, 0), 2, new Color(0, 1, 0.5, 1));
+                if (debugInterface != null)
+                    debugInterface.AddPlacedText(perception.EnemyUnints[i].Position, (point).ToString(), new Vec2(0, 0), 2, new Color(0, 1, 0.5, 1));
                 if (bestPoints < point)
                 {
                     bestEnemyIndex = i;
                     bestPoints = point;
                 }
             }
-            //Удалить эти комментарии после 12 июля, есть не пригодились до этого, то зачем они нужны в дальнейшем
-            //var enemy = perception.EnemyUnints[bestEnemyIndex];
-            //if (perception.MyUnints[id].Aim == 1 && Tools.RaycastObstacle(perception.MyUnints[id].Position, (perception.EnemyUnints[bestEnemyIndex].Position),
-            //        perception.Constants.Obstacles, true) == null)
-            //{
-            //    _steeringShootToDestinationDirection.SetDestination(perception.MyUnints[id].Position.FindMirrorPoint(enemy.Position));
-            //    _steeringShootToDestinationDirection.SetDirection(enemy.Position);
-            //    return _steeringShootToDestinationDirection;
-            //}
-            //_steeringAimToDestinationDirection.SetDestination(perception.MyUnints[id].Position.FindMirrorPoint(enemy.Position));
-            //_steeringAimToDestinationDirection.SetDirection(enemy.Position);
-            //return _steeringAimToDestinationDirection;
+
+            if (debugInterface != null)
+                debugInterface.AddRing(perception.MyUnints[id].Position, safeZone, 0.5, new Color(0, 1, 0.5, 1));
             var unit = perception.MyUnints[0];
-            debugInterface.AddRing(perception.MyUnints[id].Position, safeZone, 0.5, new Color(0, 1, 0.5, 1));
             var enemy = perception.EnemyUnints[bestEnemyIndex];
             debugInterface.AddSegment(unit.Position,unit.Position.Add(unit.Direction.Multi(100)),0.3,new Color(0,1,0,0.5));
             

@@ -144,12 +144,14 @@ namespace AiCup22.Custom
                  Console.WriteLine($"Перпендикулярный вектор: {perpDir}");
                  Console.WriteLine($"Целевая позиция: {targetPos}");
                  Console.WriteLine($"Целевой вектор: {targetDir}");*/
-
-                debugInterface.AddRing(intersectPoint.Value, 1, 0.5, new Color(1, 0, 0, 1));
-                debugInterface.AddRing(targetPos, 1, 0.5, new Color(0, 0.5, 0.5, 1));
-                debugInterface.AddSegment(obst.Value.Position, obst.Value.Position.Substract(perpDir.Normalize()), 0.5, new Color(0, 0, 1, 1));
-                debugInterface.AddSegment(unit.Position, destination, 0.5, new Color(0, 1, 0, 1));
-                debugInterface.AddSegment(obst.Value.Position, targetPos, 0.5, new Color(1, 0, 0, 1));
+                if (debugInterface != null)
+                {
+                    debugInterface.AddRing(intersectPoint.Value, 1, 0.5, new Color(1, 0, 0, 1));
+                    debugInterface.AddRing(targetPos, 1, 0.5, new Color(0, 0.5, 0.5, 1));
+                    debugInterface.AddSegment(obst.Value.Position, obst.Value.Position.Substract(perpDir.Normalize()), 0.5, new Color(0, 0, 1, 1));
+                    debugInterface.AddSegment(unit.Position, destination, 0.5, new Color(0, 1, 0, 1));
+                    debugInterface.AddSegment(obst.Value.Position, targetPos, 0.5, new Color(1, 0, 0, 1));
+                }
                 return new UnitOrder(targetDir, dir, null);
             }
         }
@@ -246,14 +248,16 @@ namespace AiCup22.Custom
                 var perpDir = obst.Value.Position.Substract(intersectPoint.Value);
                 var targetPos = obst.Value.Position.Substract(perpDir.Normalize().Multi(obst.Value.Radius + 3 * perception.Constants.UnitRadius));
                 var targetDir = targetPos.Substract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed);
-
-                debugInterface.AddRing(intersectPoint.Value, 1, 0.5, new Color(1, 0, 0, 1));
-                debugInterface.AddRing(targetPos, 1, 0.5, new Color(0, 0.5, 0.5, 1));
-                debugInterface.AddSegment(obst.Value.Position, obst.Value.Position.Substract(perpDir.Normalize()), 0.5, new Color(0, 0, 1, 1));
-                debugInterface.AddSegment(unit.Position, destination, 0.5, new Color(0, 1, 0, 1));
-                debugInterface.AddSegment(obst.Value.Position, targetPos, 0.5, new Color(1, 0, 0, 1));
                 var enemy = direction.Substract(unit.Position);
                 ActionOrder action = new ActionOrder.Aim(false);
+                if (debugInterface != null)
+                {
+                    debugInterface.AddRing(intersectPoint.Value, 1, 0.5, new Color(1, 0, 0, 1));
+                    debugInterface.AddRing(targetPos, 1, 0.5, new Color(0, 0.5, 0.5, 1));
+                    debugInterface.AddSegment(obst.Value.Position, obst.Value.Position.Substract(perpDir.Normalize()), 0.5, new Color(0, 0, 1, 1));
+                    debugInterface.AddSegment(unit.Position, destination, 0.5, new Color(0, 1, 0, 1));
+                    debugInterface.AddSegment(obst.Value.Position, targetPos, 0.5, new Color(1, 0, 0, 1));
+                }
                 return new UnitOrder(targetDir, enemy, action);
             }
         }
@@ -280,15 +284,17 @@ namespace AiCup22.Custom
                 var intersectPoint = dirS.GetIntersection(perpS);
                 var perpDir = obst.Value.Position.Substract(intersectPoint.Value);
                 var targetPos = obst.Value.Position.Substract(perpDir.Normalize().Multi(obst.Value.Radius + 3 * perception.Constants.UnitRadius));
-                var targetDir = targetPos.Substract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed);
-
-                debugInterface.AddRing(intersectPoint.Value, 1, 0.5, new Color(1, 0, 0, 1));
-                debugInterface.AddRing(targetPos, 1, 0.5, new Color(0, 0.5, 0.5, 1));
-                debugInterface.AddSegment(obst.Value.Position, obst.Value.Position.Substract(perpDir.Normalize()), 0.5, new Color(0, 0, 1, 1));
-                debugInterface.AddSegment(unit.Position, destination, 0.5, new Color(0, 1, 0, 1));
-                debugInterface.AddSegment(obst.Value.Position, targetPos, 0.5, new Color(1, 0, 0, 1));
+                var targetDir = targetPos.Substract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed);            
                 var enemy = direction.Substract(unit.Position);
                 ActionOrder action = new ActionOrder.Aim(true);
+                if (debugInterface != null)
+                {
+                    debugInterface.AddRing(intersectPoint.Value, 1, 0.5, new Color(1, 0, 0, 1));
+                    debugInterface.AddRing(targetPos, 1, 0.5, new Color(0, 0.5, 0.5, 1));
+                    debugInterface.AddSegment(obst.Value.Position, obst.Value.Position.Substract(perpDir.Normalize()), 0.5, new Color(0, 0, 1, 1));
+                    debugInterface.AddSegment(unit.Position, destination, 0.5, new Color(0, 1, 0, 1));
+                    debugInterface.AddSegment(obst.Value.Position, targetPos, 0.5, new Color(1, 0, 0, 1));
+                }
                 return new UnitOrder(targetDir, enemy, action);
             }
         }

@@ -142,7 +142,8 @@ namespace AiCup22.Custom
                 CalculateCloseObstacles(_myUnints[0].Position, obstacleSearchRadius);
             }
             EstimateDirections(game, debugInterface);
-            DebugOutput(game, debugInterface);
+            if (debugInterface != null)
+                DebugOutput(game, debugInterface);
         }
 
         private void CalculateCloseObstacles(Vec2 startPosition, double distance)
@@ -194,8 +195,8 @@ namespace AiCup22.Custom
                 for (int i = 0; i < directions.Length; i++)
                 {
                     if (Tools.BelongDirection(enemy.Value.Item3.Position,
-                       _myUnints[0].Position, directions[i].Multi(-1), 180/directions.Length))
-                        //_myUnints[0].Position, directions[i], 180/directions.Length))
+                       _myUnints[0].Position, directions[i].Multi(-1), 180 / directions.Length))
+                    //_myUnints[0].Position, directions[i], 180/directions.Length))
                     {
                         directionDangers[i] += enemy.Value.Item2;
                         break;
@@ -220,14 +221,9 @@ namespace AiCup22.Custom
                                 directionDangers[id1] += EstimateBulletDanger(bullet);
                             else
                                 directionDangers[id2] += EstimateBulletDanger(bullet);
-                            System.Console.WriteLine("EstimateBulletDanger " + EstimateBulletDanger(bullet));
-                            System.Console.WriteLine("Point 1 distance: " + point.Value.SqrDistance(MyUnints[0].Position.Add(directions[id1])));
-                            System.Console.WriteLine("Point 2 distance: " + point.Value.SqrDistance(MyUnints[0].Position.Add(directions[id2])));
 
-                            debugInterface.AddCircle(MyUnints[0].Position.Add(directions[id1]), 0.1, new Color(0, 1, 0, 1));
-                            debugInterface.AddCircle(MyUnints[0].Position.Add(directions[id2]), 0.1, new Color(0, 1, 0, 1));
-                            debugInterface.AddCircle(point.Value, 0.1, new Color(0, 0, 1, 1));
-                            debugInterface.AddSegment(bullet.Position, bullet.Position.Add(bullet.Velocity), 0.1, new Color(0.7, 0.3, 0, 0.8));
+                            if (debugInterface != null)
+                                debugInterface.AddSegment(bullet.Position, bullet.Position.Add(bullet.Velocity), 0.1, new Color(0.7, 0.3, 0, 0.8));
                             break;
                         }
                     }
@@ -289,7 +285,7 @@ namespace AiCup22.Custom
                 }
 
                 Vec2 debugTextPos = debugInterface.GetState().Camera.Center.Substract(offset);
-                debugInterface.AddPlacedText(debugTextPos, $"Health: {player.Health}\n  Shield: { player.Shield}Potions: {player.ShieldPotions}\nVelocity: {player.Velocity}", new Vec2(0.5, 0.5), 1, new Color(0, 0, 1, 1));
+                debugInterface.AddPlacedText(debugTextPos, $"Health: {player.Health}\n  Shield: {player.Shield}Potions: {player.ShieldPotions}\nVelocity: {player.Velocity}", new Vec2(0.5, 0.5), 1, new Color(0, 0, 1, 1));
                 //debugInterface.Add(new DebugData.PlacedText(debugTextPos,
                 //    $"Health: {player.Health}",
                 //    new Vec2(0.5, 0.5), textsize, textColor));

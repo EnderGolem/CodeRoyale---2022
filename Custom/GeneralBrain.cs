@@ -42,30 +42,27 @@ namespace AiCup22.Custom
             if (Tools.CurrentZoneDistance(perception.Game.Zone, perception.MyUnints[0].Position) <= 5)
                 return _staySafe;
 
-            /*double radarValue = CalculateRadarValue(perception, debugInterface);
-            double battleValue = CalculateBattleValue(perception, debugInterface);
-
-            double lootingValue = CalculateLootingValue(perception, debugInterface);*/
-
             stateValues[3] = CalculateStaySafeValue(perception, debugInterface);
             stateValues[2] = CalculateRadarValue(perception, debugInterface);
             stateValues[1] = CalculateBattleValue(perception, debugInterface);
             stateValues[0] = CalculateLootingValue(perception, debugInterface);
             Vec2 offset = new Vec2(-20, 10);
             var textSize = 3;
-            debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0, 0)),
-                $"Radar: {stateValues[2]}",
-                new Vec2(0.5, 0.5), textSize, new Color(0, 0, 1, 1));
-            debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0, 2)),
-                $"Battle: {stateValues[1]}",
-                new Vec2(0.5, 0.5), textSize, new Color(1, 0, 0, 1));
-            debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0, 4)),
-                $"Looting {stateValues[0]}",
-                new Vec2(0.5, 0.5), textSize, new Color(0, 1, 0, 1));
-            debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0, 6)),
-                $"StayAway {stateValues[3]}",
-                new Vec2(0.5, 0.5), textSize, new Color(1, 1, 0, 1));
-
+            if (debugInterface != null)
+            {
+                debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0, 0)),
+                    $"Radar: {stateValues[2]}",
+                    new Vec2(0.5, 0.5), textSize, new Color(0, 0, 1, 1));
+                debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0, 2)),
+                    $"Battle: {stateValues[1]}",
+                    new Vec2(0.5, 0.5), textSize, new Color(1, 0, 0, 1));
+                debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0, 4)),
+                    $"Looting {stateValues[0]}",
+                    new Vec2(0.5, 0.5), textSize, new Color(0, 1, 0, 1));
+                debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0, 6)),
+                    $"StayAway {stateValues[3]}",
+                    new Vec2(0.5, 0.5), textSize, new Color(1, 1, 0, 1));
+            }
             int bestState = -1;
             double bestValue = double.MinValue;
 
