@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
+using System.Windows.Input;
 
 namespace AiCup22
 {
@@ -65,6 +66,7 @@ namespace AiCup22
                         throw new Exception("Unexpected server message");
                 }
             }
+            myStrategy.addText();
         }
         public static void Main(string[] args)
         {
