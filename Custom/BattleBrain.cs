@@ -39,14 +39,14 @@ namespace AiCup22.Custom
             {
                 point = CalculateEnemyValue(perception, perception.EnemyUnints[i]);
                 if (debugInterface != null)
-                    debugInterface.AddPlacedText(perception.EnemyUnints[i].Position, (point).ToString(), new Vec2(0, 0), 2, new Color(0, 1, 0.5, 1));
+                    debugInterface.AddPlacedText(perception.EnemyUnints[i].Position, (point).ToString(), new Vec2(0, 0), 0.5, new Color(0, 1, 0.5, 0.7));
                 if (bestPoints < point)
                 {
                     bestEnemyIndex = i;
                     bestPoints = point;
                 }
             }
-
+            
             var unit = perception.MyUnints[0];
             var enemy = perception.EnemyUnints[bestEnemyIndex];
             var safeDirection = CalculateDodge(perception, debugInterface);
@@ -61,6 +61,7 @@ namespace AiCup22.Custom
                 debugInterface.AddRing(perception.MyUnints[id].Position, safeZone, 0.5, new Color(0, 1, 0.5, 1));
                 debugInterface.AddRing(perception.MyUnints[id].Position, 30, 0.5, new Color(0, 1, 0.5, 1));
                 debugInterface.AddCircle(estimatedEnemyPosition, 0.4, new Color(1, 0, 0, 1));
+                debugInterface.AddPlacedText(enemy.Position.Add(new Vec2(0,1)),enemy.Velocity.Length().ToString(),new Vec2(0.5,0.5), 0.5,new Color(1, 0.4, 0.6, 0.5));
                 debugInterface.AddSegment(enemy.Position, estimatedEnemyPosition, 0.1, new Color(1, 0.4, 0.6, 0.5));
             }
             if (((currentState != _steeringAimToDestinationDirection && currentState != _steeringShootToDestinationDirection) && distanceToEnemy > 30 * 30) ||
@@ -124,7 +125,8 @@ namespace AiCup22.Custom
                 estimatedFlyTime = estimatedEnemyPosition.Distance(shotPosition) / bulletSpeed;
                 estimatedEnemyPosition = enemy.Position.Add(enemy.Velocity.Multi(estimatedFlyTime));
             }
-
+            
+            return estimatedEnemyPosition;
             return estimatedEnemyPosition.Add(estimatedEnemyPosition.Substract(enemy.Position).Multi(0.65));
         }
 
