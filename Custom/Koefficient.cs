@@ -15,7 +15,7 @@ namespace AiCup22.Custom
         public const double shieldValuefBattle = 3000;
         public const double WeaponValueBattle = 1000;
         public const double maxAmmoValue = 150;
-        public const double maxPotionsValueLoot = 100;
+        public const double maxPotionsValueLoot = 70;
         public const double PunishmentForLeavingBattle = 500;
 
         public const double bowValue = 3000;

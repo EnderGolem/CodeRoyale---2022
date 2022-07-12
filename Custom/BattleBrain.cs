@@ -48,18 +48,24 @@ namespace AiCup22.Custom
             }
 
             if (debugInterface != null)
+            {
                 debugInterface.AddRing(perception.MyUnints[id].Position, safeZone, 0.5, new Color(0, 1, 0.5, 1));
+                debugInterface.AddRing(perception.MyUnints[id].Position, 30, 0.5, new Color(0, 1, 0.5, 1));
+            }
+
             var unit = perception.MyUnints[0];
             var enemy = perception.EnemyUnints[bestEnemyIndex];
-            debugInterface.AddSegment(unit.Position,unit.Position.Add(unit.Direction.Multi(100)),0.3,new Color(0,1,0,0.5));
-            
+            debugInterface.AddSegment(unit.Position,unit.Position.Add(unit.Direction.Multi(100)),0.3,new Color(0,1,0,0.5));            
             // Надо бы хранить состояния еще, чтобы была возможно, стрелять по убегающему, не переходя в режим догоняния
-            if (perception.MyUnints[id].Position.SqrDistance(perception.EnemyUnints[bestEnemyIndex].Position) > 35 * 35) //Приблежаемся, возможно нужно стрелять
+            var distanceToEnemy = perception.MyUnints[id].Position.SqrDistance(perception.EnemyUnints[bestEnemyIndex].Position);
+            Console.WriteLine("CurrentState " + (currentState == _steeringAimToDestinationDirection));
+            if (((currentState != _steeringAimToDestinationDirection && currentState != _steeringShootToDestinationDirection) && distanceToEnemy > 30 * 30) ||
+                ((currentState == _steeringAimToDestinationDirection || currentState == _steeringShootToDestinationDirection) && distanceToEnemy > 35 * 35)) //Приблежаемся, возможно нужно стрелять. Можно красивее через Active
             {
                 _steeringRunToDestination.SetDestination(perception.EnemyUnints[bestEnemyIndex].Position);
                 return _steeringRunToDestination;
             }
-            else if (safeZone * safeZone < perception.MyUnints[id].Position.SqrDistance(perception.EnemyUnints[bestEnemyIndex].Position)) //Стреляем
+            else if (safeZone * safeZone < distanceToEnemy) //Стреляем
             {
                 int maxSafeIndex = perception.FindIndexMaxSafeDirection();
 
