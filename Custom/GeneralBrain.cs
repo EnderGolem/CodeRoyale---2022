@@ -46,6 +46,19 @@ namespace AiCup22.Custom
             stateValues[2] = CalculateRadarValue(perception, debugInterface);
             stateValues[1] = CalculateBattleValue(perception, debugInterface);
             stateValues[0] = CalculateLootingValue(perception, debugInterface);
+
+            int bestState = -1;
+            double bestValue = double.MinValue;
+
+            for (int i = 0; i < stateValues.Length; i++)
+
+            {
+                if (stateValues[i] > bestValue)
+                {
+                    bestState = i;
+                    bestValue = stateValues[i];
+                }
+            }
             Vec2 offset = new Vec2(-20, 10);
             var textSize = 3;
             if (debugInterface != null)
@@ -62,20 +75,10 @@ namespace AiCup22.Custom
                 debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0, 6)),
                     $"StayAway {stateValues[3]}",
                     new Vec2(0.5, 0.5), textSize, new Color(1, 1, 0, 1));
+                debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0, 8)),
+                   $"CurrentStay {allStates[bestState].GetType().Name}",
+                   new Vec2(0.5, 0.5), textSize, new Color(1, 0, 1, 1));
             }
-            int bestState = -1;
-            double bestValue = double.MinValue;
-
-            for (int i = 0; i < stateValues.Length; i++)
-
-            {
-                if (stateValues[i] > bestValue)
-                {
-                    bestState = i;
-                    bestValue = stateValues[i];
-                }
-            }
-
             return allStates[bestState];
         }
 
@@ -84,22 +87,19 @@ namespace AiCup22.Custom
 
             if (_radarBrain.IsActive)
             {
-
-                // return 200 - 3*(perception.Game.CurrentTick - _radarBrain.LastActivationTick);
-                if (perception.Game.CurrentTick - _radarBrain.LastActivationTick < 30) //Возможно формула
+                if (perception.Game.CurrentTick - _radarBrain.LastActivationTick < 30)
                 {
-                    return 170;
+                    return 4100;
                 }
                 else
                 {
                     return -10000;
                 }
-
             }
             else
             {
-                var result = (perception.Game.CurrentTick - _radarBrain.LastDeactivationTick + 50) / 5;
-                return result < 180 ? result : 180;
+                var result = (perception.Game.CurrentTick - _radarBrain.LastDeactivationTick) * 10;
+                return result;
             }
         }
 
@@ -107,7 +107,7 @@ namespace AiCup22.Custom
         {
             Unit unit = perception.MyUnints[0];
             double value = 0;
-            if (perception.EnemyUnints.Count == 0) 
+            if (perception.EnemyUnints.Count == 0)
             {
                 return -100000;
             }
@@ -165,7 +165,7 @@ namespace AiCup22.Custom
             }
 
             //value += healthValueKoefBattle * unit.Health + shieldValueKoefBattle * unit.Shield;
-            return value;
+            return value < 10000 ? value : 10000;
         }
 
         protected virtual double CalculateStaySafeValue(Perception perception, DebugInterface debugInterface)
