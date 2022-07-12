@@ -18,7 +18,7 @@ namespace AiCup22.Custom
         private LootingBrain _lootingBrain;
         private BattleBrain _battleBrain;
         private RadarBrain _radarBrain;
-        private RunToCenter _staySafe; //Для теста
+        private StaySafeBrain _staySafe; //Для теста
 
 
         private double[] stateValues;
@@ -28,7 +28,7 @@ namespace AiCup22.Custom
             _lootingBrain = new LootingBrain();
             _battleBrain = new BattleBrain();
             _radarBrain = new RadarBrain();
-            _staySafe = new RunToCenter();
+            _staySafe = new StaySafeBrain();
             allStates.Add(_lootingBrain);
             allStates.Add(_battleBrain);
             allStates.Add(_radarBrain);
@@ -39,9 +39,6 @@ namespace AiCup22.Custom
 
         protected override Processable ChooseNewState(Perception perception, DebugInterface debugInterface)
         {
-            if (Tools.CurrentZoneDistance(perception.Game.Zone, perception.MyUnints[0].Position) <= 5)
-                return _staySafe;
-
             stateValues[3] = CalculateStaySafeValue(perception, debugInterface);
             stateValues[2] = CalculateRadarValue(perception, debugInterface);
             stateValues[1] = CalculateBattleValue(perception, debugInterface);
@@ -175,11 +172,35 @@ namespace AiCup22.Custom
             {
                 return 10000;
             }
-            double zoneValue = 60 - 3 * zoneDistance;
+
+            double enemiesValue=0;
+            if (perception.EnemiesAimingYou.Count > 0)
+            {
+                int i = 0;
+                int sum = 0;
+                double totalDanger = 0;
+                foreach (var enemy in perception.EnemiesAimingYou)
+                {
+                    i++;
+                    sum += i;
+                    totalDanger += perception.MemorizedEnemies[enemy].Item2;
+                }
+
+                enemiesValue = sum * (totalDanger) / i;
+            }
+
+            double zoneValue = Koefficient.StayAwayZoneMaxValue - zoneDistance*zoneDistance;
             zoneValue = Math.Max(0, zoneValue);
-            double shieldValue = 200 - perception.MyUnints[0].Shield;
-            double healthValue = 200 - 2 * perception.MyUnints[0].Health;
-            return zoneValue + shieldValue + healthValue;
+            double healthValue = Koefficient.StayAwayMaxHealthValue - Koefficient.StayAwayMaxHealthValue*(perception.MyUnints[0].Health+perception.MyUnints[0].Shield)
+                                 /(perception.Constants.MaxShield+perception.Constants.UnitHealth);
+            healthValue = healthValue * perception.EnemiesAimingYou.Count;
+            double value = zoneValue + healthValue + enemiesValue + Koefficient.StayAwayBaseValue;
+            if (_staySafe.IsActive)
+            {
+                value += Koefficient.PunishmentForLeavingStaySafe;
+            }
+            
+            return value;
         }
 
     }
