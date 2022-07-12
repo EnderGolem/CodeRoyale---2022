@@ -18,6 +18,11 @@ namespace AiCup22.Custom
         public const double maxPotionsValueLoot = 70;
         public const double PunishmentForLeavingBattle = 500;
 
+        public const double PunishmentForLeavingStaySafe = 500;
+        public const double StayAwayMaxHealthValue = 3000;
+        public const double StayAwayBaseValue = 1100;
+        public const double StayAwayZoneMaxValue = 5000;
+
         public const double bowValue = 3000;
 
         public static class Looting

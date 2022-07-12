@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using AiCup22.Custom;
 using AiCup22.Model;
 using Color = AiCup22.Debugging.Color;
@@ -17,6 +17,7 @@ namespace AiCup22.Custom
 
         private List<Unit> _myUnints;
         private List<Unit> _enemyUnints;
+        private List<int> enemiesAimingYou; 
 
         private const double obstacleSearchRadius = 80;
         private const int closeObstaclesRecalculationDelay = 10;
@@ -43,6 +44,7 @@ namespace AiCup22.Custom
 
         public Dictionary<int, MemorizedProjectile> MemorizedProjectiles => memorizedProjectiles;
 
+        public List<int> EnemiesAimingYou => enemiesAimingYou;
         public Dictionary<int, (int, double, Unit)> MemorizedEnemies => memorizedEnemies;
 
         private Dictionary<int, Loot> memorizedLoot;
@@ -66,6 +68,7 @@ namespace AiCup22.Custom
             memorizedEnemies = new Dictionary<int, (int, double, Unit)>();
             memorizedProjectiles = new Dictionary<int, MemorizedProjectile>();
             closeObstacles = new List<Obstacle>();
+            enemiesAimingYou = new List<int>();
             directions = new Vec2[8];
             directions[0] = new Vec2(1, 0);
             directions[1] = new Vec2(0.5, 0.5);
@@ -136,6 +139,8 @@ namespace AiCup22.Custom
                     mem.projData = game.Projectiles[i];
                 }
             }
+            
+            CalculateEnemiesAimingYou(game,debugInterface);
 
             if (lastObstacleRecalculationTick + closeObstaclesRecalculationDelay <= game.CurrentTick)
             {
@@ -195,7 +200,7 @@ namespace AiCup22.Custom
                 for (int i = 0; i < directions.Length; i++)
                 {
                     if (Tools.BelongDirection(enemy.Value.Item3.Position,
-                       _myUnints[0].Position, directions[i].Multi(-1), 180 / directions.Length))
+                       _myUnints[0].Position, directions[i].Multi(1), 180 / directions.Length))
                     //_myUnints[0].Position, directions[i], 180/directions.Length))
                     {
                         directionDangers[i] += enemy.Value.Item2;
@@ -203,52 +208,52 @@ namespace AiCup22.Custom
                     }
                 }
             }
-            foreach (var bullet in game.Projectiles)
+            /*foreach (var bullet in memorizedProjectiles)
             {
-                if (bullet.ShooterPlayerId != game.MyId)
+                if (bullet.Value.projData.ShooterPlayerId != game.MyId)
                     for (int i = 0; i < directions.Length; i++)
                     {
-                        if (Tools.BelongDirection(bullet.Position,
+                        if (Tools.BelongDirection(bullet.Value.actualPosition,
                             _myUnints[0].Position, directions[i], 180 / directions.Length))
                         {
                             //Просчет, куда надо идти и в какую сторону безопасней
                             var id1 = (i + 6) % 8;  //Типо -2
                             var id2 = (i + 2) % 8;
-                            var lineBullet = new Straight(bullet.Velocity, bullet.Position);
+                            var lineBullet = new Straight(bullet.Value.projData.Velocity, bullet.Value.actualPosition);
                             var lineDirection = new Straight(directions[id1], MyUnints[0].Position);
                             var point = lineBullet.GetIntersection(lineDirection);
                             if (point.Value.SqrDistance(MyUnints[0].Position.Add(directions[id1])) > point.Value.SqrDistance(MyUnints[0].Position.Add(directions[id2])))
-                                directionDangers[id1] += EstimateBulletDanger(bullet);
+                                directionDangers[id1] += EstimateBulletDanger(bullet.Value.projData);
                             else
-                                directionDangers[id2] += EstimateBulletDanger(bullet);
+                                directionDangers[id2] += EstimateBulletDanger(bullet.Value.projData);
 
                             if (debugInterface != null)
-                                debugInterface.AddSegment(bullet.Position, bullet.Position.Add(bullet.Velocity), 0.1, new Color(0.7, 0.3, 0, 0.8));
+                                debugInterface.AddSegment(bullet.Value.actualPosition, bullet.Value.actualPosition.Add(bullet.Value.projData.Velocity), 0.1, new Color(0.7, 0.3, 0, 0.8));
                             break;
                         }
                     }
+            }*/
+            for (int i = 0; i < directions.Length; i++) //Расскомитить
+            {
+                if (Tools.CurrentZoneDistance(game.Zone, _myUnints[0].Position.Add(directions[i].Normalize().Multi(30))) < 0)
+               {
+                   directionDangers[i] += Math.Pow(30 - Tools.CurrentZoneDistance(game.Zone, _myUnints[0].Position), 2);
+               }
             }
-            //for (int i = 0; i < directions.Length; i++) //Расскомитить
-            //{
-            //    if (Tools.CurrentZoneDistance(game.Zone, _myUnints[0].Position.Add(directions[i].Normalize().Multi(30))) < 0)
-            //    {
-            //        directionDangers[i] += Math.Pow(30 - Tools.CurrentZoneDistance(game.Zone, _myUnints[0].Position), 2);
-            //    }
-            //}
 
-            //double[] add = new double[directions.Length];
-            //for (int i = 0; i < directions.Length; i++)
-            //{
-            //    int prev = (i == 0) ? 7 : i - 1;
-            //    int next = (i + 1) % Directions.Length;
-            //    add[prev] += directionDangers[i] * 0.5;
-            //    add[next] += directionDangers[i] * 0.5;
-            //}
+            double[] add = new double[directions.Length];
+            for (int i = 0; i < directions.Length; i++)
+            {
+                int prev = (i == 0) ? 7 : i - 1; 
+                int next = (i + 1) % Directions.Length;
+                add[prev] += directionDangers[i] * 0.5;
+                add[next] += directionDangers[i] * 0.5;
+            }
 
-            //for (int i = 0; i < add.Length; i++)
-            //{
-            //    directionDangers[i] += add[i];
-            //}
+            for (int i = 0; i < add.Length; i++)
+            {
+                directionDangers[i] += add[i];
+            }
 
 
         }
@@ -335,9 +340,31 @@ namespace AiCup22.Custom
                         directionDangers[i].ToString(),
                         new Vec2(0, 0), 3, new Color(1, 0.2, 1, 0.7));
                 }
+
+                foreach (var enemy in enemiesAimingYou)
+                {
+                    debugInterface.AddSegment(memorizedEnemies[enemy].Item3.Position,
+                        memorizedEnemies[enemy].Item3.Position.Add(memorizedEnemies[enemy].Item3.Direction.Multi(50)),0.5,new Color(1,0,0,0.5));
+                }
             }
         }
-        
+
+        private void CalculateEnemiesAimingYou(Game game, DebugInterface debugInterface)
+        {
+            enemiesAimingYou.Clear();
+            foreach (var enemy in memorizedEnemies)
+            {
+                if (enemy.Value.Item3.Weapon.HasValue && game.CurrentTick - enemy.Value.Item1 < 40 && 
+                    Tools.BelongConeOfVision(_myUnints[0].Position,enemy.Value.Item3.Position,
+                        enemy.Value.Item3.Direction,_constants.ViewDistance*0.9,
+                        _constants.Weapons[enemy.Value.Item3.Weapon.Value].AimFieldOfView*0.5) &&
+                    enemy.Value.Item3.Aim>0.4)
+                {
+                    enemiesAimingYou.Add(enemy.Key);
+                }
+            }
+        }
+
     }
 
     public class MemorizedProjectile
