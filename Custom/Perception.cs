@@ -241,10 +241,15 @@ namespace AiCup22.Custom
             }*/
             for (int i = 0; i < directions.Length; i++) //Расскомитить
             {
-                if (Tools.CurrentZoneDistance(game.Zone, _myUnints[0].Position.Add(directions[i].Normalize().Multi(30))) < 0)
+                double dirZoneDist = Tools.CurrentZoneDistance(game.Zone,
+                    _myUnints[0].Position.Add(directions[i].Normalize().Multi(30)));
+                /*if (dirZoneDist < 0)
                {
                    directionDangers[i] += Math.Pow(30 - Tools.CurrentZoneDistance(game.Zone, _myUnints[0].Position), 2);
-               }
+               }*/
+                directionDangers[i] +=
+                        game.Zone.CurrentCenter.Distance(_myUnints[0].Position.Add(directions[i].Normalize()));
+                
             }
 
             double[] add = new double[directions.Length];
@@ -350,8 +355,8 @@ namespace AiCup22.Custom
                 {
                     Console.WriteLine($"{i}. {directionDangers[i]}");
                     Debug.AddPlacedText(_myUnints[0].Position.Add(directions[i].Multi(30)),
-                        directionDangers[i].ToString(),
-                        new Vec2(0, 0), 3, new Color(1, 0.2, 1, 0.7));
+                        (Math.Ceiling(directionDangers[i])).ToString(),
+                        new Vec2(0, 0), 2, new Color(1, 0.2, 1, 0.7));
                 }
 
                 foreach (var enemy in enemiesAimingYou)

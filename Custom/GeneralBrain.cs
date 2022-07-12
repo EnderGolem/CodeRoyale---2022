@@ -174,11 +174,12 @@ namespace AiCup22.Custom
             }
 
             double enemiesValue=0;
+            int i = 0;
+            int sum = 0;
+            double totalDanger = 0;
             if (perception.EnemiesAimingYou.Count > 0)
             {
-                int i = 0;
-                int sum = 0;
-                double totalDanger = 0;
+                
                 foreach (var enemy in perception.EnemiesAimingYou)
                 {
                     i++;
@@ -189,11 +190,11 @@ namespace AiCup22.Custom
                 enemiesValue = sum * (totalDanger) / i;
             }
 
-            double zoneValue = Koefficient.StayAwayZoneMaxValue - zoneDistance*zoneDistance;
+            double zoneValue = Koefficient.StayAwayZoneMaxValue * (1 - zoneDistance/perception.Game.Zone.CurrentRadius);
             zoneValue = Math.Max(0, zoneValue);
             double healthValue = Koefficient.StayAwayMaxHealthValue - Koefficient.StayAwayMaxHealthValue*(perception.MyUnints[0].Health+perception.MyUnints[0].Shield)
                                  /(perception.Constants.MaxShield+perception.Constants.UnitHealth);
-            healthValue = healthValue * perception.EnemiesAimingYou.Count;
+            healthValue = healthValue * sum;
             double value = zoneValue + healthValue + enemiesValue + Koefficient.StayAwayBaseValue;
             if (_staySafe.IsActive)
             {
