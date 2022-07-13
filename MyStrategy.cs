@@ -24,8 +24,8 @@ namespace AiCup22
             Dictionary<int, AiCup22.Model.UnitOrder> orders = new Dictionary<int, UnitOrder>();
             //try
             //{
-                perception.Analyze(game, debugInterface);
-                orders.Add(perception.MyUnints[0].Id, brain.Process(perception, debugInterface));
+            perception.Analyze(game, debugInterface);
+            orders.Add(perception.MyUnints[0].Id, brain.Process(perception, debugInterface));
 
             //}
             //catch (Exception e)
@@ -38,7 +38,7 @@ namespace AiCup22
         public void addText()
         {
 
-            FileInfo fileInf = new FileInfo("ressss.csv");
+            FileInfo fileInf = new FileInfo("Ver5_5.csv");
             var sw = fileInf.AppendText();
             int myPlayersId = 0;
             for (int i = 0; i < lastGame.Players.Length; i++)
