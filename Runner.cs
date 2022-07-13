@@ -66,7 +66,7 @@ namespace AiCup22
                         throw new Exception("Unexpected server message");
                 }
             }
-            myStrategy.addText();
+          //  myStrategy.addText();
         }
         public static void Main(string[] args)
         {

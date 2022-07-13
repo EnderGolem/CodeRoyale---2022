@@ -46,22 +46,22 @@ namespace AiCup22.Custom
                     bestPoints = point;
                 }
             }
-            
+
             var unit = perception.MyUnints[0];
             var enemy = perception.EnemyUnints[bestEnemyIndex];
             var safeDirection = CalculateDodge(perception, debugInterface);
-            debugInterface.AddSegment(unit.Position, unit.Position.Add(unit.Direction.Multi(100)), 0.3, new Color(0, 1, 0, 0.5));
             var distanceToEnemy = perception.MyUnints[id].Position.SqrDistance(perception.EnemyUnints[bestEnemyIndex].Position);
             var estimatedEnemyPosition = CalculateAimToTargetPrediction(ref enemy, perception.Constants.Weapons[perception.MyUnints[0].Weapon.Value].ProjectileSpeed, perception.MyUnints[0].Position);
-            Console.WriteLine("CurrentState " + (currentState == _steeringAimToDestinationDirection));
+            // Console.WriteLine("CurrentState " + (currentState == _steeringAimToDestinationDirection));
 
 
             if (debugInterface != null)
             {
+                debugInterface.AddSegment(unit.Position, unit.Position.Add(unit.Direction.Multi(100)), 0.3, new Color(0, 1, 0, 0.5));
                 debugInterface.AddRing(perception.MyUnints[id].Position, safeZone, 0.5, new Color(0, 1, 0.5, 1));
                 debugInterface.AddRing(perception.MyUnints[id].Position, 30, 0.5, new Color(0, 1, 0.5, 1));
                 debugInterface.AddCircle(estimatedEnemyPosition, 0.4, new Color(1, 0, 0, 1));
-                debugInterface.AddPlacedText(enemy.Position.Add(new Vec2(0,1)),enemy.Velocity.Length().ToString(),new Vec2(0.5,0.5), 0.5,new Color(1, 0.4, 0.6, 0.5));
+                debugInterface.AddPlacedText(enemy.Position.Add(new Vec2(0, 1)), enemy.Velocity.Length().ToString(), new Vec2(0.5, 0.5), 0.5, new Color(1, 0.4, 0.6, 0.5));
                 debugInterface.AddSegment(enemy.Position, estimatedEnemyPosition, 0.1, new Color(1, 0.4, 0.6, 0.5));
             }
             if (((currentState != _steeringAimToDestinationDirection && currentState != _steeringShootToDestinationDirection) && distanceToEnemy > 30 * 30) ||
@@ -125,7 +125,7 @@ namespace AiCup22.Custom
                 estimatedFlyTime = estimatedEnemyPosition.Distance(shotPosition) / bulletSpeed;
                 estimatedEnemyPosition = enemy.Position.Add(enemy.Velocity.Multi(estimatedFlyTime));
             }
-            
+
             return estimatedEnemyPosition;
             return estimatedEnemyPosition.Add(estimatedEnemyPosition.Substract(enemy.Position).Multi(0.65));
         }
@@ -150,7 +150,7 @@ namespace AiCup22.Custom
             var lineBullet = new Straight(bullet.Velocity, bullet.Position);
             var lineDirection = new Straight(safeDirection1, perception.MyUnints[0].Position);
             var point = lineBullet.GetIntersection(lineDirection);
-            System.Console.WriteLine($"SafeDirection1 {safeDirection1} SafeDirection{safeDirection2}");
+            //  System.Console.WriteLine($"SafeDirection1 {safeDirection1} SafeDirection{safeDirection2}");
             if (debugInterface != null)
                 debugInterface.AddSegment(bullet.Position, bullet.Position.Add(bullet.Velocity), 0.1, new Color(0.7, 0.3, 0, 0.8));
             if (point.Value.SqrDistance(perception.MyUnints[0].Position.Add(safeDirection1)) > point.Value.SqrDistance(perception.MyUnints[0].Position.Add(safeDirection2)))

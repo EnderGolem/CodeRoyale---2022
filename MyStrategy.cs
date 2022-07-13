@@ -22,16 +22,17 @@ namespace AiCup22
         {
             lastGame = game;
             Dictionary<int, AiCup22.Model.UnitOrder> orders = new Dictionary<int, UnitOrder>();
-            try
-            {
+            //try
+            //{
                 perception.Analyze(game, debugInterface);
                 orders.Add(perception.MyUnints[0].Id, brain.Process(perception, debugInterface));
 
-            }
-            catch (Exception e)
-            {
-                debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center, $"Message: {e.Message}\nTrace: {e.StackTrace}\nSource: {e.Source}", new Vec2(0, 0), 10, new Debugging.Color(0, 0, 0, 1));
-            }
+            //}
+            //catch (Exception e)
+            //{
+            //    if (debugInterface != null)
+            //        debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center, $"Message: {e.Message}\nTrace: {e.StackTrace}\nSource: {e.Source}", new Vec2(0, 0), 10, new Debugging.Color(0, 0, 0, 1));
+            //}
             return new Order(orders);
         }
         public void addText()

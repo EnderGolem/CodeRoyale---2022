@@ -17,7 +17,7 @@ namespace AiCup22.Custom
 
         private List<Unit> _myUnints;
         private List<Unit> _enemyUnints;
-        private List<int> enemiesAimingYou; 
+        private List<int> enemiesAimingYou;
 
         private const double obstacleSearchRadius = 80;
         private const int closeObstaclesRecalculationDelay = 10;
@@ -141,11 +141,12 @@ namespace AiCup22.Custom
                     }
                 else   //УДАЛИТЬ!!!!!!!!!!!!!!!!!!!!!!!
                 {
-                    debugInterface.AddSegment(game.Projectiles[i].Position, game.Projectiles[i].Position.Add(game.Projectiles[i].Velocity), 0.1, new Color(0.48, 0.48, 0.88, 0.5));
+                    if (debugInterface != null)
+                        debugInterface.AddSegment(game.Projectiles[i].Position, game.Projectiles[i].Position.Add(game.Projectiles[i].Velocity), 0.1, new Color(0.48, 0.48, 0.88, 0.5));
                 }
             }
-            
-            CalculateEnemiesAimingYou(game,debugInterface);
+
+            CalculateEnemiesAimingYou(game, debugInterface);
 
             if (lastObstacleRecalculationTick + closeObstaclesRecalculationDelay <= game.CurrentTick)
             {
@@ -213,33 +214,7 @@ namespace AiCup22.Custom
                     }
                 }
             }
-
-            /*foreach (var bullet in memorizedProjectiles)
-            {
-                if (bullet.Value.projData.ShooterPlayerId != game.MyId)
-                    for (int i = 0; i < directions.Length; i++)
-                    {
-                        if (Tools.BelongDirection(bullet.Value.actualPosition,
-                            _myUnints[0].Position, directions[i], 180 / directions.Length))
-                        {
-                            //Просчет, куда надо идти и в какую сторону безопасней
-                            var id1 = (i + 6) % 8;  //Типо -2
-                            var id2 = (i + 2) % 8;
-                            var lineBullet = new Straight(bullet.Value.projData.Velocity, bullet.Value.actualPosition);
-                            var lineDirection = new Straight(directions[id1], MyUnints[0].Position);
-                            var point = lineBullet.GetIntersection(lineDirection);
-                            if (point.Value.SqrDistance(MyUnints[0].Position.Add(directions[id1])) > point.Value.SqrDistance(MyUnints[0].Position.Add(directions[id2])))
-                                directionDangers[id1] += EstimateBulletDanger(bullet.Value.projData);
-                            else
-                                directionDangers[id2] += EstimateBulletDanger(bullet.Value.projData);
-
-                            if (debugInterface != null)
-                                debugInterface.AddSegment(bullet.Value.actualPosition, bullet.Value.actualPosition.Add(bullet.Value.projData.Velocity), 0.1, new Color(0.7, 0.3, 0, 0.8));
-                            break;
-                        }
-                    }
-            }*/
-            for (int i = 0; i < directions.Length; i++) //Расскомитить
+            for (int i = 0; i < directions.Length; i++)
             {
                 double dirZoneDist = Tools.CurrentZoneDistance(game.Zone,
                     _myUnints[0].Position.Add(directions[i].Normalize().Multi(30)));
@@ -249,13 +224,13 @@ namespace AiCup22.Custom
                }*/
                 directionDangers[i] +=
                         game.Zone.CurrentCenter.Distance(_myUnints[0].Position.Add(directions[i].Normalize()));
-                
+
             }
 
             double[] add = new double[directions.Length];
             for (int i = 0; i < directions.Length; i++)
             {
-                int prev = (i == 0) ? 7 : i - 1; 
+                int prev = (i == 0) ? 7 : i - 1;
                 int next = (i + 1) % Directions.Length;
                 add[prev] += directionDangers[i] * 0.5;
                 add[next] += directionDangers[i] * 0.5;
@@ -304,7 +279,8 @@ namespace AiCup22.Custom
                 Vec2 debugTextPos = debugInterface.GetState().Camera.Center.Substract(offset);
                 try
                 {
-                    debugInterface.AddPlacedText(debugTextPos, $"Health: {player.Health} Ammo: {player.Ammo[player.Weapon.Value]}\n  Shield: {player.Shield}Potions: {player.ShieldPotions}\nVelocity: {player.Velocity}", new Vec2(0.5, 0.5), 1, new Color(0, 0, 1, 1));
+                    if (debugInterface != null)
+                        debugInterface.AddPlacedText(debugTextPos, $"Health: {player.Health} Ammo: {player.Ammo[player.Weapon.Value]}\n  Shield: {player.Shield}Potions: {player.ShieldPotions}\nVelocity: {player.Velocity}", new Vec2(0.5, 0.5), 1, new Color(0, 0, 1, 1));
                 }
                 catch (Exception)
                 {
@@ -362,7 +338,7 @@ namespace AiCup22.Custom
                 foreach (var enemy in enemiesAimingYou)
                 {
                     debugInterface.AddSegment(memorizedEnemies[enemy].Item3.Position,
-                        memorizedEnemies[enemy].Item3.Position.Add(memorizedEnemies[enemy].Item3.Direction.Multi(50)),0.5,new Color(1,0,0,0.5));
+                        memorizedEnemies[enemy].Item3.Position.Add(memorizedEnemies[enemy].Item3.Direction.Multi(50)), 0.5, new Color(1, 0, 0, 0.5));
                 }
             }
         }
@@ -373,11 +349,11 @@ namespace AiCup22.Custom
             enemiesAimingYou.Clear();
             foreach (var enemy in memorizedEnemies)
             {
-                if (enemy.Value.Item3.Weapon.HasValue && game.CurrentTick - enemy.Value.Item1 < 40 && 
-                    Tools.BelongConeOfVision(_myUnints[0].Position,enemy.Value.Item3.Position,
-                        enemy.Value.Item3.Direction,_constants.ViewDistance*0.9,
-                        _constants.Weapons[enemy.Value.Item3.Weapon.Value].AimFieldOfView*0.5) &&
-                    enemy.Value.Item3.Aim>0.4)
+                if (enemy.Value.Item3.Weapon.HasValue && game.CurrentTick - enemy.Value.Item1 < 40 &&
+                    Tools.BelongConeOfVision(_myUnints[0].Position, enemy.Value.Item3.Position,
+                        enemy.Value.Item3.Direction, _constants.ViewDistance * 0.9,
+                        _constants.Weapons[enemy.Value.Item3.Weapon.Value].AimFieldOfView * 0.5) &&
+                    enemy.Value.Item3.Aim > 0.4)
                 {
                     enemiesAimingYou.Add(enemy.Key);
                 }
