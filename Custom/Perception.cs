@@ -87,7 +87,7 @@ namespace AiCup22.Custom
             _debug = debugInterface;
 
             _enemyUnints = new List<Unit>();
-            _myUnints = new List<Unit>(); // Потому что, если находится в конструкторе, то каждый getorder, будет увеличиваться
+            _myUnints = new List<Unit>();            // Потому что, если находится в конструкторе, то каждый getorder, будет увеличиваться
             foreach (var unit in game.Units)
             {
                 if (unit.PlayerId != game.MyId)
@@ -105,26 +105,8 @@ namespace AiCup22.Custom
                 memorizedLoot.TryAdd(game.Loot[i].Id, game.Loot[i]);
             }
 
-            List<int> memProjToRemove = new List<int>();
-
-            foreach (var projectile in memorizedProjectiles)
-            {
-                projectile.Value.CalculateActualPosition(this);
-                if ((Tools.BelongConeOfVision(projectile.Value.actualPosition, _myUnints[0].Position,
-                         _myUnints[0].Direction, Constants.ViewDistance,
-                         (1 - _myUnints[0].Aim) * Constants.FieldOfView) &&
-                     Game.Projectiles.Count(p => p.Id == projectile.Value.projData.Id) == 0)
-                    || projectile.Value.IsExpired(this)
-                    || projectile.Value.actualPosition.Distance(MyUnints[0].Position) < Constants.UnitRadius)
-                {
-                    memProjToRemove.Add(projectile.Key);
-                }
-            }
-
-            for (int i = 0; i < memProjToRemove.Count; i++)
-            {
-                memorizedProjectiles.Remove(memProjToRemove[i]);
-            }
+            removeProjectiles();
+            removeEnemies();
 
             for (int i = 0; i < game.Projectiles.Length; i++)
             {
@@ -157,6 +139,47 @@ namespace AiCup22.Custom
                 DebugOutput(game, debugInterface);
         }
 
+
+
+        private void removeEnemies()
+        {
+            List<int> memEnemiesToRemove = new List<int>();
+            foreach (var enemy in memorizedEnemies)
+            {
+                if (Game.CurrentTick - enemy.Value.Item1 > Tools.TimeToTicks(6,Constants.TicksPerSecond))
+                {
+                    memEnemiesToRemove.Add(enemy.Key);
+                }
+            }
+            for (int i = 0; i < memEnemiesToRemove.Count; i++) //Есть более быстрый способ удаления за O(1)
+            {
+                memorizedEnemies.Remove(memEnemiesToRemove[i]);
+            }
+        }
+        private void removeProjectiles()
+        {
+            List<int> memProjToRemove = new List<int>();
+
+            foreach (var projectile in memorizedProjectiles)
+            {
+                projectile.Value.CalculateActualPosition(this);
+                if ((Tools.BelongConeOfVision(projectile.Value.actualPosition, _myUnints[0].Position,
+                         _myUnints[0].Direction, Constants.ViewDistance,
+                         (1 - _myUnints[0].Aim) * Constants.FieldOfView) &&
+                     Game.Projectiles.Count(p => p.Id == projectile.Value.projData.Id) == 0)
+                    || projectile.Value.IsExpired(this)
+                    || projectile.Value.actualPosition.Distance(MyUnints[0].Position) < Constants.UnitRadius)
+                {
+                    memProjToRemove.Add(projectile.Key);
+                }
+            }
+
+            for (int i = 0; i < memProjToRemove.Count; i++) //Есть более быстрый способ удаления за O(1)
+            {
+                memorizedProjectiles.Remove(memProjToRemove[i]);
+            }
+        }
+
         private void CalculateCloseObstacles(Vec2 startPosition, double distance)
         {
             closeObstacles.Clear();
@@ -175,7 +198,7 @@ namespace AiCup22.Custom
             double ammoDanger = weaponDanger * unit.Ammo[unit.Weapon.Value] / _constants.Weapons[unit.Weapon.Value].MaxInventoryAmmo; //Тут точно балансить
             double healthDanger = unit.Health;
             double shieldDanger = unit.Shield;
-            return weaponDanger + ammoDanger + healthDanger + shieldDanger; // ХУЕЕЕТА
+            return (weaponDanger + ammoDanger + healthDanger + shieldDanger); // ХУЕЕЕТА
         }
 
 
@@ -190,13 +213,13 @@ namespace AiCup22.Custom
 
         protected void EstimateDirections(Game game, DebugInterface debugInterface)
         {
-            directionDangers.Clear();
+            directionDangers.Clear(); //Зачем тут Clear?
             for (int i = 0; i < directions.Length; i++)
             {
                 directionDangers.Add(0);
             }
 
-            foreach (var enemy in MemorizedEnemies) //Можно вроде бы просчитывать быстрее и более корректней.
+            foreach (var enemy in MemorizedEnemies)
             {
                 if (game.CurrentTick - enemy.Value.Item1 > 200)
                 {
@@ -207,9 +230,12 @@ namespace AiCup22.Custom
                 {
                     if (Tools.BelongDirection(enemy.Value.Item3.Position,
                        _myUnints[0].Position, directions[i].Multi(1), 180 / directions.Length))
-                    //_myUnints[0].Position, directions[i], 180/directions.Length))
                     {
-                        directionDangers[i] += enemy.Value.Item2;
+                        var distance = MyUnints[0].Position.Distance(enemy.Value.Item3.Position);
+                        double distanceDanger = -0.1 * distance + 4;                //ИИ должен бояться, тех кто ближе больше, чем те кто дальше
+                        if (distance > 30)
+                            distanceDanger = 1;
+                        directionDangers[i] += enemy.Value.Item2 * distanceDanger;
                         break;
                     }
                 }
@@ -223,7 +249,7 @@ namespace AiCup22.Custom
                    directionDangers[i] += Math.Pow(30 - Tools.CurrentZoneDistance(game.Zone, _myUnints[0].Position), 2);
                }*/
                 directionDangers[i] +=
-                        game.Zone.CurrentCenter.Distance(_myUnints[0].Position.Add(directions[i].Normalize()));
+                        game.Zone.CurrentCenter.Distance(_myUnints[0].Position.Add(directions[i].Normalize())) * 2;
 
             }
 
