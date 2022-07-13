@@ -130,7 +130,7 @@ namespace AiCup22
         }
         public static void Main(string[] args)
         {
-            for (int i = 1; i <= 39; i++)
+            for (int i = 1; i <= 11; i++)
             {
                 System.Console.WriteLine($"Round {i}");
                 Thread.Sleep(2000);

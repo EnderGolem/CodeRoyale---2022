@@ -23,7 +23,6 @@ namespace AiCup22.Custom
 
         private double[] stateValues;
 
-
         public GeneralBrain()
         {
             _lootingBrain = new LootingBrain();
@@ -36,10 +35,30 @@ namespace AiCup22.Custom
             allStates.Add(_staySafe);
 
             stateValues = new double[allStates.Count];
+            timeStates = new long[allStates.Count];
         }
 
         protected override Processable ChooseNewState(Perception perception, DebugInterface debugInterface)
         {
+            if (debugInterface != null)
+            {
+                if (currentState == _lootingBrain)
+                {
+                    timeStates[0] += 1;
+                }
+                if (currentState == _battleBrain)
+                {
+                    timeStates[1] += 1;
+                }
+                if (currentState == _radarBrain)
+                {
+                    timeStates[2] += 1;
+                }
+                if (currentState == _staySafe)
+                {
+                    timeStates[3] += 1;
+                }
+            }
             stateValues[3] = CalculateStaySafeValue(perception, debugInterface);
             stateValues[2] = CalculateRadarValue(perception, debugInterface);
             stateValues[1] = CalculateBattleValue(perception, debugInterface);
@@ -153,6 +172,8 @@ namespace AiCup22.Custom
                 return -10000;
             Unit unit = perception.MyUnints[0];
             double value = 0;
+            if (currentState == _battleBrain)
+                value -= 1000;
             if (!unit.Weapon.HasValue) //??? справедливо
             {
                 value += 6000;
@@ -216,6 +237,10 @@ namespace AiCup22.Custom
             }
 
             return value;
+        }
+        public string AddText()
+        {
+            return $"{timeStates[0]};{timeStates[1]};{timeStates[2]};{timeStates[3]}";
         }
 
     }

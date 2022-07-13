@@ -24,9 +24,10 @@ namespace AiCup22
             Dictionary<int, AiCup22.Model.UnitOrder> orders = new Dictionary<int, UnitOrder>();
             //try
             //{
+            
             perception.Analyze(game, debugInterface);
             orders.Add(perception.MyUnints[0].Id, brain.Process(perception, debugInterface));
-
+          
             //}
             //catch (Exception e)
             //{
@@ -49,8 +50,9 @@ namespace AiCup22
                     break;
                 }
             }
-            System.Console.WriteLine($"{lastGame.Players[myPlayersId].Score};{lastGame.Players[myPlayersId].Kills};{lastGame.Players[myPlayersId].Damage}; \n");
-            sw.WriteLine($"{lastGame.Players[myPlayersId].Score};{lastGame.Players[myPlayersId].Kills};{lastGame.Players[myPlayersId].Damage};{lastGame.Players[myPlayersId].Place}");
+            string s = $"{lastGame.Players[myPlayersId].Score};{lastGame.Players[myPlayersId].Kills};{lastGame.Players[myPlayersId].Damage};{lastGame.Players[myPlayersId].Place};{brain.TimeStates[0]};{brain.TimeStates[1]};{brain.TimeStates[2]};{brain.TimeStates[3]};";
+            System.Console.WriteLine(s);
+            sw.WriteLine(s);
             sw.Close();
         }
         public void DebugUpdate(int displayedTick, DebugInterface debugInterface) { }
