@@ -116,7 +116,7 @@ namespace AiCup22.Custom
                 }
             }
 
-            if (!hasEnemy)
+            if (!hasEnemy && perception.EnemyUnints.Count == 0)
             {
                 return -100000;
             }
