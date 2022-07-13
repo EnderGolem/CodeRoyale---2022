@@ -138,6 +138,8 @@ namespace AiCup22.Custom
 
         protected virtual double CalculateLootingValue(Perception perception, DebugInterface debugInterface)
         {
+            if (perception.MemorizedLoot.Count == 0)
+                return -10000;
             Unit unit = perception.MyUnints[0];
             double value = 0;
             if (!unit.Weapon.HasValue) //??? справедливо
@@ -163,7 +165,7 @@ namespace AiCup22.Custom
             }
 
             //value += healthValueKoefBattle * unit.Health + shieldValueKoefBattle * unit.Shield;
-            return value < 10000 ? value : 10000;
+            return value < 9999 ? value : 9999;
         }
 
         protected virtual double CalculateStaySafeValue(Perception perception, DebugInterface debugInterface)
@@ -174,13 +176,13 @@ namespace AiCup22.Custom
                 return 10000;
             }
 
-            double enemiesValue=0;
+            double enemiesValue = 0;
             int i = 0;
             int sum = 0;
             double totalDanger = 0;
             if (perception.EnemiesAimingYou.Count > 0)
             {
-                
+
                 foreach (var enemy in perception.EnemiesAimingYou)
                 {
                     i++;
@@ -191,17 +193,17 @@ namespace AiCup22.Custom
                 enemiesValue = sum * (totalDanger) / i;
             }
 
-            double zoneValue = Koefficient.StayAwayZoneMaxValue * (1 - zoneDistance/perception.Game.Zone.CurrentRadius);
+            double zoneValue = Koefficient.StayAwayZoneMaxValue * (1 - zoneDistance / perception.Game.Zone.CurrentRadius);
             zoneValue = Math.Max(0, zoneValue);
-            double healthValue = Koefficient.StayAwayMaxHealthValue - Koefficient.StayAwayMaxHealthValue*(perception.MyUnints[0].Health+perception.MyUnints[0].Shield)
-                                 /(perception.Constants.MaxShield+perception.Constants.UnitHealth);
+            double healthValue = Koefficient.StayAwayMaxHealthValue - Koefficient.StayAwayMaxHealthValue * (perception.MyUnints[0].Health + perception.MyUnints[0].Shield)
+                                 / (perception.Constants.MaxShield + perception.Constants.UnitHealth);
             healthValue = healthValue * sum;
             double value = zoneValue + healthValue + enemiesValue + Koefficient.StayAwayBaseValue;
             if (_staySafe.IsActive)
             {
                 value += Koefficient.PunishmentForLeavingStaySafe;
             }
-            
+
             return value;
         }
 
