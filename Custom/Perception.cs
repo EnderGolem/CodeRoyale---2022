@@ -139,7 +139,7 @@ namespace AiCup22.Custom
                         mem.lastSeenTick = game.CurrentTick;
                         mem.projData = game.Projectiles[i];
                     }
-                else   //УДАЛИТЬ!!!!!!!!!!!!!!!!!!!!!!!
+                else   //УДАЛИТЬ!!!!!!!!!!!!!!!!!!!!!!! Хотя, пусть будет
                 {
                     if (debugInterface != null)
                         debugInterface.AddSegment(game.Projectiles[i].Position, game.Projectiles[i].Position.Add(game.Projectiles[i].Velocity), 0.1, new Color(0.48, 0.48, 0.88, 0.5));
