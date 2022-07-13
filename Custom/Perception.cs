@@ -157,7 +157,7 @@ namespace AiCup22.Custom
             }
         }
         private void removeProjectiles()
-        {
+        {   
             List<int> memProjToRemove = new List<int>();
 
             foreach (var projectile in memorizedProjectiles)
@@ -355,7 +355,6 @@ namespace AiCup22.Custom
 
                 for (int i = 0; i < directions.Length; i++)
                 {
-                    Console.WriteLine($"{i}. {directionDangers[i]}");
                     Debug.AddPlacedText(_myUnints[0].Position.Add(directions[i].Multi(30)),
                         (Math.Ceiling(directionDangers[i])).ToString(),
                         new Vec2(0, 0), 2, new Color(1, 0.2, 1, 0.7));
