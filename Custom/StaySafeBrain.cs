@@ -6,11 +6,14 @@ namespace AiCup22.Custom
     public class StaySafeBrain :Brain
     {
         private RunToDestination _runToDestination;
-        
+        private UseShieldToDestination _useShieldToDestination;
+
         public StaySafeBrain()
         {
             _runToDestination = new SteeringRunToDestination();
+            _useShieldToDestination = new UseShieldToDestination();
             allStates.Add(_runToDestination);
+            allStates.Add(_useShieldToDestination);
         }
 
         protected override Processable ChooseNewState(Perception perception, DebugInterface debugInterface)
@@ -33,6 +36,12 @@ namespace AiCup22.Custom
                     safestDir = i;
                     minDanger = perception.DirectionDangers[i];
                 }
+            }
+
+            if (perception.MyUnints[0].Shield < 160)
+            {
+                _useShieldToDestination.SetDestination(perception.MyUnints[0].Position.Add(perception.Directions[safestDir].Multi(100)));
+                return _useShieldToDestination;
             }
             _runToDestination.SetDestination(perception.MyUnints[0].Position.Add(perception.Directions[safestDir].Multi(100)));
 
