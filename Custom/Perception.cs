@@ -34,16 +34,11 @@ namespace AiCup22.Custom
         /// Веса направлений
         /// </summary>
         protected List<double> directionDangers;
-
         public List<Obstacle> CloseObstacles => closeObstacles;
-
         public Vec2[] Directions => directions;
-
         public List<double> DirectionDangers => directionDangers;
         public Dictionary<int, Loot> MemorizedLoot => memorizedLoot;
-
         public Dictionary<int, MemorizedProjectile> MemorizedProjectiles => memorizedProjectiles;
-
         public List<int> EnemiesAimingYou => enemiesAimingYou;
         public Dictionary<int, (int, double, Unit)> MemorizedEnemies => memorizedEnemies;
 
@@ -146,7 +141,7 @@ namespace AiCup22.Custom
             List<int> memEnemiesToRemove = new List<int>();
             foreach (var enemy in memorizedEnemies)
             {
-                if (Game.CurrentTick - enemy.Value.Item1 > Tools.TimeToTicks(6,Constants.TicksPerSecond))
+                if (Game.CurrentTick - enemy.Value.Item1 > Tools.TimeToTicks(6, Constants.TicksPerSecond))
                 {
                     memEnemiesToRemove.Add(enemy.Key);
                 }
@@ -157,7 +152,7 @@ namespace AiCup22.Custom
             }
         }
         private void removeProjectiles()
-        {   
+        {
             List<int> memProjToRemove = new List<int>();
 
             foreach (var projectile in memorizedProjectiles)
@@ -232,9 +227,9 @@ namespace AiCup22.Custom
                        _myUnints[0].Position, directions[i].Multi(1), 180 / directions.Length))
                     {
                         var distance = MyUnints[0].Position.Distance(enemy.Value.Item3.Position);
-                        double distanceDanger = -0.1 * distance + 4;                //ИИ должен бояться, тех кто ближе больше, чем те кто дальше
+                        double distanceDanger = 1;                //ИИ должен бояться, тех кто ближе больше, чем те кто дальше
                         if (distance > 30)
-                            distanceDanger = 1;
+                            distanceDanger = -0.025 * distance + 1.75;
                         directionDangers[i] += enemy.Value.Item2 * distanceDanger;
                         break;
                     }

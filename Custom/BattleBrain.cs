@@ -87,7 +87,6 @@ namespace AiCup22.Custom
             }
             else  //Отступаем
             {
-                System.Console.WriteLine("RUUUUN id: " + id);
                 if (perception.MyUnints[id].Aim == 1 && Tools.RaycastObstacle(perception.MyUnints[id].Position, estimatedEnemyPosition,
                         perception.Constants.Obstacles, true) == null)
                 {

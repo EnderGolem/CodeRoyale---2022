@@ -130,10 +130,10 @@ namespace AiCup22
         }
         public static void Main(string[] args)
         {
-            for (int i = 1; i <= 50; i++)
+            for (int i = 1; i <= 39; i++)
             {
                 System.Console.WriteLine($"Round {i}");
-                Thread.Sleep(3000);
+                Thread.Sleep(2000);
                 System.Console.WriteLine("Create");
                 string host = args.Length < 1 ? "127.0.0.1" : args[0];
                 int port = args.Length < 2 ? 31001 : int.Parse(args[1]);

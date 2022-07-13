@@ -23,6 +23,7 @@ namespace AiCup22.Custom
 
         private double[] stateValues;
 
+
         public GeneralBrain()
         {
             _lootingBrain = new LootingBrain();
@@ -103,9 +104,19 @@ namespace AiCup22.Custom
 
         protected virtual double CalculateBattleValue(Perception perception, DebugInterface debugInterface)
         {
+
             Unit unit = perception.MyUnints[0];
             double value = 0;
-            if (perception.EnemyUnints.Count == 0)
+            bool hasEnemy = false;
+            foreach (var enemy in perception.MemorizedEnemies)
+            {
+                if (perception.Game.CurrentTick - enemy.Value.Item1 > Tools.TimeToTicks(1, perception.Constants.TicksPerSecond))
+                {
+                    hasEnemy = true;
+                }
+            }
+
+            if (!hasEnemy)
             {
                 return -100000;
             }

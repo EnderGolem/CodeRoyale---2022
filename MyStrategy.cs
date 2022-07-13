@@ -38,7 +38,7 @@ namespace AiCup22
         public void addText()
         {
 
-            FileInfo fileInf = new FileInfo("Ver5_5.csv");
+            FileInfo fileInf = new FileInfo("Ver5_6.csv");
             var sw = fileInf.AppendText();
             int myPlayersId = 0;
             for (int i = 0; i < lastGame.Players.Length; i++)
