@@ -87,7 +87,7 @@ namespace AiCup22.Custom
             _debug = debugInterface;
 
             _enemyUnints = new List<Unit>();
-            _myUnints = new List<Unit>(); // Потому что, если находится в конструкторе, то каждый getorder, будет увеличиваться
+            _myUnints = new List<Unit>();            // Потому что, если находится в конструкторе, то каждый getorder, будет увеличиваться
             foreach (var unit in game.Units)
             {
                 if (unit.PlayerId != game.MyId)
@@ -105,6 +105,59 @@ namespace AiCup22.Custom
                 memorizedLoot.TryAdd(game.Loot[i].Id, game.Loot[i]);
             }
 
+            removeProjectiles();
+            removeEnemies();
+
+            for (int i = 0; i < game.Projectiles.Length; i++)
+            {
+                if (game.Projectiles[i].ShooterPlayerId != game.MyId)
+                    if (!memorizedProjectiles.ContainsKey(game.Projectiles[i].Id))
+                    {
+                        memorizedProjectiles[game.Projectiles[i].Id] = new MemorizedProjectile(game.Projectiles[i], this);
+                    }
+                    else
+                    {
+                        var mem = memorizedProjectiles[game.Projectiles[i].Id];
+                        mem.lastSeenTick = game.CurrentTick;
+                        mem.projData = game.Projectiles[i];
+                    }
+                else   //УДАЛИТЬ!!!!!!!!!!!!!!!!!!!!!!! Хотя, пусть будет
+                {
+                    if (debugInterface != null)
+                        debugInterface.AddSegment(game.Projectiles[i].Position, game.Projectiles[i].Position.Add(game.Projectiles[i].Velocity), 0.1, new Color(0.48, 0.48, 0.88, 0.5));
+                }
+            }
+
+            CalculateEnemiesAimingYou(game, debugInterface);
+
+            if (lastObstacleRecalculationTick + closeObstaclesRecalculationDelay <= game.CurrentTick)
+            {
+                CalculateCloseObstacles(_myUnints[0].Position, obstacleSearchRadius);
+            }
+            EstimateDirections(game, debugInterface);
+            if (debugInterface != null)
+                DebugOutput(game, debugInterface);
+        }
+
+
+
+        private void removeEnemies()
+        {
+            List<int> memEnemiesToRemove = new List<int>();
+            foreach (var enemy in memorizedEnemies)
+            {
+                if (Game.CurrentTick - enemy.Value.Item1 > Tools.TimeToTicks(6,Constants.TicksPerSecond))
+                {
+                    memEnemiesToRemove.Add(enemy.Key);
+                }
+            }
+            for (int i = 0; i < memEnemiesToRemove.Count; i++) //Есть более быстрый способ удаления за O(1)
+            {
+                memorizedEnemies.Remove(memEnemiesToRemove[i]);
+            }
+        }
+        private void removeProjectiles()
+        {   
             List<int> memProjToRemove = new List<int>();
 
             foreach (var projectile in memorizedProjectiles)
@@ -121,40 +174,10 @@ namespace AiCup22.Custom
                 }
             }
 
-            for (int i = 0; i < memProjToRemove.Count; i++)
+            for (int i = 0; i < memProjToRemove.Count; i++) //Есть более быстрый способ удаления за O(1)
             {
                 memorizedProjectiles.Remove(memProjToRemove[i]);
             }
-
-            for (int i = 0; i < game.Projectiles.Length; i++)
-            {
-                if (game.Projectiles[i].ShooterPlayerId != game.MyId)
-                    if (!memorizedProjectiles.ContainsKey(game.Projectiles[i].Id))
-                    {
-                        memorizedProjectiles[game.Projectiles[i].Id] = new MemorizedProjectile(game.Projectiles[i], this);
-                    }
-                    else
-                    {
-                        var mem = memorizedProjectiles[game.Projectiles[i].Id];
-                        mem.lastSeenTick = game.CurrentTick;
-                        mem.projData = game.Projectiles[i];
-                    }
-                else   //УДАЛИТЬ!!!!!!!!!!!!!!!!!!!!!!!
-                {
-                    if (debugInterface != null)
-                        debugInterface.AddSegment(game.Projectiles[i].Position, game.Projectiles[i].Position.Add(game.Projectiles[i].Velocity), 0.1, new Color(0.48, 0.48, 0.88, 0.5));
-                }
-            }
-
-            CalculateEnemiesAimingYou(game, debugInterface);
-
-            if (lastObstacleRecalculationTick + closeObstaclesRecalculationDelay <= game.CurrentTick)
-            {
-                CalculateCloseObstacles(_myUnints[0].Position, obstacleSearchRadius);
-            }
-            EstimateDirections(game, debugInterface);
-            if (debugInterface != null)
-                DebugOutput(game, debugInterface);
         }
 
         private void CalculateCloseObstacles(Vec2 startPosition, double distance)
@@ -175,7 +198,7 @@ namespace AiCup22.Custom
             double ammoDanger = weaponDanger * unit.Ammo[unit.Weapon.Value] / _constants.Weapons[unit.Weapon.Value].MaxInventoryAmmo; //Тут точно балансить
             double healthDanger = unit.Health;
             double shieldDanger = unit.Shield;
-            return weaponDanger + ammoDanger + healthDanger + shieldDanger; // ХУЕЕЕТА
+            return (weaponDanger + ammoDanger + healthDanger + shieldDanger); // ХУЕЕЕТА
         }
 
 
@@ -190,13 +213,13 @@ namespace AiCup22.Custom
 
         protected void EstimateDirections(Game game, DebugInterface debugInterface)
         {
-            directionDangers.Clear();
+            directionDangers.Clear(); //Зачем тут Clear?
             for (int i = 0; i < directions.Length; i++)
             {
                 directionDangers.Add(0);
             }
 
-            foreach (var enemy in MemorizedEnemies) //Можно вроде бы просчитывать быстрее и более корректней.
+            foreach (var enemy in MemorizedEnemies)
             {
                 if (game.CurrentTick - enemy.Value.Item1 > 200)
                 {
@@ -207,9 +230,12 @@ namespace AiCup22.Custom
                 {
                     if (Tools.BelongDirection(enemy.Value.Item3.Position,
                        _myUnints[0].Position, directions[i].Multi(1), 180 / directions.Length))
-                    //_myUnints[0].Position, directions[i], 180/directions.Length))
                     {
-                        directionDangers[i] += enemy.Value.Item2;
+                        var distance = MyUnints[0].Position.Distance(enemy.Value.Item3.Position);
+                        double distanceDanger = -0.1 * distance + 4;                //ИИ должен бояться, тех кто ближе больше, чем те кто дальше
+                        if (distance > 30)
+                            distanceDanger = 1;
+                        directionDangers[i] += enemy.Value.Item2 * distanceDanger;
                         break;
                     }
                 }
@@ -223,7 +249,9 @@ namespace AiCup22.Custom
                    directionDangers[i] += Math.Pow(30 - Tools.CurrentZoneDistance(game.Zone, _myUnints[0].Position), 2);
                }*/
                 directionDangers[i] +=
-                        game.Zone.CurrentCenter.Distance(_myUnints[0].Position.Add(directions[i].Normalize()));
+
+                        game.Zone.CurrentCenter.Distance(_myUnints[0].Position.Add(directions[i].Normalize())) * 2;
+
             }
 
             double[] add = new double[directions.Length];
@@ -328,7 +356,6 @@ namespace AiCup22.Custom
 
                 for (int i = 0; i < directions.Length; i++)
                 {
-                    Console.WriteLine($"{i}. {directionDangers[i]}");
                     Debug.AddPlacedText(_myUnints[0].Position.Add(directions[i].Multi(30)),
                         (Math.Ceiling(directionDangers[i])).ToString(),
                         new Vec2(0, 0), 2, new Color(1, 0.2, 1, 0.7));
