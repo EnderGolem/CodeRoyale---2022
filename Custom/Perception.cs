@@ -224,7 +224,6 @@ namespace AiCup22.Custom
                }*/
                 directionDangers[i] +=
                         game.Zone.CurrentCenter.Distance(_myUnints[0].Position.Add(directions[i].Normalize()));
-
             }
 
             double[] add = new double[directions.Length];
