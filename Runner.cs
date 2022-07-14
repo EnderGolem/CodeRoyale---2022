@@ -73,7 +73,7 @@ namespace AiCup22
             //int port = args.Length < 2 ? 31001 : int.Parse(args[1]);
             //string token = args.Length < 3 ? "0000000000000000" : args[2];
             //new Runner(host, port, token).Run();
-             Custom.ManyRunner.ManyRuns(args);
+            Custom.ManyRunner.ManyRuns(args,50);
 
         }
     }
