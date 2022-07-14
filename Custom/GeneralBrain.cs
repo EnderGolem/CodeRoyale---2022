@@ -129,7 +129,7 @@ namespace AiCup22.Custom
             bool hasEnemy = false;
             foreach (var enemy in perception.MemorizedEnemies)
             {
-                if (perception.Game.CurrentTick - enemy.Value.Item1 > Tools.TimeToTicks(1, perception.Constants.TicksPerSecond))
+                if (perception.Game.CurrentTick - enemy.Value.Item1 < Tools.TimeToTicks(1, perception.Constants.TicksPerSecond))
                 {
                     hasEnemy = true;
                 }
