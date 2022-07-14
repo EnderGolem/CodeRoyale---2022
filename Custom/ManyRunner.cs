@@ -1,17 +1,20 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
+using System.Windows.Input;
+using System.Runtime.InteropServices;
+using System.Threading;
 
-namespace AiCup22
+namespace AiCup22.Custom
 {
-    public class Runner
+    public class ManyRunner
     {
         private BinaryReader reader;
         private BinaryWriter writer;
-        public Runner(string host, int port, string token)
+        public ManyRunner(string host, int port, string token)
         {
             while (true)
             {
@@ -28,6 +31,8 @@ namespace AiCup22
                     writer.Write((int)1);
                     writer.Write((int)1);
                     writer.Flush();
+                    VirtualInnput.SetCursorClick(1070, 595);
+
                     break;
                 }
                 catch (Exception)
@@ -41,14 +46,18 @@ namespace AiCup22
             MyStrategy myStrategy = null;
             var debugInterface = new DebugInterface(reader, writer);
             var running = true;
+            int maxWithoutOrder = 100;
+            int withoutOrder = 0;
             while (running)
             {
+                withoutOrder++;
                 switch (AiCup22.Codegame.ServerMessage.ReadFrom(reader))
                 {
                     case AiCup22.Codegame.ServerMessage.UpdateConstants message:
                         myStrategy = new MyStrategy(message.Constants);
                         break;
                     case AiCup22.Codegame.ServerMessage.GetOrder message:
+                        withoutOrder = 0;
                         new AiCup22.Codegame.ClientMessage.OrderMessage(myStrategy.GetOrder(message.PlayerView, message.DebugAvailable ? debugInterface : null)).WriteTo(writer);
                         writer.Flush();
                         break;
@@ -64,17 +73,29 @@ namespace AiCup22
                     default:
                         throw new Exception("Unexpected server message");
                 }
+                if (withoutOrder > maxWithoutOrder)
+                {
+                    System.Console.WriteLine("My_strategy Finish");
+                    VirtualInnput.PressEsk();
+                    System.Console.WriteLine("Esc_click");
+                }
+
             }
+            myStrategy.addText();
+            System.Console.WriteLine("Add_file");
         }
-        public static void Main(string[] args)
+        public static void ManyRuns(string[] args, int countRuns = 50)
         {
-
-            //string host = args.Length < 1 ? "127.0.0.1" : args[0];
-            //int port = args.Length < 2 ? 31001 : int.Parse(args[1]);
-            //string token = args.Length < 3 ? "0000000000000000" : args[2];
-            //new Runner(host, port, token).Run();
-             Custom.ManyRunner.ManyRuns(args);
-
+            for (int i = 1; i <= countRuns; i++)
+            {
+                System.Console.WriteLine($"Round {i}");
+                Thread.Sleep(2000);
+                System.Console.WriteLine("Create");
+                string host = args.Length < 1 ? "127.0.0.1" : args[0];
+                int port = args.Length < 2 ? 31001 : int.Parse(args[1]);
+                string token = args.Length < 3 ? "0000000000000000" : args[2];
+                new Runner(host, port, token).Run();
+            }
         }
     }
 }
