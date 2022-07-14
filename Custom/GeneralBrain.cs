@@ -35,10 +35,30 @@ namespace AiCup22.Custom
             allStates.Add(_staySafe);
 
             stateValues = new double[allStates.Count];
+            timeStates = new long[allStates.Count];
         }
 
         protected override Processable ChooseNewState(Perception perception, DebugInterface debugInterface)
         {
+            if (debugInterface != null)
+            {
+                if (currentState == _lootingBrain)
+                {
+                    timeStates[0] += 1;
+                }
+                if (currentState == _battleBrain)
+                {
+                    timeStates[1] += 1;
+                }
+                if (currentState == _radarBrain)
+                {
+                    timeStates[2] += 1;
+                }
+                if (currentState == _staySafe)
+                {
+                    timeStates[3] += 1;
+                }
+            }
             stateValues[3] = CalculateStaySafeValue(perception, debugInterface);
             stateValues[2] = CalculateRadarValue(perception, debugInterface);
             stateValues[1] = CalculateBattleValue(perception, debugInterface);

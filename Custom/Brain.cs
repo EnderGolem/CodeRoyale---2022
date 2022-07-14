@@ -26,7 +26,9 @@ namespace AiCup22.Custom
         protected Processable currentState;
 
         protected List<Processable> allStates;
+        protected long[] timeStates;
 
+        public long[] TimeStates => timeStates;
 
         /// <summary>
         /// Здесь дожен быть какой - то общий список всех конечных действий на выбор данного мозга
