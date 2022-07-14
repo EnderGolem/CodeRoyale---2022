@@ -102,6 +102,19 @@ namespace AiCup22.Custom
 
         protected virtual double CalculateRadarValue(Perception perception, DebugInterface debugInterface)
         {
+            var soundBullet = false;
+            foreach (var sound in perception.Game.Sounds)
+            {
+                if (sound.Position.Distance(perception.MyUnints[0].Position) < 1.5)
+                {
+                    if (!Tools.BelongConeOfVision(sound.Position, perception.MyUnints[0].Position, perception.MyUnints[0].Direction, perception.Constants.ViewDistance, perception.Constants.FieldOfView)) //Идет проверка по зрению без учета прицеливания
+                    {
+                        soundBullet = true;
+                    }
+                }
+                if (debugInterface != null)
+                    debugInterface.AddCircle(sound.Position, 0.5, new Color(1, 1, 0, 1));
+            }
 
             if (_radarBrain.IsActive)
             {
@@ -117,6 +130,12 @@ namespace AiCup22.Custom
             else
             {
                 var result = (perception.Game.CurrentTick - _radarBrain.LastDeactivationTick) * 10;
+                if ((perception.Game.CurrentTick - _radarBrain.LastDeactivationTick) < 120 && soundBullet)
+                    return 0;
+                if (soundBullet)
+                {
+                    result *= 10;
+                }
                 return result;
             }
         }
