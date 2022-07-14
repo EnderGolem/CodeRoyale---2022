@@ -125,7 +125,7 @@ namespace AiCup22.Custom
             {
                 memorizedProjectiles.Remove(memProjToRemove[i]);
             }
-
+            removeEnemies();
             for (int i = 0; i < game.Projectiles.Length; i++)
             {
                 if (game.Projectiles[i].ShooterPlayerId != game.MyId)
@@ -155,6 +155,21 @@ namespace AiCup22.Custom
             EstimateDirections(game, debugInterface);
             if (debugInterface != null)
                 DebugOutput(game, debugInterface);
+        }
+        private void removeEnemies()
+        {
+            List<int> memEnemiesToRemove = new List<int>();
+            foreach (var enemy in memorizedEnemies)
+            {
+                if (Game.CurrentTick - enemy.Value.Item1 > Tools.TimeToTicks(6, Constants.TicksPerSecond))
+                {
+                    memEnemiesToRemove.Add(enemy.Key);
+                }
+            }
+            for (int i = 0; i < memEnemiesToRemove.Count; i++) //Есть более быстрый способ удаления за O(1)
+            {
+                memorizedEnemies.Remove(memEnemiesToRemove[i]);
+            }
         }
 
         private void CalculateCloseObstacles(Vec2 startPosition, double distance)
