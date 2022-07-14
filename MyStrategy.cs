@@ -3,6 +3,8 @@ using AiCup22.Model;
 using AiCup22.Custom;
 using System;
 using System.IO;
+using System.Linq;
+using AiCup22.Debugging;
 
 namespace AiCup22
 {
@@ -25,8 +27,14 @@ namespace AiCup22
             //try
             //{
             perception.Analyze(game, debugInterface);
-            orders.Add(perception.MyUnints[0].Id, brain.Process(perception, debugInterface));
-
+            var order = brain.Process(perception, debugInterface);
+            orders.Add(perception.MyUnints[0].Id, order);
+            
+            
+               /* var unit = perception.SimulateUnitMovement(perception.MyUnints[0], order, perception.CloseObstacles,
+                    perception.MemorizedProjectiles.Values.ToList(), 3, game.CurrentTick,debugInterface);   
+            
+            debugInterface.AddRing(unit.Position,1.4,0.2,new Color(0,0,1,1));*/
             //}
             //catch (Exception e)
             //{
