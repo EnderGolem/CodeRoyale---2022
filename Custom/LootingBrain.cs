@@ -64,10 +64,12 @@ namespace AiCup22.Custom
                     continue;
                 }
 
-                double curPoints = CalculateLootValue(perception, loot.Value);
+                double curPoints = CalculateLootValue(perception, loot.Value,debugInterface);
 
                 if (debugInterface != null)
+                {
                     debugInterface.AddPlacedText(loot.Value.Position, Math.Round(curPoints).ToString(), new Vec2(0, 0), 1, new Color(1, 0, 0.5, 1));
+                }
 
                 if (bestPoints < curPoints)
                 {
@@ -140,14 +142,12 @@ namespace AiCup22.Custom
                 return -1;
             return 20 / (-distance - 4) + 5;
         }
-        private double CalculateLootValue(Perception perception, Loot loot)
+        private double CalculateLootValue(Perception perception, Loot loot, DebugInterface debugInterface = null)
         {
 
 
-            //   double points = -loot.Position.SqrDistance(perception.MyUnints[id].Position); //Не корректно, лучше вообще работать без минуса
-            double points = 1 / loot.Position.SqrDistance(perception.MyUnints[id].Position);
-            //System.Console.WriteLine("Looting Brain Points Disance " + points);
 
+            double points = 1;
             switch (loot.Item)
             {
                 case Item.Weapon weapon:
@@ -195,6 +195,11 @@ namespace AiCup22.Custom
                     points *= CalculateShieldValue(perception, potion);
                     break;
             }
+            if (debugInterface != null)
+            {
+                debugInterface.AddPlacedText(loot.Position.Add(new Vec2(1, -1)), Math.Round(points).ToString(), new Vec2(0, 0), 0.7, new Color(0.2, 0.72, 0.8, 0.7));
+            }
+            points *= 1 / loot.Position.SqrDistance(perception.MyUnints[id].Position);
             points *= CalculateZoneValue(perception, loot.Position);
             return points;
         }
