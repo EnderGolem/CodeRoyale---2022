@@ -35,30 +35,10 @@ namespace AiCup22.Custom
             allStates.Add(_staySafe);
 
             stateValues = new double[allStates.Count];
-            timeStates = new long[allStates.Count];
         }
 
         protected override Processable ChooseNewState(Perception perception, DebugInterface debugInterface)
         {
-            if (debugInterface != null)
-            {
-                if (currentState == _lootingBrain)
-                {
-                    timeStates[0] += 1;
-                }
-                if (currentState == _battleBrain)
-                {
-                    timeStates[1] += 1;
-                }
-                if (currentState == _radarBrain)
-                {
-                    timeStates[2] += 1;
-                }
-                if (currentState == _staySafe)
-                {
-                    timeStates[3] += 1;
-                }
-            }
             stateValues[3] = CalculateStaySafeValue(perception, debugInterface);
             stateValues[2] = CalculateRadarValue(perception, debugInterface);
             stateValues[1] = CalculateBattleValue(perception, debugInterface);
@@ -76,24 +56,23 @@ namespace AiCup22.Custom
                     bestValue = stateValues[i];
                 }
             }
+            Vec2 offset = new Vec2(-20, 10);
+            var textSize = 3;
             if (debugInterface != null)
             {
-                Vec2 offset = new Vec2(-30, 20);
-                var textSize = 2.5;
-                var center = perception.MyUnints[0].Position.Add(offset);
-                debugInterface.AddPlacedText(center.Add(new Vec2(0, 0)),
+                debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0, 0)),
                     $"Radar: {stateValues[2]}",
                     new Vec2(0.5, 0.5), textSize, new Color(0, 0, 1, 1));
-                debugInterface.AddPlacedText(center.Add(new Vec2(0, 2)),
+                debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0, 2)),
                     $"Battle: {stateValues[1]}",
                     new Vec2(0.5, 0.5), textSize, new Color(1, 0, 0, 1));
-                debugInterface.AddPlacedText(center.Add(new Vec2(0, 4)),
+                debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0, 4)),
                     $"Looting {stateValues[0]}",
                     new Vec2(0.5, 0.5), textSize, new Color(0, 1, 0, 1));
-                debugInterface.AddPlacedText(center.Add(new Vec2(0, 6)),
+                debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0, 6)),
                     $"StayAway {stateValues[3]}",
                     new Vec2(0.5, 0.5), textSize, new Color(1, 1, 0, 1));
-                debugInterface.AddPlacedText(center.Add(new Vec2(0, 8)),
+                debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0, 8)),
                    $"CurrentStay {allStates[bestState].GetType().Name}",
                    new Vec2(0.5, 0.5), textSize, new Color(1, 0, 1, 1));
             }
@@ -123,19 +102,9 @@ namespace AiCup22.Custom
 
         protected virtual double CalculateBattleValue(Perception perception, DebugInterface debugInterface)
         {
-
             Unit unit = perception.MyUnints[0];
             double value = 0;
-            bool hasEnemy = false;
-            foreach (var enemy in perception.MemorizedEnemies)
-            {
-                if (perception.Game.CurrentTick - enemy.Value.Item1 > Tools.TimeToTicks(1, perception.Constants.TicksPerSecond))
-                {
-                    hasEnemy = true;
-                }
-            }
-
-            if (!hasEnemy && perception.EnemyUnints.Count == 0)
+            if (perception.EnemyUnints.Count == 0)
             {
                 return -100000;
             }
@@ -168,12 +137,8 @@ namespace AiCup22.Custom
 
         protected virtual double CalculateLootingValue(Perception perception, DebugInterface debugInterface)
         {
-            if (perception.MemorizedLoot.Count == 0)
-                return -10000;
             Unit unit = perception.MyUnints[0];
             double value = 0;
-            //if (currentState == _battleBrain)
-            //    value -= 1000;
             if (!unit.Weapon.HasValue) //??? справедливо
             {
                 value += 6000;
@@ -197,7 +162,7 @@ namespace AiCup22.Custom
             }
 
             //value += healthValueKoefBattle * unit.Health + shieldValueKoefBattle * unit.Shield;
-            return value < 9999 ? value : 9999;
+            return value < 10000 ? value : 10000;
         }
 
         protected virtual double CalculateStaySafeValue(Perception perception, DebugInterface debugInterface)
@@ -208,13 +173,13 @@ namespace AiCup22.Custom
                 return 10000;
             }
 
-            double enemiesValue = 0;
+            double enemiesValue=0;
             int i = 0;
             int sum = 0;
             double totalDanger = 0;
             if (perception.EnemiesAimingYou.Count > 0)
             {
-
+                
                 foreach (var enemy in perception.EnemiesAimingYou)
                 {
                     i++;
@@ -224,22 +189,19 @@ namespace AiCup22.Custom
 
                 enemiesValue = sum * (totalDanger) / i;
             }
-            double zoneValue = Koefficient.StayAwayZoneMaxValue * (1 - zoneDistance / perception.Game.Zone.CurrentRadius);
+
+            double zoneValue = Koefficient.StayAwayZoneMaxValue * (1 - zoneDistance/perception.Game.Zone.CurrentRadius);
             zoneValue = Math.Max(0, zoneValue);
-            double healthValue = Koefficient.StayAwayMaxHealthValue - Koefficient.StayAwayMaxHealthValue * (perception.MyUnints[0].Health + perception.MyUnints[0].Shield)
-                                 / (perception.Constants.MaxShield + perception.Constants.UnitHealth);
+            double healthValue = Koefficient.StayAwayMaxHealthValue - Koefficient.StayAwayMaxHealthValue*(perception.MyUnints[0].Health+perception.MyUnints[0].Shield)
+                                 /(perception.Constants.MaxShield+perception.Constants.UnitHealth);
             healthValue = healthValue * sum;
             double value = zoneValue + healthValue + enemiesValue + Koefficient.StayAwayBaseValue;
             if (_staySafe.IsActive)
             {
                 value += Koefficient.PunishmentForLeavingStaySafe;
             }
-
+            
             return value;
-        }
-        public string AddText()
-        {
-            return $"{timeStates[0]};{timeStates[1]};{timeStates[2]};{timeStates[3]}";
         }
 
     }
