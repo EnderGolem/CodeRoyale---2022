@@ -172,8 +172,8 @@ namespace AiCup22.Custom
                 return -10000;
             Unit unit = perception.MyUnints[0];
             double value = 0;
-            if (currentState == _battleBrain)
-                value -= 1000;
+            //if (currentState == _battleBrain)
+            //    value -= 1000;
             if (!unit.Weapon.HasValue) //??? справедливо
             {
                 value += 6000;
@@ -224,7 +224,6 @@ namespace AiCup22.Custom
 
                 enemiesValue = sum * (totalDanger) / i;
             }
-
             double zoneValue = Koefficient.StayAwayZoneMaxValue * (1 - zoneDistance / perception.Game.Zone.CurrentRadius);
             zoneValue = Math.Max(0, zoneValue);
             double healthValue = Koefficient.StayAwayMaxHealthValue - Koefficient.StayAwayMaxHealthValue * (perception.MyUnints[0].Health + perception.MyUnints[0].Shield)

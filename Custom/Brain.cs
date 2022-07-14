@@ -27,6 +27,7 @@ namespace AiCup22.Custom
 
         protected List<Processable> allStates;
         protected long[] timeStates;
+
         public long[] TimeStates => timeStates;
 
         /// <summary>

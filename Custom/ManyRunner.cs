@@ -81,7 +81,7 @@ namespace AiCup22.Custom
                 }
 
             }
-            myStrategy.addText();
+            myStrategy.addText("Ver5_94.csv");
             System.Console.WriteLine("Add_file");
         }
         public static void ManyRuns(string[] args, int countRuns = 50)
@@ -94,7 +94,7 @@ namespace AiCup22.Custom
                 string host = args.Length < 1 ? "127.0.0.1" : args[0];
                 int port = args.Length < 2 ? 31001 : int.Parse(args[1]);
                 string token = args.Length < 3 ? "0000000000000000" : args[2];
-                new Runner(host, port, token).Run();
+                new ManyRunner(host, port, token).Run();
             }
         }
     }
