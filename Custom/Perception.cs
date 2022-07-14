@@ -301,7 +301,6 @@ namespace AiCup22.Custom
 
                 debugInterface.AddRing(game.Zone.CurrentCenter, game.Zone.CurrentRadius, 1, new Color(1, 0, 0, 1));
                 debugInterface.AddRing(game.Zone.NextCenter, game.Zone.NextRadius, 1, new Color(0, 1, 0, 1));
-                //Console.WriteLine(memorizedLoot.Count);
                 foreach (var l in memorizedLoot)
                 {
                     debugInterface.AddRing(l.Value.Position, 1, 0.3, new Color(0.8, 0.8, 0.8, 1));
@@ -329,7 +328,6 @@ namespace AiCup22.Custom
 
                 for (int i = 0; i < directions.Length; i++)
                 {
-                    Console.WriteLine($"{i}. {directionDangers[i]}");
                     Debug.AddPlacedText(_myUnints[0].Position.Add(directions[i].Multi(30)),
                         (Math.Ceiling(directionDangers[i])).ToString(),
                         new Vec2(0, 0), 2, new Color(1, 0.2, 1, 0.7));
