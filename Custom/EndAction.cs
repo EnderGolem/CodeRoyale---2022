@@ -367,7 +367,7 @@ namespace AiCup22.Custom
             }
 
             Vec2 dir = perception.SimulateEvading(perception.MyUnints[0],perception.CloseObstacles,
-                perception.MemorizedProjectiles.Values.ToList(),3,perception.Game.Zone.CurrentCenter.Substract(unit.Position).Normalize(),1,12,debugInterface);
+                perception.MemorizedProjectiles.Values.ToList(),3,perception.Game.Zone.CurrentCenter.Substract(unit.Position).Normalize(),1,10,debugInterface);
             debugInterface.AddSegment(unit.Position,unit.Position.Add(dir.Multi(5)),0.5,new Color(1,1,0,0.3));
             //Console.WriteLine(dir);
             return new UnitOrder(dir.Multi(perception.Constants.MaxUnitForwardSpeed),new Vec2(), null);
@@ -390,10 +390,31 @@ namespace AiCup22.Custom
                         perception.MemorizedProjectiles.Values.ToList(),3,targetDir.Normalize(),1,10,debugInterface);
                     debugInterface?.AddSegment(perception.MyUnints[0].Position,perception.MyUnints[0].Position.Add(d.Multi(5)),0.5,new Color(1,1,0,0.3));
                     //Console.WriteLine(dir);
-                    return new UnitOrder(d.Multi(perception.Constants.MaxUnitForwardSpeed),new Vec2(), null);
+                    return new UnitOrder(d.Multi(perception.Constants.MaxUnitForwardSpeed),perception.MyUnints[0].Direction, null);
                 }
         }
     }
+
+    public class UseShieldToDestinationWithEvading:SteeringRunToDestination
+    {
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
+        {
+            var targetDir = CalculateDirToDestinationWithObstAvoidance(perception, debugInterface);
+            var projs = perception.ClipSafeProjectiles();
+            if (projs.Count == 0)
+            {
+                return new UnitOrder(targetDir, targetDir, null);
+            }
+            else
+            {
+                Vec2 d = perception.SimulateEvading(perception.MyUnints[0],perception.CloseObstacles,
+                    perception.MemorizedProjectiles.Values.ToList(),3,targetDir.Normalize(),1,10,debugInterface);
+                debugInterface?.AddSegment(perception.MyUnints[0].Position,perception.MyUnints[0].Position.Add(d.Multi(5)),0.5,new Color(1,1,0,0.3));
+                //Console.WriteLine(dir);
+                return new UnitOrder(d.Multi(perception.Constants.MaxUnitForwardSpeed),perception.MyUnints[0].Direction, new ActionOrder.UseShieldPotion());
+            }
+        }
     }
+}
 
     
