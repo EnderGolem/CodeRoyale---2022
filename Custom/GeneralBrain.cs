@@ -138,7 +138,6 @@ namespace AiCup22.Custom
                 return result;
             }
         }
-
         protected virtual double CalculateBattleValue(Perception perception, DebugInterface debugInterface)
         {
 
@@ -255,6 +254,4 @@ namespace AiCup22.Custom
 
             return value;
         }
-
     }
-}
