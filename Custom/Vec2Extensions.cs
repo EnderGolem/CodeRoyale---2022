@@ -1,4 +1,5 @@
-﻿using AiCup22.Model;
+﻿using System;
+using AiCup22.Model;
 
 namespace AiCup22
 {
@@ -40,6 +41,15 @@ namespace AiCup22
             a.Y = a.Y / distance;
             return a;
         }
+
+        public static Vec2 Rotate(this Vec2 a,double angle)
+        {
+            double rAngle = angle * Math.PI / 180;
+            double sin = Math.Sin(rAngle);
+            double cos = Math.Cos(rAngle);
+            return new Vec2(a.X*cos-a.Y*sin,a.Y*cos+a.X*sin);
+        }
+
         public static bool Compare(this Vec2 a, Vec2 b)
         {
             return (a.X == b.X) && (a.Y == b.Y);

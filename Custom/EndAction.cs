@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using AiCup22.Debugging;
 using AiCup22.Model;
 
@@ -119,7 +120,7 @@ namespace AiCup22.Custom
 
         public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
-            Obstacle? obst = Tools.RaycastObstacle2Point(perception.MyUnints[0].Position, destination, perception.Constants.UnitRadius * 2, perception.Constants.Obstacles, false);
+            /*Obstacle? obst = Tools.RaycastObstacle2Point(perception.MyUnints[0].Position, destination, perception.Constants.UnitRadius * 2, perception.Constants.Obstacles, false);
 
             if (!obst.HasValue || obst.Value.Position.SqrDistance(perception.MyUnints[0].Position) > obst.Value.Radius * obst.Value.Radius * 9)
             {
@@ -144,18 +145,57 @@ namespace AiCup22.Custom
                  Console.WriteLine($"Перпендикулярный вектор: {perpDir}");
                  Console.WriteLine($"Целевая позиция: {targetPos}");
                  Console.WriteLine($"Целевой вектор: {targetDir}");*/
-                if (debugInterface != null)
-                {
-                    debugInterface.AddRing(intersectPoint.Value, 1, 0.5, new Color(1, 0, 0, 1));
-                    debugInterface.AddRing(targetPos, 1, 0.5, new Color(0, 0.5, 0.5, 1));
-                    debugInterface.AddSegment(obst.Value.Position, obst.Value.Position.Substract(perpDir.Normalize()), 0.5, new Color(0, 0, 1, 1));
-                    debugInterface.AddSegment(unit.Position, destination, 0.5, new Color(0, 1, 0, 1));
-                    debugInterface.AddSegment(obst.Value.Position, targetPos, 0.5, new Color(1, 0, 0, 1));
-                }
-                return new UnitOrder(targetDir, dir, null);
+            /*if (debugInterface != null)
+            {
+                debugInterface.AddRing(intersectPoint.Value, 1, 0.5, new Color(1, 0, 0, 1));
+                debugInterface.AddRing(targetPos, 1, 0.5, new Color(0, 0.5, 0.5, 1));
+                debugInterface.AddSegment(obst.Value.Position, obst.Value.Position.Substract(perpDir.Normalize()), 0.5, new Color(0, 0, 1, 1));
+                debugInterface.AddSegment(unit.Position, destination, 0.5, new Color(0, 1, 0, 1));
+                debugInterface.AddSegment(obst.Value.Position, targetPos, 0.5, new Color(1, 0, 0, 1));
+            }*/
+            var targetDir = CalculateDirToDestinationWithObstAvoidance(perception, debugInterface);
+            return new UnitOrder(targetDir, targetDir, null);
+        }
+
+        protected Vec2 CalculateDirToDestinationWithObstAvoidance(Perception perception, DebugInterface debugInterface)
+        {
+            Unit unit = perception.MyUnints[0];
+            Obstacle? obst = Tools.RaycastObstacle2Point(unit.Position, destination,
+                perception.Constants.UnitRadius * 2, perception.Constants.Obstacles, false);
+
+            if (!obst.HasValue || obst.Value.Position.SqrDistance(perception.MyUnints[0].Position) >
+                obst.Value.Radius * obst.Value.Radius * 9)
+            {
+                return destination.Substract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed);
+                ;
+            }
+            else
+            {
+                var dir = destination.Substract(unit.Position).Normalize()
+                    .Multi(perception.Constants.MaxUnitForwardSpeed);
+                Straight perpS = new Straight();
+                perpS.SetByNormalAndPoint(dir, obst.Value.Position);
+                var dirS = new Straight(dir, unit.Position);
+                var intersectPoint = dirS.GetIntersection(perpS);
+                var perpDir = obst.Value.Position.Substract(intersectPoint.Value);
+                var targetPos = obst.Value.Position.Substract(perpDir.Normalize()
+                    .Multi(obst.Value.Radius + 3 * perception.Constants.UnitRadius));
+                var targetDir = targetPos.Substract(unit.Position).Normalize()
+                    .Multi(perception.Constants.MaxUnitForwardSpeed);
+
+                /* Console.WriteLine($"Прямая перпендикулярная цели: {perpS}");
+                 Console.WriteLine($"Прямая до цели: {dirS}");
+                 Console.WriteLine($"Точка пересечения: {intersectPoint}");
+                 Console.WriteLine($"Центр препятствия: {obst.Value.Position}");
+                 Console.WriteLine($"Перпендикулярный вектор: {perpDir}");
+                 Console.WriteLine($"Целевая позиция: {targetPos}");
+                 Console.WriteLine($"Целевой вектор: {targetDir}");*/
+
+                return targetDir;
             }
         }
     }
+
     public class UseShield : EndAction
     {
         public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
@@ -316,4 +356,44 @@ namespace AiCup22.Custom
         }
     }
 
-}
+    public class Evading : EndAction
+    {
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
+        {
+            Unit unit = perception.MyUnints[0];
+            if (perception.MemorizedProjectiles.Count == 0)
+            {
+                return new UnitOrder(new Vec2(),new Vec2(-unit.Direction.Y, unit.Direction.X),null );
+            }
+
+            Vec2 dir = perception.SimulateEvading(perception.MyUnints[0],perception.CloseObstacles,
+                perception.MemorizedProjectiles.Values.ToList(),3,perception.Game.Zone.CurrentCenter.Substract(unit.Position).Normalize(),1,12,debugInterface);
+            debugInterface.AddSegment(unit.Position,unit.Position.Add(dir.Multi(5)),0.5,new Color(1,1,0,0.3));
+            //Console.WriteLine(dir);
+            return new UnitOrder(dir.Multi(perception.Constants.MaxUnitForwardSpeed),new Vec2(), null);
+        }
+    }
+
+    public class SteeringRunToDestinationWithEvading : SteeringRunToDestination
+    {
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
+        {
+                var targetDir = CalculateDirToDestinationWithObstAvoidance(perception, debugInterface);
+                var projs = perception.ClipSafeProjectiles();
+                if (projs.Count == 0)
+                {
+                    return new UnitOrder(targetDir, targetDir, null);
+                }
+                else
+                {
+                    Vec2 d = perception.SimulateEvading(perception.MyUnints[0],perception.CloseObstacles,
+                        perception.MemorizedProjectiles.Values.ToList(),3,targetDir.Normalize(),1,10,debugInterface);
+                    debugInterface?.AddSegment(perception.MyUnints[0].Position,perception.MyUnints[0].Position.Add(d.Multi(5)),0.5,new Color(1,1,0,0.3));
+                    //Console.WriteLine(dir);
+                    return new UnitOrder(d.Multi(perception.Constants.MaxUnitForwardSpeed),new Vec2(), null);
+                }
+        }
+    }
+    }
+
+    

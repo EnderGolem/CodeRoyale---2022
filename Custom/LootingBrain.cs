@@ -30,7 +30,7 @@ namespace AiCup22.Custom
         */
         public LootingBrain()
         {
-            _runToDestination = new SteeringRunToDestination();
+            _runToDestination = new SteeringRunToDestinationWithEvading();
             _pickupLoot = new PickupLoot();
             _useShieldToDestination = new UseShieldToDestination();
             allStates.Add(_runToDestination);

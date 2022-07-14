@@ -380,7 +380,183 @@ namespace AiCup22.Custom
                 }
             }
         }
+        
+        public Unit SimulateUnitMovement(Unit unit, UnitOrder order, List<Obstacle> obstacles, List<MemorizedProjectile> projectiles,
+            bool[] projectileMask, out List<int> destroyedProjectiles,
+            int simulationStep, int startSimulationTick, DebugInterface debugInterface)
+        {
+            double simulationTime = Tools.TicksToTime(simulationStep, _constants.TicksPerSecond);
+            double aimModifier = _constants.Weapons[unit.Weapon.Value].AimMovementSpeedModifier;
+            double maxForwardSpeed = _constants.MaxUnitForwardSpeed * (1 - (1 - aimModifier) * unit.Aim);
+            double maxBackwardSpeed = _constants.MaxUnitBackwardSpeed * (1 - (1 - aimModifier) * unit.Aim);
 
+            double circleRadius = (maxForwardSpeed + maxBackwardSpeed) / 2;
+            Vec2 circleCenterRelative = unit.Direction.Multi((maxForwardSpeed - maxBackwardSpeed) / 2);
+            Vec2 limitedTargetVelocity = order.TargetVelocity.Substract(circleCenterRelative);
+            if (limitedTargetVelocity.SqrDistance(new Vec2())>circleRadius*circleRadius)
+            {
+                limitedTargetVelocity = limitedTargetVelocity.Normalize().Multi(circleRadius);
+            }
+
+            limitedTargetVelocity = limitedTargetVelocity.Add(circleCenterRelative);
+            Vec2 diff = limitedTargetVelocity.Substract(unit.Velocity);
+            Vec2 ndiff = diff.Normalize()
+                .Multi(_constants.UnitAcceleration * (1 / _constants.TicksPerSecond) * simulationStep);
+            if (ndiff.SqrDistance(new Vec2())>diff.SqrDistance(new Vec2()))
+            {
+                ndiff = diff;
+            }
+
+            Vec2 simulationVelocity = unit.Velocity.Add(ndiff);
+            /*debugInterface.AddCircle(unit.Position.Add(circleCenterRelative),0.5,new Color(1,1,1,1));
+            debugInterface.AddRing(unit.Position.Add(circleCenterRelative),circleRadius,0.2,new Color(1,1,1,0.5));
+            debugInterface.AddSegment(unit.Position,unit.Position.Add(order.TargetVelocity),0.5,new Color(1,0,0,0.5));
+            debugInterface.AddSegment(unit.Position,unit.Position.Add(limitedTargetVelocity),0.5,new Color(0,1,0,0.5));
+            debugInterface.AddSegment(unit.Position,unit.Position.Add(unit.Velocity),0.5,new Color(1,1,0,0.5));
+            debugInterface.AddSegment(unit.Position,unit.Position.Add(simulationVelocity),0.5,new Color(0,0,1,0.5));*/
+            Unit upUnit = unit;
+            upUnit.Position = unit.Position.Add(simulationVelocity.Multi(simulationTime));
+            upUnit.Velocity = simulationVelocity;
+            destroyedProjectiles = new List<int>();
+            for (int i = 0; i < projectiles.Count; i++)
+            {
+                if (projectileMask[i])
+                {
+                    continue;
+                }
+
+                MemorizedProjectile proj = projectiles[i];
+                Vec2 newProjPosition = proj.projData.Position.Add(proj.projData.Velocity.Multi(
+                    Tools.TicksToTime(startSimulationTick + simulationStep - proj.lastSeenTick,
+                        Constants.TicksPerSecond)));
+                if (newProjPosition.SqrDistance(upUnit.Position)<= 1.4*_constants.UnitRadius*_constants.UnitRadius)
+                {
+                    double damage = _constants.Weapons[proj.projData.WeaponTypeIndex].ProjectileDamage;
+                    double shieldDamage = Math.Clamp(damage,0,unit.Shield);
+                    upUnit.Shield -= shieldDamage;
+                    upUnit.Health -= (damage - shieldDamage);
+                    destroyedProjectiles.Add(i);
+                }
+            }
+
+            return upUnit;
+        }
+
+        public Vec2 SimulateEvading(Unit unit, List<Obstacle> obstacles, List<MemorizedProjectile> projectiles,
+            int directionCount,Vec2 zeroDirection,int simulationStep,int simulationDepth,DebugInterface debugInterface)
+        {
+            Vec2[] directions = new Vec2[directionCount];
+            double dirAngle = 360 / directionCount;
+            Unit[] simulatedUnits = new Unit[directions.Length];
+            double bestRes = -100;
+            int bestIndex = -1;
+            List<Unit> bestList = new List<Unit>();
+            for (int i = 0; i < directionCount; i++)
+            {
+                double angle = dirAngle * i;
+                directions[i] = (zeroDirection).Rotate(angle);
+            }
+            bool[] projectileMask = new bool[projectiles.Count];
+            for (int i = 0; i < directionCount; i++)
+            {
+                var (u, lst) = CascadeSimulation(unit, 
+                    new UnitOrder(directions[i].Multi(_constants.MaxUnitForwardSpeed),unit.Direction,null),
+                    obstacles,projectiles,projectileMask,directions,simulationStep,_game.CurrentTick,0,simulationDepth,debugInterface);
+                simulatedUnits[i] = u;
+                /*if (simulatedUnits[i].Shield == unit.Shield && simulatedUnits[i].Health == unit.Health)
+                {
+                    return directions[i];
+                }*/
+                
+                if (simulatedUnits[i].Health+simulatedUnits[i].Shield>bestRes)
+                {
+                    bestRes = simulatedUnits[i].Health + simulatedUnits[i].Shield;
+                    bestIndex = i;
+                    bestList = lst;
+                }
+            }
+
+            for (int i = 0; i < bestList.Count; i++)
+            {
+                debugInterface.AddCircle(bestList[i].Position,0.2,new Color(1-(bestList[i].Health/100),(bestList[i].Health/100)*1,0,1));
+            }
+            return directions[bestIndex];
+        }
+
+        protected (Unit,List<Unit>) CascadeSimulation(Unit unit, UnitOrder order, List<Obstacle> obstacles, List<MemorizedProjectile> projectiles,
+            bool[] projectileMask,
+            Vec2[] directions, int simulationStep,int curSimulationTick,int curSimulationDepth,int maxSimulationDepth,DebugInterface debugInterface)
+        {
+            List<int> catchedProj;
+            Unit simUnit = SimulateUnitMovement(unit,order,obstacles,projectiles,projectileMask,out catchedProj,simulationStep,curSimulationTick,debugInterface);
+            for (int i = 0; i < catchedProj.Count; i++)
+            {
+                projectileMask[catchedProj[i]] = true;
+            }
+            //debugInterface.AddCircle(simUnit.Position,0.2,new Color(1-(simUnit.Health/100),(simUnit.Health/100)*1,0,1));
+
+            if (curSimulationDepth == maxSimulationDepth || simUnit.Health<=0 || simUnit.Health + simUnit.Shield < unit.Health + unit.Shield)
+            {
+                List<Unit> lst = new List<Unit>();
+                lst.Add(simUnit);
+                for (int i = 0; i < catchedProj.Count; i++)
+                {
+                    projectileMask[catchedProj[i]] = false;
+                }
+                return (simUnit,lst);
+            }
+            Unit[] simulatedUnits = new Unit[directions.Length];
+            double bestRes = -100;
+            int bestIndex = -1;
+            List<Unit> bestList = new List<Unit>();
+            for (int i = 0; i < directions.Length; i++)
+            {
+                var (u, lst) =CascadeSimulation(simUnit,
+                    new UnitOrder(directions[i].Multi(_constants.MaxUnitForwardSpeed),simUnit.Direction,null),
+                    obstacles,projectiles,projectileMask,directions,simulationStep,curSimulationTick+simulationStep,
+                    curSimulationDepth+1,maxSimulationDepth,debugInterface);
+                simulatedUnits[i] = u;
+                if (simulatedUnits[i].Shield == simUnit.Shield && simulatedUnits[i].Health == simUnit.Health)
+                {
+                    //debugInterface.AddRing(simUnit.Position,1,0.5,new Color(0,1,0,1));
+                    lst.Add(simUnit);
+                    for (int j = 0; j < catchedProj.Count; j++)
+                    {
+                        projectileMask[catchedProj[j]] = false;
+                    }
+                    return (simulatedUnits[i],lst);
+                }
+                
+                if (simulatedUnits[i].Health+simulatedUnits[i].Shield>bestRes)
+                {
+                    bestRes = simulatedUnits[i].Health + simulatedUnits[i].Shield;
+                    bestIndex = i;
+                    bestList = lst;
+                    //Console.WriteLine("Search best!");
+                }
+            }
+            bestList.Add(simUnit);
+            for (int i = 0; i < catchedProj.Count; i++)
+            {
+                projectileMask[catchedProj[i]] = false;
+            }
+            return (simulatedUnits[bestIndex],bestList);
+        } 
+        
+        public List<MemorizedProjectile> ClipSafeProjectiles()
+        {
+            List<MemorizedProjectile> res = new List<MemorizedProjectile>();
+
+            foreach (var projectile in memorizedProjectiles)
+            {
+                if (projectile.Value.actualPosition.SqrDistance(_myUnints[0].Position)<1600)
+                {
+                    res.Add(projectile.Value);
+                }
+            }
+
+            return res;
+        }
 
     }
 
