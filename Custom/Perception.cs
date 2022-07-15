@@ -556,10 +556,7 @@ namespace AiCup22.Custom
             
            //debugInterface.AddCircle(simUnit.Position,0.2,new Color(1-(simUnit.Health/100),(simUnit.Health/100)*1,0,1));
 
-
-            Unit simUnit = SimulateUnitMovement(unit, order, obstacles, projectiles, projectileMask, out catchedProj, simulationStep, curSimulationTick, debugInterface);
-
-            //debugInterface.AddCircle(simUnit.Position,0.2,new Color(1-(simUnit.Health/100),(simUnit.Health/100)*1,0,1));
+           
 
             if (curSimulationDepth == maxSimulationDepth || simUnit.Health <= 0 || simUnit.Health + simUnit.Shield <= bestScore)
             {
