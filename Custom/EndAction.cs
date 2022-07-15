@@ -366,7 +366,7 @@ namespace AiCup22.Custom
                 return new UnitOrder(new Vec2(),new Vec2(-unit.Direction.Y, unit.Direction.X),null );
             }
 
-            Vec2 dir = perception.SimulateEvading(perception.MyUnints[0],perception.CloseObstacles,
+            Vec2 dir = perception.SimulateEvading(perception.MyUnints[0],0,perception.CloseObstacles,
                 perception.MemorizedProjectiles.Values.ToList(),3,perception.Game.Zone.CurrentCenter.Substract(unit.Position).Normalize(),1,11,debugInterface);
             debugInterface?.AddSegment(unit.Position,unit.Position.Add(dir.Multi(5)),0.5,new Color(1,1,0,0.3));
             //Console.WriteLine(dir);
@@ -386,8 +386,8 @@ namespace AiCup22.Custom
                 }
                 else
                 {
-                    Vec2 d = perception.SimulateEvading(perception.MyUnints[0],perception.CloseObstacles,
-                        perception.MemorizedProjectiles.Values.ToList(),3,targetDir.Normalize(),1,19,debugInterface);
+                    Vec2 d = perception.SimulateEvading(perception.MyUnints[0],0,perception.CloseObstacles,
+                        projs,3,targetDir.Normalize(),1,15,debugInterface);
                     debugInterface?.AddSegment(perception.MyUnints[0].Position,perception.MyUnints[0].Position.Add(d.Multi(5)),0.5,new Color(1,1,0,0.3));
                     //Console.WriteLine(dir);
                     return new UnitOrder(d.Multi(perception.Constants.MaxUnitForwardSpeed),perception.MyUnints[0].Direction, null);
@@ -407,12 +407,42 @@ namespace AiCup22.Custom
             }
             else
             {
-                Vec2 d = perception.SimulateEvading(perception.MyUnints[0],perception.CloseObstacles,
-                    perception.MemorizedProjectiles.Values.ToList(),3,targetDir.Normalize(),1,19,debugInterface);
+                Vec2 d = perception.SimulateEvading(perception.MyUnints[0],0,perception.CloseObstacles,
+                    projs,3,targetDir.Normalize(),1,15,debugInterface);
                 debugInterface?.AddSegment(perception.MyUnints[0].Position,perception.MyUnints[0].Position.Add(d.Multi(5)),0.5,new Color(1,1,0,0.3));
                 //Console.WriteLine(dir);
                 return new UnitOrder(d.Multi(perception.Constants.MaxUnitForwardSpeed),perception.MyUnints[0].Direction, new ActionOrder.UseShieldPotion());
             }
+        }
+    }
+    
+    public class LookAroundWithEvading : EndAction
+    {
+        public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
+        {
+            var unit = perception.MyUnints[0];
+            Vec2 dir = new Vec2(-unit.Direction.Y, unit.Direction.X);
+            Vec2 dirToCenter = perception.Game.Zone.CurrentCenter.Substract(unit.Position);
+            var projs = perception.ClipSafeProjectiles();
+            if (projs.Count == 0)
+            {
+                if (perception.MyUnints[0].Shield < 150)
+                {
+                    ActionOrder action = new ActionOrder.UseShieldPotion();
+                    return new UnitOrder(dirToCenter, dir, action);
+                }
+                return new UnitOrder(dirToCenter, dir, null);
+            }
+            Vec2 d = perception.SimulateEvading(perception.MyUnints[0],-1,perception.CloseObstacles,
+                projs,3,dirToCenter,1,15,debugInterface);
+            debugInterface?.AddSegment(perception.MyUnints[0].Position,perception.MyUnints[0].Position.Add(d.Multi(5)),0.5,new Color(1,1,0,0.3));
+            ActionOrder a = null;
+            if (perception.MyUnints[0].Shield < 160)
+            {
+                a = new ActionOrder.UseShieldPotion();
+            }
+            return new UnitOrder(d.Multi(perception.Constants.MaxUnitForwardSpeed),dir, a);
+
         }
     }
 }
