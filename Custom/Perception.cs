@@ -543,9 +543,7 @@ namespace AiCup22.Custom
             return directions[bestIndex];
         }
 
-
         protected (Unit,List<Unit>) CascadeSimulation(Unit unit, UnitOrder order,int rotationDir, List<Obstacle> obstacles, List<MemorizedProjectile> projectiles,
-
             bool[] projectileMask,
             Vec2[] directions, int simulationStep, int curSimulationTick, int curSimulationDepth, int maxSimulationDepth, double bestScore, DebugInterface debugInterface)
         {
@@ -622,7 +620,6 @@ namespace AiCup22.Custom
 
             foreach (var projectile in memorizedProjectiles)
             {
-
                 if (projectile.Value.actualPosition.SqrDistance(_myUnints[0].Position)<800)
                 {
                     res.Add(projectile.Value);
