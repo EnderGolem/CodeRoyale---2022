@@ -139,7 +139,6 @@ namespace AiCup22.Custom
                 return result;
             }
         }
-
         protected virtual double CalculateBattleValue(Perception perception, DebugInterface debugInterface)
         {
 
@@ -256,10 +255,6 @@ namespace AiCup22.Custom
 
             return value;
         }
-        public string AddText()
-        {
-            return $"{timeStates[0]};{timeStates[1]};{timeStates[2]};{timeStates[3]}";
-        }
 
     }
-}
+

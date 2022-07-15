@@ -100,10 +100,10 @@ namespace AiCup22.Custom
             {
                 memorizedLoot.TryAdd(game.Loot[i].Id, game.Loot[i]);
             }
-
+            
             removeProjectiles();
             removeEnemies();
-
+            
             for (int i = 0; i < game.Projectiles.Length; i++)
             {
                 if (game.Projectiles[i].ShooterPlayerId != game.MyId)
@@ -133,8 +133,6 @@ namespace AiCup22.Custom
             if (debugInterface != null)
                 DebugOutput(game, debugInterface);
         }
-
-
 
         private void removeEnemies()
         {
@@ -323,7 +321,6 @@ namespace AiCup22.Custom
 
                 debugInterface.AddRing(game.Zone.CurrentCenter, game.Zone.CurrentRadius, 1, new Color(1, 0, 0, 1));
                 debugInterface.AddRing(game.Zone.NextCenter, game.Zone.NextRadius, 1, new Color(0, 1, 0, 1));
-                //Console.WriteLine(memorizedLoot.Count);
                 foreach (var l in memorizedLoot)
                 {
                     debugInterface.AddRing(l.Value.Position, 1, 0.3, new Color(0.8, 0.8, 0.8, 1));
