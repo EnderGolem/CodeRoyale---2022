@@ -23,6 +23,8 @@ namespace AiCup22.Custom
         public const double StayAwayBaseValue = 1100;
         public const double StayAwayZoneMaxValue = 2500;
 
+        public const double StayAwayFromCenter = 0.4; //При 0 будет стоять в центре при 1 прямо на зоне
+
         public const double bowValue = 3000;
 
         public static class Looting

@@ -46,7 +46,7 @@ namespace AiCup22.Custom
                     bestPoints = point;
                 }
             }
-            
+
             var unit = perception.MyUnints[0];
             var enemy = perception.EnemyUnints[bestEnemyIndex];
             var safeDirection = CalculateDodge(perception, debugInterface);
@@ -81,7 +81,17 @@ namespace AiCup22.Custom
                     _steeringShootToDestinationDirection.SetDirection(estimatedEnemyPosition);
                     return _steeringShootToDestinationDirection;
                 }
-                _steeringAimToDestinationDirection.SetDestination(perception.MyUnints[id].Position.Add(safeDirection));
+
+                if (Tools.RaycastObstacle(perception.MyUnints[id].Position, estimatedEnemyPosition, perception.Constants.Obstacles, true) == null) //Если нет укрытия, просто прицеливаемся, уклоняясь
+                    _steeringAimToDestinationDirection.SetDestination(perception.MyUnints[id].Position.Add(safeDirection));
+                if (Tools.RaycastObstacle(perception.MyUnints[id].Position, estimatedEnemyPosition, perception.Constants.Obstacles, true) != null) //Если есть укрытие то
+                {
+                    if (perception.EnemiesAimingYou.Contains(enemy.Id))
+                        _steeringAimToDestinationDirection.SetDestination(perception.MyUnints[id].Position.FindMirrorPoint(enemy.Position)); //Если Смотрит на нас, то отходим, отдалясь от укрытия
+                    else                                                                                                                    //Если не смотрит, то приближаемся
+                        _steeringAimToDestinationDirection.SetDestination(enemy.Position);
+
+                }
                 _steeringAimToDestinationDirection.SetDirection(estimatedEnemyPosition);
                 return _steeringAimToDestinationDirection;
             }
