@@ -435,20 +435,29 @@ namespace AiCup22.Custom
                 /*Vec2 newProjPosition = proj.projData.Position.Add(proj.projData.Velocity.Multi(
                     Tools.TicksToTime(startSimulationTick  - proj.lastSeenTick,
                         Constants.TicksPerSecond)));*/
-                Vec2 newProjPosition = proj.estimatedPositions[startSimulationTick-_game.CurrentTick+1];
+                int index = (startSimulationTick - _game.CurrentTick) / simulationStep;
+                Vec2 lastProjPosition = proj.estimatedPositions[index];
+                Vec2 newProjPosition = proj.estimatedPositions[index+1];
                 if (newProjPosition.X == -10000)
                 {
                     continue;
                 }
-                var obst = Tools.RaycastObstacle(proj.estimatedPositions[startSimulationTick-_game.CurrentTick],
-                    proj.estimatedPositions[startSimulationTick-_game.CurrentTick+1],new []{new Obstacle(0,upUnit.Position,quareUnitRadius,true,false) },false);
+                var obst = Tools.RaycastObstacle(lastProjPosition,
+                    newProjPosition,new []{new Obstacle(0,upUnit.Position,quareUnitRadius,true,false) },false);
                 if (/*newProjPosition.SqrDistance(upUnit.Position)<= quareUnitRadius*/obst.HasValue)
                 {
                     double damage = _constants.Weapons[proj.projData.WeaponTypeIndex].ProjectileDamage;
-                    double shieldDamage = Math.Clamp(damage,0,unit.Shield);
-                    upUnit.Shield -= shieldDamage;
-                    upUnit.Health -= (damage - shieldDamage);
-                    destroyedProjectiles.Add(i);
+                    try
+                    {
+                        double shieldDamage = Math.Clamp(damage,0,unit.Shield);
+                        upUnit.Shield -= shieldDamage;
+                        upUnit.Health -= (damage - shieldDamage);
+                        destroyedProjectiles.Add(i);
+                    }
+                    catch (Exception e)
+                    {
+                        
+                    }
                 }
             }
 
@@ -473,7 +482,7 @@ namespace AiCup22.Custom
 
             for (int i = 0; i < projectiles.Count; i++)
             {
-                projectiles[i].CalculateEstimatedPositions(this, simulationDepth);
+                projectiles[i].CalculateEstimatedPositions(this, simulationDepth,simulationStep);
             }
             bool[] projectileMask = new bool[projectiles.Count];
             for (int i = 0; i < directionCount; i++)
@@ -632,16 +641,16 @@ namespace AiCup22.Custom
             return false;
         }
 
-        public void CalculateEstimatedPositions(Perception perception, int simulationDepth)
+        public void CalculateEstimatedPositions(Perception perception, int simulationDepth, int simulationStep)
         {
             estimatedPositions = new Vec2[simulationDepth+2];
             estimatedPositions[0] = actualPosition;
 
-            Vec2 tickMovement = projData.Velocity.Multi(Tools.TicksToTime(1,
+            Vec2 tickMovement = projData.Velocity.Multi(Tools.TicksToTime(simulationStep,
                 perception.Constants.TicksPerSecond));
             for (int i = 1; i < estimatedPositions.Length; i++)
             {
-                if (!IsExpired(perception, perception.Game.CurrentTick+i))
+                if (!IsExpired(perception, perception.Game.CurrentTick+i*simulationStep))
                 {
                     estimatedPositions[i] = estimatedPositions[i - 1].Add(tickMovement);
                 }
