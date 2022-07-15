@@ -387,7 +387,7 @@ namespace AiCup22.Custom
                 else
                 {
                     Vec2 d = perception.SimulateEvading(perception.MyUnints[0],perception.CloseObstacles,
-                        perception.MemorizedProjectiles.Values.ToList(),3,targetDir.Normalize(),1,19,debugInterface);
+                        perception.MemorizedProjectiles.Values.ToList(),3,targetDir.Normalize(),1,17,debugInterface);
                     debugInterface?.AddSegment(perception.MyUnints[0].Position,perception.MyUnints[0].Position.Add(d.Multi(5)),0.5,new Color(1,1,0,0.3));
                     //Console.WriteLine(dir);
                     return new UnitOrder(d.Multi(perception.Constants.MaxUnitForwardSpeed),perception.MyUnints[0].Direction, null);
@@ -408,7 +408,7 @@ namespace AiCup22.Custom
             else
             {
                 Vec2 d = perception.SimulateEvading(perception.MyUnints[0],perception.CloseObstacles,
-                    perception.MemorizedProjectiles.Values.ToList(),3,targetDir.Normalize(),1,19,debugInterface);
+                    perception.MemorizedProjectiles.Values.ToList(),3,targetDir.Normalize(),1,17,debugInterface);
                 debugInterface?.AddSegment(perception.MyUnints[0].Position,perception.MyUnints[0].Position.Add(d.Multi(5)),0.5,new Color(1,1,0,0.3));
                 //Console.WriteLine(dir);
                 return new UnitOrder(d.Multi(perception.Constants.MaxUnitForwardSpeed),perception.MyUnints[0].Direction, new ActionOrder.UseShieldPotion());
