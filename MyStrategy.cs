@@ -17,19 +17,43 @@ namespace AiCup22
         private Game lastGame;
         private long totalTime = 0;
         private long maxTickTime = 0;
+
+        private int countHit;
+
         public MyStrategy(AiCup22.Model.Constants constants)
         {
+            countHit = 0;
             perception = new Perception(constants);
             brain = new GeneralBrain();
+            lastGame = new Game();
+        }
+
+        private int FindMyUnitId()
+        {
+            int myPlayersId = -1;
+            if (lastGame.Players != null)
+                for (int i = 0; i < lastGame.Players.Length; i++)
+                {
+                    if (lastGame.Players[i].Id == lastGame.MyId)
+                    {
+                        myPlayersId = i;
+                        break;
+                    }
+                }
+            return myPlayersId;
         }
 
         public AiCup22.Model.Order GetOrder(AiCup22.Model.Game game, DebugInterface debugInterface)
         {
+            int myId = FindMyUnitId();
+            if (myId != -1 && (lastGame.Units[myId].Health + lastGame.Units[myId].Shield) - (game.Units[myId].Health + game.Units[myId].Shield) > 0)
+                countHit++;
             lastGame = game;
             Dictionary<int, AiCup22.Model.UnitOrder> orders = new Dictionary<int, UnitOrder>();
             //try
             //{
             /*perception.Analyze(game, debugInterface);
+            perception.Analyze(game, debugInterface);
             var order = brain.Process(perception, debugInterface);
             orders.Add(perception.MyUnints[0].Id, order);*/
             
@@ -67,24 +91,19 @@ namespace AiCup22
             //}
             return new Order(orders);
         }
-        public void addText()
+
+        public void addText(string fileName)
         {
 
-            FileInfo fileInf = new FileInfo("Ver5_5.csv");
+            FileInfo fileInf = new FileInfo(fileName);
             var sw = fileInf.AppendText();
-            int myPlayersId = 0;
-            for (int i = 0; i < lastGame.Players.Length; i++)
-            {
-                if (lastGame.Players[i].Id == lastGame.MyId)
-                {
-                    myPlayersId = i;
-                    break;
-                }
-            }
-            System.Console.WriteLine($"{lastGame.Players[myPlayersId].Score};{lastGame.Players[myPlayersId].Kills};{lastGame.Players[myPlayersId].Damage}; \n");
-            sw.WriteLine($"{lastGame.Players[myPlayersId].Score};{lastGame.Players[myPlayersId].Kills};{lastGame.Players[myPlayersId].Damage};{lastGame.Players[myPlayersId].Place}");
+            int myPlayersId = FindMyUnitId();
+            string s = $"{lastGame.Players[myPlayersId].Score};{lastGame.Players[myPlayersId].Kills};{lastGame.Players[myPlayersId].Damage};{lastGame.Players[myPlayersId].Place};{brain.TimeStates[0]};{brain.TimeStates[1]};{brain.TimeStates[2]};{brain.TimeStates[3]};{countHit};";
+            System.Console.WriteLine(s);
+            sw.WriteLine(s);
             sw.Close();
         }
+
         public void DebugUpdate(int displayedTick, DebugInterface debugInterface) { }
         public void Finish() { }
     }

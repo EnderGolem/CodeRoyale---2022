@@ -3,7 +3,7 @@ using AiCup22.Model;
 
 namespace AiCup22.Custom
 {
-    public class StaySafeBrain :Brain
+    public class StaySafeBrain : Brain
     {
         private RunToDestination _runToDestination;
         private UseShieldToDestinationWithEvading _useShieldToDestination;
@@ -22,9 +22,9 @@ namespace AiCup22.Custom
             double minDanger = double.MaxValue;
             for (int i = 0; i < perception.Directions.Length; i++) //Мне кажется тут ошибка т.к. сейчас DirectionDangers указывает опасность в дргую сторону
             {
-                int prev = (i==0)?7:i - 1;
+                int prev = (i == 0) ? 7 : i - 1;
                 int next = (i + 1) % perception.Directions.Length;
-                if (perception.DirectionDangers[i]==0 && perception.DirectionDangers[prev] == 0 && perception.DirectionDangers[next]==0)
+                if (perception.DirectionDangers[i] == 0 && perception.DirectionDangers[prev] == 0 && perception.DirectionDangers[next] == 0)
                 {
                     safestDir = i;
                     minDanger = perception.DirectionDangers[i];
@@ -38,7 +38,7 @@ namespace AiCup22.Custom
                 }
             }
 
-            if (perception.MyUnints[0].Shield < 160)
+            if (perception.MyUnints[0].Shield < 160 && perception.MyUnints[0].ShieldPotions != 0)
             {
                 _useShieldToDestination.SetDestination(perception.MyUnints[0].Position.Add(perception.Directions[safestDir].Multi(100)));
                 return _useShieldToDestination;

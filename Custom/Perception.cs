@@ -19,6 +19,7 @@ namespace AiCup22.Custom
         private List<Unit> _myUnints;
         private List<Unit> _enemyUnints;
         private List<int> enemiesAimingYou;
+        private List<Sound> sounds;  //Впилить проверку на то, кто именно слышит звук, чтобы не было повторов
 
         private const double obstacleSearchRadius = 80;
         private const int closeObstaclesRecalculationDelay = 10;
@@ -35,16 +36,11 @@ namespace AiCup22.Custom
         /// Веса направлений
         /// </summary>
         protected List<double> directionDangers;
-
         public List<Obstacle> CloseObstacles => closeObstacles;
-
         public Vec2[] Directions => directions;
-
         public List<double> DirectionDangers => directionDangers;
         public Dictionary<int, Loot> MemorizedLoot => memorizedLoot;
-
         public Dictionary<int, MemorizedProjectile> MemorizedProjectiles => memorizedProjectiles;
-
         public List<int> EnemiesAimingYou => enemiesAimingYou;
         public Dictionary<int, (int, double, Unit)> MemorizedEnemies => memorizedEnemies;
 
@@ -105,10 +101,10 @@ namespace AiCup22.Custom
             {
                 memorizedLoot.TryAdd(game.Loot[i].Id, game.Loot[i]);
             }
-
+            
             removeProjectiles();
             removeEnemies();
-
+            
             for (int i = 0; i < game.Projectiles.Length; i++)
             {
                 if (game.Projectiles[i].ShooterPlayerId != game.MyId)
@@ -128,7 +124,6 @@ namespace AiCup22.Custom
                         debugInterface.AddSegment(game.Projectiles[i].Position, game.Projectiles[i].Position.Add(game.Projectiles[i].Velocity), 0.1, new Color(0.48, 0.48, 0.88, 0.5));
                 }
             }
-
             CalculateEnemiesAimingYou(game, debugInterface);
 
             if (lastObstacleRecalculationTick + closeObstaclesRecalculationDelay <= game.CurrentTick)
@@ -140,14 +135,12 @@ namespace AiCup22.Custom
                 DebugOutput(game, debugInterface);
         }
 
-
-
         private void removeEnemies()
         {
             List<int> memEnemiesToRemove = new List<int>();
             foreach (var enemy in memorizedEnemies)
             {
-                if (Game.CurrentTick - enemy.Value.Item1 > Tools.TimeToTicks(6,Constants.TicksPerSecond))
+                if (Game.CurrentTick - enemy.Value.Item1 > Tools.TimeToTicks(6, Constants.TicksPerSecond))
                 {
                     memEnemiesToRemove.Add(enemy.Key);
                 }
@@ -158,7 +151,7 @@ namespace AiCup22.Custom
             }
         }
         private void removeProjectiles()
-        {   
+        {
             List<int> memProjToRemove = new List<int>();
 
             foreach (var projectile in memorizedProjectiles)
@@ -233,9 +226,9 @@ namespace AiCup22.Custom
                        _myUnints[0].Position, directions[i].Multi(1), 180 / directions.Length))
                     {
                         var distance = MyUnints[0].Position.Distance(enemy.Value.Item3.Position);
-                        double distanceDanger = -0.1 * distance + 4;                //ИИ должен бояться, тех кто ближе больше, чем те кто дальше
+                        double distanceDanger = 1;                //ИИ должен бояться, тех кто ближе больше, чем те кто дальше
                         if (distance > 30)
-                            distanceDanger = 1;
+                            distanceDanger = -0.025 * distance + 1.75;
                         directionDangers[i] += enemy.Value.Item2 * distanceDanger;
                         break;
                     }
@@ -329,7 +322,6 @@ namespace AiCup22.Custom
 
                 debugInterface.AddRing(game.Zone.CurrentCenter, game.Zone.CurrentRadius, 1, new Color(1, 0, 0, 1));
                 debugInterface.AddRing(game.Zone.NextCenter, game.Zone.NextRadius, 1, new Color(0, 1, 0, 1));
-                //Console.WriteLine(memorizedLoot.Count);
                 foreach (var l in memorizedLoot)
                 {
                     debugInterface.AddRing(l.Value.Position, 1, 0.3, new Color(0.8, 0.8, 0.8, 1));
