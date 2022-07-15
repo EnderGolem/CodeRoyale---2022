@@ -17,7 +17,7 @@ namespace AiCup22.Custom
         public BattleBrain()
         {
             _lookAroundAction = new LookAroundAction();
-            _steeringRunToDestination = new SteeringRunToDestination();
+            _steeringRunToDestination = new SteeringRunToDestinationWithEvading();
             _aimToDestinationDirection = new AimToDestinationDirection();
             _steeringAimToDestinationDirection = new SteeringAimToDestinationDirection();
             _steeringShootToDestinationDirection = new SteeringShootToDestinationDirection();

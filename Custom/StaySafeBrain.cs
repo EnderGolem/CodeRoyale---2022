@@ -6,12 +6,12 @@ namespace AiCup22.Custom
     public class StaySafeBrain : Brain
     {
         private RunToDestination _runToDestination;
-        private UseShieldToDestination _useShieldToDestination;
+        private UseShieldToDestinationWithEvading _useShieldToDestination;
 
         public StaySafeBrain()
         {
             _runToDestination = new SteeringRunToDestinationWithEvading();
-            _useShieldToDestination = new UseShieldToDestination();
+            _useShieldToDestination = new UseShieldToDestinationWithEvading();
             allStates.Add(_runToDestination);
             allStates.Add(_useShieldToDestination);
         }
