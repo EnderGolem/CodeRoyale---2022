@@ -101,10 +101,10 @@ namespace AiCup22.Custom
             {
                 memorizedLoot.TryAdd(game.Loot[i].Id, game.Loot[i]);
             }
-            
+
             removeProjectiles();
             removeEnemies();
-            
+
             for (int i = 0; i < game.Projectiles.Length; i++)
             {
                 if (game.Projectiles[i].ShooterPlayerId != game.MyId)
@@ -161,7 +161,7 @@ namespace AiCup22.Custom
                          _myUnints[0].Direction, Constants.ViewDistance,
                          (1 - _myUnints[0].Aim) * Constants.FieldOfView) &&
                      Game.Projectiles.Count(p => p.Id == projectile.Value.projData.Id) == 0)
-                    || projectile.Value.IsExpired(this,_game.CurrentTick)
+                    || projectile.Value.IsExpired(this, _game.CurrentTick)
                     || projectile.Value.actualPosition.Distance(MyUnints[0].Position) < Constants.UnitRadius)
                 {
                     memProjToRemove.Add(projectile.Key);
@@ -234,17 +234,16 @@ namespace AiCup22.Custom
                     }
                 }
             }
+            var vec = _myUnints[0].Position.Substract(game.Zone.CurrentCenter).Normalize().Multi(game.Zone.CurrentRadius * Koefficient.StayAwayFromCenter);
+            var point = game.Zone.CurrentCenter.Add(vec);
+            System.Console.WriteLine($"cen {vec}");
             for (int i = 0; i < directions.Length; i++)
             {
-                double dirZoneDist = Tools.CurrentZoneDistance(game.Zone,
-                    _myUnints[0].Position.Add(directions[i].Normalize().Multi(30)));
                 /*if (dirZoneDist < 0)
                {
                    directionDangers[i] += Math.Pow(30 - Tools.CurrentZoneDistance(game.Zone, _myUnints[0].Position), 2);
                }*/
-                directionDangers[i] +=
-
-                        game.Zone.CurrentCenter.Distance(_myUnints[0].Position.Add(directions[i].Normalize())) * 2;
+                directionDangers[i] += point.Distance(_myUnints[0].Position.Add(directions[i].Normalize())) * 1;
 
             }
 
@@ -378,7 +377,7 @@ namespace AiCup22.Custom
                 }
             }
         }
-        
+
         public Unit SimulateUnitMovement(Unit unit, UnitOrder order, List<Obstacle> obstacles, List<MemorizedProjectile> projectiles,
             bool[] projectileMask, out List<int> destroyedProjectiles,
             int simulationStep, int startSimulationTick, DebugInterface debugInterface)
@@ -391,7 +390,7 @@ namespace AiCup22.Custom
             double circleRadius = (maxForwardSpeed + maxBackwardSpeed) / 2;
             Vec2 circleCenterRelative = unit.Direction.Multi((maxForwardSpeed - maxBackwardSpeed) / 2);
             Vec2 limitedTargetVelocity = order.TargetVelocity.Substract(circleCenterRelative);
-            if (limitedTargetVelocity.SqrDistance(new Vec2())>circleRadius*circleRadius)
+            if (limitedTargetVelocity.SqrDistance(new Vec2()) > circleRadius * circleRadius)
             {
                 limitedTargetVelocity = limitedTargetVelocity.Normalize().Multi(circleRadius);
             }
@@ -400,7 +399,7 @@ namespace AiCup22.Custom
             Vec2 diff = limitedTargetVelocity.Substract(unit.Velocity);
             Vec2 ndiff = diff.Normalize()
                 .Multi(_constants.UnitAcceleration * (1 / _constants.TicksPerSecond) * simulationStep);
-            if (ndiff.SqrDistance(new Vec2())>diff.SqrDistance(new Vec2()))
+            if (ndiff.SqrDistance(new Vec2()) > diff.SqrDistance(new Vec2()))
             {
                 ndiff = diff;
             }
@@ -430,26 +429,26 @@ namespace AiCup22.Custom
                         Constants.TicksPerSecond)));*/
                 int index = (startSimulationTick - _game.CurrentTick) / simulationStep;
                 Vec2 lastProjPosition = proj.estimatedPositions[index];
-                Vec2 newProjPosition = proj.estimatedPositions[index+1];
+                Vec2 newProjPosition = proj.estimatedPositions[index + 1];
                 if (newProjPosition.X == -10000)
                 {
                     continue;
                 }
                 var obst = Tools.RaycastObstacle(lastProjPosition,
-                    newProjPosition,new []{new Obstacle(0,upUnit.Position,quareUnitRadius,true,false) },false);
+                    newProjPosition, new[] { new Obstacle(0, upUnit.Position, quareUnitRadius, true, false) }, false);
                 if (/*newProjPosition.SqrDistance(upUnit.Position)<= quareUnitRadius*/obst.HasValue)
                 {
                     double damage = _constants.Weapons[proj.projData.WeaponTypeIndex].ProjectileDamage;
                     try
                     {
-                        double shieldDamage = Math.Clamp(damage,0,unit.Shield);
+                        double shieldDamage = Math.Clamp(damage, 0, unit.Shield);
                         upUnit.Shield -= shieldDamage;
                         upUnit.Health -= (damage - shieldDamage);
                         destroyedProjectiles.Add(i);
                     }
                     catch (Exception e)
                     {
-                        
+
                     }
                 }
             }
@@ -458,7 +457,7 @@ namespace AiCup22.Custom
         }
 
         public Vec2 SimulateEvading(Unit unit, List<Obstacle> obstacles, List<MemorizedProjectile> projectiles,
-            int directionCount,Vec2 zeroDirection,int simulationStep,int simulationDepth,DebugInterface debugInterface)
+            int directionCount, Vec2 zeroDirection, int simulationStep, int simulationDepth, DebugInterface debugInterface)
         {
             Vec2[] directions = new Vec2[directionCount];
             double dirAngle = 360 / directionCount;
@@ -475,7 +474,7 @@ namespace AiCup22.Custom
 
             for (int i = 0; i < projectiles.Count; i++)
             {
-                projectiles[i].CalculateEstimatedPositions(this, simulationDepth,simulationStep);
+                projectiles[i].CalculateEstimatedPositions(this, simulationDepth, simulationStep);
             }
             bool[] projectileMask = new bool[projectiles.Count];
             for (int i = 0; i < directionCount; i++)
@@ -483,10 +482,10 @@ namespace AiCup22.Custom
                 /*var timer = Stopwatch.StartNew();
                 long nanosecPerTick = (1000L*1000L*1000L) / Stopwatch.Frequency;
                 timer.Start();*/
-                var (u, lst) = CascadeSimulation(unit, 
-                    new UnitOrder(directions[i].Multi(_constants.MaxUnitForwardSpeed),unit.Direction,null),
-                    obstacles,projectiles,projectileMask,directions,simulationStep,_game.CurrentTick,
-                    0,simulationDepth,bestScore,debugInterface);
+                var (u, lst) = CascadeSimulation(unit,
+                    new UnitOrder(directions[i].Multi(_constants.MaxUnitForwardSpeed), unit.Direction, null),
+                    obstacles, projectiles, projectileMask, directions, simulationStep, _game.CurrentTick,
+                    0, simulationDepth, bestScore, debugInterface);
                 simulatedUnits[i] = u;
                 /*timer.Stop();
                 if (timer.ElapsedMilliseconds > 1)
@@ -498,8 +497,8 @@ namespace AiCup22.Custom
                 {
                     return directions[i];
                 }
-                
-                if (simulatedUnits[i].Health+simulatedUnits[i].Shield>bestRes)
+
+                if (simulatedUnits[i].Health + simulatedUnits[i].Shield > bestRes)
                 {
                     bestRes = simulatedUnits[i].Health + simulatedUnits[i].Shield;
                     bestIndex = i;
@@ -525,38 +524,38 @@ namespace AiCup22.Custom
             return directions[bestIndex];
         }
 
-        protected (Unit,List<Unit>) CascadeSimulation(Unit unit, UnitOrder order, List<Obstacle> obstacles, List<MemorizedProjectile> projectiles,
+        protected (Unit, List<Unit>) CascadeSimulation(Unit unit, UnitOrder order, List<Obstacle> obstacles, List<MemorizedProjectile> projectiles,
             bool[] projectileMask,
-            Vec2[] directions, int simulationStep,int curSimulationTick,int curSimulationDepth,int maxSimulationDepth,double bestScore,DebugInterface debugInterface)
+            Vec2[] directions, int simulationStep, int curSimulationTick, int curSimulationDepth, int maxSimulationDepth, double bestScore, DebugInterface debugInterface)
         {
             List<int> catchedProj;
-            
-            Unit simUnit = SimulateUnitMovement(unit,order,obstacles,projectiles,projectileMask,out catchedProj,simulationStep,curSimulationTick,debugInterface);
-            
-           //debugInterface.AddCircle(simUnit.Position,0.2,new Color(1-(simUnit.Health/100),(simUnit.Health/100)*1,0,1));
 
-            if (curSimulationDepth == maxSimulationDepth || simUnit.Health<=0 || simUnit.Health+simUnit.Shield<=bestScore)
+            Unit simUnit = SimulateUnitMovement(unit, order, obstacles, projectiles, projectileMask, out catchedProj, simulationStep, curSimulationTick, debugInterface);
+
+            //debugInterface.AddCircle(simUnit.Position,0.2,new Color(1-(simUnit.Health/100),(simUnit.Health/100)*1,0,1));
+
+            if (curSimulationDepth == maxSimulationDepth || simUnit.Health <= 0 || simUnit.Health + simUnit.Shield <= bestScore)
             {
                 List<Unit> lst = new List<Unit>();
                 lst.Add(simUnit);
-                return (simUnit,lst);
+                return (simUnit, lst);
             }
-            
+
             for (int i = 0; i < catchedProj.Count; i++)
             {
                 projectileMask[catchedProj[i]] = true;
             }
             Unit[] simulatedUnits = new Unit[directions.Length];
-            double bs = bestScore; 
+            double bs = bestScore;
             double bestRes = -100;
             int bestIndex = -1;
             List<Unit> bestList = new List<Unit>();
             for (int i = 0; i < directions.Length; i++)
             {
-                var (u, lst) =CascadeSimulation(simUnit,
-                    new UnitOrder(directions[i].Multi(_constants.MaxUnitForwardSpeed),simUnit.Direction,null),
-                    obstacles,projectiles,projectileMask,directions,simulationStep,curSimulationTick+simulationStep,
-                    curSimulationDepth+1,maxSimulationDepth,bs,debugInterface);
+                var (u, lst) = CascadeSimulation(simUnit,
+                    new UnitOrder(directions[i].Multi(_constants.MaxUnitForwardSpeed), simUnit.Direction, null),
+                    obstacles, projectiles, projectileMask, directions, simulationStep, curSimulationTick + simulationStep,
+                    curSimulationDepth + 1, maxSimulationDepth, bs, debugInterface);
                 simulatedUnits[i] = u;
                 if (simulatedUnits[i].Shield == simUnit.Shield && simulatedUnits[i].Health == simUnit.Health)
                 {
@@ -566,10 +565,10 @@ namespace AiCup22.Custom
                     {
                         projectileMask[catchedProj[j]] = false;
                     }
-                    return (simulatedUnits[i],lst);
+                    return (simulatedUnits[i], lst);
                 }
-                
-                if (simulatedUnits[i].Health+simulatedUnits[i].Shield>bestRes)
+
+                if (simulatedUnits[i].Health + simulatedUnits[i].Shield > bestRes)
                 {
                     bestRes = simulatedUnits[i].Health + simulatedUnits[i].Shield;
                     bestIndex = i;
@@ -587,16 +586,16 @@ namespace AiCup22.Custom
             {
                 projectileMask[catchedProj[i]] = false;
             }
-            return (simulatedUnits[bestIndex],bestList);
-        } 
-        
+            return (simulatedUnits[bestIndex], bestList);
+        }
+
         public List<MemorizedProjectile> ClipSafeProjectiles()
         {
             List<MemorizedProjectile> res = new List<MemorizedProjectile>();
 
             foreach (var projectile in memorizedProjectiles)
             {
-                if (projectile.Value.actualPosition.SqrDistance(_myUnints[0].Position)<400)
+                if (projectile.Value.actualPosition.SqrDistance(_myUnints[0].Position) < 400)
                 {
                     res.Add(projectile.Value);
                 }
@@ -653,20 +652,20 @@ namespace AiCup22.Custom
 
         public void CalculateEstimatedPositions(Perception perception, int simulationDepth, int simulationStep)
         {
-            estimatedPositions = new Vec2[simulationDepth+2];
+            estimatedPositions = new Vec2[simulationDepth + 2];
             estimatedPositions[0] = actualPosition;
 
             Vec2 tickMovement = projData.Velocity.Multi(Tools.TicksToTime(simulationStep,
                 perception.Constants.TicksPerSecond));
             for (int i = 1; i < estimatedPositions.Length; i++)
             {
-                if (!IsExpired(perception, perception.Game.CurrentTick+i*simulationStep))
+                if (!IsExpired(perception, perception.Game.CurrentTick + i * simulationStep))
                 {
                     estimatedPositions[i] = estimatedPositions[i - 1].Add(tickMovement);
                 }
                 else
                 {
-                    estimatedPositions[i] = new Vec2(-100000,0);
+                    estimatedPositions[i] = new Vec2(-100000, 0);
                 }
             }
         }
