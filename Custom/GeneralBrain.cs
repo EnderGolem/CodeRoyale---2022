@@ -39,7 +39,7 @@ namespace AiCup22.Custom
 
         protected override Processable ChooseNewState(Perception perception, DebugInterface debugInterface)
         {
-            return new Evading();
+            //return new Evading();
             stateValues[3] = CalculateStaySafeValue(perception, debugInterface);
             stateValues[2] = CalculateRadarValue(perception, debugInterface);
             stateValues[1] = CalculateBattleValue(perception, debugInterface);

@@ -5,6 +5,7 @@ using Color = AiCup22.Debugging.Color;
 using System.Drawing;
 using AiCup22.Debugging;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace AiCup22.Custom
@@ -487,15 +488,24 @@ namespace AiCup22.Custom
             bool[] projectileMask = new bool[projectiles.Count];
             for (int i = 0; i < directionCount; i++)
             {
+                /*var timer = Stopwatch.StartNew();
+                long nanosecPerTick = (1000L*1000L*1000L) / Stopwatch.Frequency;
+                timer.Start();*/
                 var (u, lst) = CascadeSimulation(unit, 
                     new UnitOrder(directions[i].Multi(_constants.MaxUnitForwardSpeed),unit.Direction,null),
                     obstacles,projectiles,projectileMask,directions,simulationStep,_game.CurrentTick,
                     0,simulationDepth,bestScore,debugInterface);
                 simulatedUnits[i] = u;
-                /*if (simulatedUnits[i].Shield == unit.Shield && simulatedUnits[i].Health == unit.Health)
+                /*timer.Stop();
+                if (timer.ElapsedMilliseconds > 1)
+                {
+                    Console.WriteLine($"Simulation took:{timer.ElapsedMilliseconds} ms");
+                    Console.WriteLine($"Simulation took:{timer.ElapsedTicks * nanosecPerTick} ns");
+                }*/
+                if (simulatedUnits[i].Shield == unit.Shield && simulatedUnits[i].Health == unit.Health)
                 {
                     return directions[i];
-                }*/
+                }
                 
                 if (simulatedUnits[i].Health+simulatedUnits[i].Shield>bestRes)
                 {
@@ -509,11 +519,17 @@ namespace AiCup22.Custom
                 }
             }
 
-            for (int i = 0; i < bestList.Count; i++)
+            if (debugInterface != null)
             {
-                debugInterface.AddCircle(bestList[i].Position,0.1,new Color(1-(bestList[i].Health/100),(bestList[i].Health/100)*1,0,1));
-                debugInterface.AddArc(bestList[i].Position,0.2,0.1,0,360*bestList[i].Shield/200,new Color(0,0,1,1));
+                for (int i = 0; i < bestList.Count; i++)
+                {
+                    debugInterface.AddCircle(bestList[i].Position, 0.1,
+                        new Color(1 - (bestList[i].Health / 100), (bestList[i].Health / 100) * 1, 0, 1));
+                    debugInterface.AddArc(bestList[i].Position, 0.2, 0.1, 0, 360 * bestList[i].Shield / 200,
+                        new Color(0, 0, 1, 1));
+                }
             }
+
             return directions[bestIndex];
         }
 
@@ -522,8 +538,10 @@ namespace AiCup22.Custom
             Vec2[] directions, int simulationStep,int curSimulationTick,int curSimulationDepth,int maxSimulationDepth,double bestScore,DebugInterface debugInterface)
         {
             List<int> catchedProj;
+            
             Unit simUnit = SimulateUnitMovement(unit,order,obstacles,projectiles,projectileMask,out catchedProj,simulationStep,curSimulationTick,debugInterface);
-            //debugInterface.AddCircle(simUnit.Position,0.2,new Color(1-(simUnit.Health/100),(simUnit.Health/100)*1,0,1));
+            
+           //debugInterface.AddCircle(simUnit.Position,0.2,new Color(1-(simUnit.Health/100),(simUnit.Health/100)*1,0,1));
 
             if (curSimulationDepth == maxSimulationDepth || simUnit.Health<=0 || simUnit.Health+simUnit.Shield<=bestScore)
             {
