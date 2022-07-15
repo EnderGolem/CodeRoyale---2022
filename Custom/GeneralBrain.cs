@@ -76,23 +76,24 @@ namespace AiCup22.Custom
                     bestValue = stateValues[i];
                 }
             }
-            Vec2 offset = new Vec2(-20, 10);
-            var textSize = 3;
             if (debugInterface != null)
             {
-                debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0, 0)),
+                Vec2 offset = new Vec2(-30, 20);
+                var textSize = 2.5;
+                var center = perception.MyUnints[0].Position.Add(offset);
+                debugInterface.AddPlacedText(center.Add(new Vec2(0, 0)),
                     $"Radar: {stateValues[2]}",
                     new Vec2(0.5, 0.5), textSize, new Color(0, 0, 1, 1));
-                debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0, 2)),
+                debugInterface.AddPlacedText(center.Add(new Vec2(0, 2)),
                     $"Battle: {stateValues[1]}",
                     new Vec2(0.5, 0.5), textSize, new Color(1, 0, 0, 1));
-                debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0, 4)),
+                debugInterface.AddPlacedText(center.Add(new Vec2(0, 4)),
                     $"Looting {stateValues[0]}",
                     new Vec2(0.5, 0.5), textSize, new Color(0, 1, 0, 1));
-                debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0, 6)),
+                debugInterface.AddPlacedText(center.Add(new Vec2(0, 6)),
                     $"StayAway {stateValues[3]}",
                     new Vec2(0.5, 0.5), textSize, new Color(1, 1, 0, 1));
-                debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center.Add(offset).Add(new Vec2(0, 8)),
+                debugInterface.AddPlacedText(center.Add(new Vec2(0, 8)),
                    $"CurrentStay {allStates[bestState].GetType().Name}",
                    new Vec2(0.5, 0.5), textSize, new Color(1, 0, 1, 1));
             }
@@ -254,4 +255,6 @@ namespace AiCup22.Custom
 
             return value;
         }
+
     }
+

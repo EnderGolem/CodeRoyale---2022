@@ -21,7 +21,7 @@ namespace AiCup22.Custom
         public const double PunishmentForLeavingStaySafe = 500;
         public const double StayAwayMaxHealthValue = 1800;
         public const double StayAwayBaseValue = 1100;
-        public const double StayAwayZoneMaxValue = 3000;
+        public const double StayAwayZoneMaxValue = 2500;
 
         public const double bowValue = 3000;
 

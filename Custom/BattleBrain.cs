@@ -17,7 +17,7 @@ namespace AiCup22.Custom
         public BattleBrain()
         {
             _lookAroundAction = new LookAroundAction();
-            _steeringRunToDestination = new SteeringRunToDestination();
+            _steeringRunToDestination = new SteeringRunToDestinationWithEvading();
             _aimToDestinationDirection = new AimToDestinationDirection();
             _steeringAimToDestinationDirection = new SteeringAimToDestinationDirection();
             _steeringShootToDestinationDirection = new SteeringShootToDestinationDirection();
@@ -46,7 +46,7 @@ namespace AiCup22.Custom
                     bestPoints = point;
                 }
             }
-
+            
             var unit = perception.MyUnints[0];
             var enemy = perception.EnemyUnints[bestEnemyIndex];
             var safeDirection = CalculateDodge(perception, debugInterface);
@@ -124,9 +124,7 @@ namespace AiCup22.Custom
                 estimatedFlyTime = estimatedEnemyPosition.Distance(shotPosition) / bulletSpeed;
                 estimatedEnemyPosition = enemy.Position.Add(enemy.Velocity.Multi(estimatedFlyTime));
             }
-
-            return estimatedEnemyPosition; //В версии 5 было так...
-            return estimatedEnemyPosition.Add(estimatedEnemyPosition.Substract(enemy.Position).Multi(0.65)); //Но потом изменилось так, все дело в том, что я на игт ver5 позже заливаю...
+            return estimatedEnemyPosition.Add(estimatedEnemyPosition.Substract(enemy.Position).Multi(0.65));
         }
 
         Vec2 CalculateDodge(Perception perception, DebugInterface debugInterface)
