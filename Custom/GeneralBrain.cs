@@ -40,25 +40,30 @@ namespace AiCup22.Custom
 
         protected override Processable ChooseNewState(Perception perception, DebugInterface debugInterface)
         {
+            //return new Evading();
             if (debugInterface != null)
             {
                 if (currentState == _lootingBrain)
                 {
                     timeStates[0] += 1;
                 }
+
                 if (currentState == _battleBrain)
                 {
                     timeStates[1] += 1;
                 }
+
                 if (currentState == _radarBrain)
                 {
                     timeStates[2] += 1;
                 }
+
                 if (currentState == _staySafe)
                 {
                     timeStates[3] += 1;
                 }
             }
+
             stateValues[3] = CalculateStaySafeValue(perception, debugInterface);
             stateValues[2] = CalculateRadarValue(perception, debugInterface);
             stateValues[1] = CalculateBattleValue(perception, debugInterface);
@@ -76,6 +81,7 @@ namespace AiCup22.Custom
                     bestValue = stateValues[i];
                 }
             }
+
             if (debugInterface != null)
             {
                 Vec2 offset = new Vec2(-30, 20);
@@ -94,9 +100,10 @@ namespace AiCup22.Custom
                     $"StayAway {stateValues[3]}",
                     new Vec2(0.5, 0.5), textSize, new Color(1, 1, 0, 1));
                 debugInterface.AddPlacedText(center.Add(new Vec2(0, 8)),
-                   $"CurrentStay {allStates[bestState].GetType().Name}",
-                   new Vec2(0.5, 0.5), textSize, new Color(1, 0, 1, 1));
+                    $"CurrentStay {allStates[bestState].GetType().Name}",
+                    new Vec2(0.5, 0.5), textSize, new Color(1, 0, 1, 1));
             }
+
             return allStates[bestState];
         }
 
@@ -107,11 +114,14 @@ namespace AiCup22.Custom
             {
                 if (sound.Position.Distance(perception.MyUnints[0].Position) < 1.5)
                 {
-                    if (!Tools.BelongConeOfVision(sound.Position, perception.MyUnints[0].Position, perception.MyUnints[0].Direction, perception.Constants.ViewDistance, perception.Constants.FieldOfView)) //Идет проверка по зрению без учета прицеливания
+                    if (!Tools.BelongConeOfVision(sound.Position, perception.MyUnints[0].Position,
+                        perception.MyUnints[0].Direction, perception.Constants.ViewDistance,
+                        perception.Constants.FieldOfView)) //Идет проверка по зрению без учета прицеливания
                     {
                         soundBullet = true;
                     }
                 }
+
                 if (debugInterface != null)
                     debugInterface.AddCircle(sound.Position, 0.5, new Color(1, 1, 0, 1));
             }
@@ -136,9 +146,11 @@ namespace AiCup22.Custom
                 {
                     result *= 10;
                 }
+
                 return result;
             }
         }
+
         protected virtual double CalculateBattleValue(Perception perception, DebugInterface debugInterface)
         {
 
@@ -147,7 +159,8 @@ namespace AiCup22.Custom
             bool hasEnemy = false;
             foreach (var enemy in perception.MemorizedEnemies)
             {
-                if (perception.Game.CurrentTick - enemy.Value.Item1 < Tools.TimeToTicks(1, perception.Constants.TicksPerSecond))
+                if (perception.Game.CurrentTick - enemy.Value.Item1 <
+                    Tools.TimeToTicks(1, perception.Constants.TicksPerSecond))
                 {
                     hasEnemy = true;
                 }
@@ -157,10 +170,12 @@ namespace AiCup22.Custom
             {
                 return -100000;
             }
+
             if (unit.Ammo[unit.Weapon.Value] == 0)
             {
                 return -100000;
             }
+
             if (!unit.Weapon.HasValue)
 
             {
@@ -171,15 +186,21 @@ namespace AiCup22.Custom
                 value += (unit.Weapon.Value * WeaponValueBattle);
                 if (unit.Weapon.Value == 0)
                     value += 60 * (
-                        unit.Ammo[unit.Weapon.Value] / perception.Constants.Weapons[unit.Weapon.Value].MaxInventoryAmmo) * 100;
+                        unit.Ammo[unit.Weapon.Value] /
+                        perception.Constants.Weapons[unit.Weapon.Value].MaxInventoryAmmo) * 100;
                 if (unit.Weapon.Value == 2)
                     value += maxAmmoValue * 3 * (
-                        unit.Ammo[unit.Weapon.Value] / perception.Constants.Weapons[unit.Weapon.Value].MaxInventoryAmmo) * 100;
+                        unit.Ammo[unit.Weapon.Value] /
+                        perception.Constants.Weapons[unit.Weapon.Value].MaxInventoryAmmo) * 100;
 
             }
+
             //System.Console.WriteLine($"AmmoValue {30 * (unit.Ammo[unit.Weapon.Value] / perception.Constants.Weapons[unit.Weapon.Value].MaxInventoryAmmo) * 100}" +
             //    "\nHP/SH " + healthValueBattle * (1 / 100 - unit.Health + 1) + shieldValueBattle * (1 / perception.Constants.MaxShield - unit.Shield + 1));
-            value += healthValueBattle * (1 / (100 - unit.Health + 1)) + shieldValueBattle * (1 / (perception.Constants.MaxShield - unit.Shield + 1)); //С -1 при максимуме будет не максимум увернности
+            value += healthValueBattle * (1 / (100 - unit.Health + 1)) +
+                     shieldValueBattle *
+                     (1 / (perception.Constants.MaxShield - unit.Shield +
+                           1)); //С -1 при максимуме будет не максимум увернности
             value += _battleBrain.IsActive ? PunishmentForLeavingBattle : 0;
             return value;
         }
@@ -201,7 +222,8 @@ namespace AiCup22.Custom
                 //Только для лука считается
                 //С другой стороны, может быть такое, что нужно сражаться без лука
                 double maxValue = maxAmmoValue * perception.Constants.Weapons[2].MaxInventoryAmmo +
-                    maxPotionsValueLoot * perception.Constants.MaxShieldPotionsInInventory + bowValue + 1000;
+                                  maxPotionsValueLoot * perception.Constants.MaxShieldPotionsInInventory + bowValue +
+                                  1000;
 
                 double weaponValue = unit.Weapon.Value == 2 ? bowValue : 1;
                 double ammoValue = maxAmmoValue * (unit.Ammo[2]);
@@ -209,6 +231,7 @@ namespace AiCup22.Custom
                 {
                     maxValue += perception.Constants.Weapons[2].MaxInventoryAmmo * maxAmmoValue;
                 }
+
                 double potionsValue = maxPotionsValueLoot * (unit.ShieldPotions);
                 value += (maxValue - weaponValue - ammoValue - potionsValue);
                 //      System.Console.WriteLine($"Weapong {weaponValue} ammoValue {ammoValue} po"):
@@ -242,10 +265,13 @@ namespace AiCup22.Custom
 
                 enemiesValue = sum * (totalDanger) / i;
             }
-            double zoneValue = Koefficient.StayAwayZoneMaxValue * (1 - zoneDistance / perception.Game.Zone.CurrentRadius);
+
+            double zoneValue = Koefficient.StayAwayZoneMaxValue *
+                               (1 - zoneDistance / perception.Game.Zone.CurrentRadius);
             zoneValue = Math.Max(0, zoneValue);
-            double healthValue = Koefficient.StayAwayMaxHealthValue - Koefficient.StayAwayMaxHealthValue * (perception.MyUnints[0].Health + perception.MyUnints[0].Shield)
-                                 / (perception.Constants.MaxShield + perception.Constants.UnitHealth);
+            double healthValue = Koefficient.StayAwayMaxHealthValue - Koefficient.StayAwayMaxHealthValue *
+                (perception.MyUnints[0].Health + perception.MyUnints[0].Shield)
+                / (perception.Constants.MaxShield + perception.Constants.UnitHealth);
             healthValue = healthValue * sum;
             double value = zoneValue + healthValue + enemiesValue + Koefficient.StayAwayBaseValue;
             if (_staySafe.IsActive)
