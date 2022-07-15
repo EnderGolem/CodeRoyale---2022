@@ -124,7 +124,7 @@ namespace AiCup22.Custom
                 estimatedFlyTime = estimatedEnemyPosition.Distance(shotPosition) / bulletSpeed;
                 estimatedEnemyPosition = enemy.Position.Add(enemy.Velocity.Multi(estimatedFlyTime));
             }
-            return estimatedEnemyPosition.Add(estimatedEnemyPosition.Substract(enemy.Position).Multi(0.65));
+            return estimatedEnemyPosition.Add(estimatedEnemyPosition.Substract(enemy.Position).Multi(0.45));
         }
 
         Vec2 CalculateDodge(Perception perception, DebugInterface debugInterface)

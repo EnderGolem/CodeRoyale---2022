@@ -67,7 +67,7 @@ namespace AiCup22
                long nanosecPerTick = (1000L*1000L*1000L) / Stopwatch.Frequency;
                timer.Start();
                perception.Analyze(game, debugInterface);
-               var order = brain.Process(perception, null);
+               var order = brain.Process(perception, debugInterface);
                orders.Add(perception.MyUnints[0].Id, order);
                timer.Stop();
                if (timer.ElapsedMilliseconds > 1)
