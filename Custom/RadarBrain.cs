@@ -4,10 +4,10 @@ namespace AiCup22.Custom
 {
     public class RadarBrain:Brain
     {
-        private LookAroundAction _lookAroundAction;
+        private LookAroundWithEvading _lookAroundAction;
         public RadarBrain()
         {
-            _lookAroundAction = new LookAroundAction();
+            _lookAroundAction = new LookAroundWithEvading();
             allStates.Add(_lookAroundAction);
         }
 
