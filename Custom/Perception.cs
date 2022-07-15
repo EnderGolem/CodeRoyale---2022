@@ -230,6 +230,14 @@ namespace AiCup22.Custom
                         if (distance > 30)
                             distanceDanger = -0.025 * distance + 1.75;
                         directionDangers[i] += enemy.Value.Item2 * distanceDanger;
+                        if (enemiesAimingYou.Contains(enemy.Key))
+                        {
+                            ///Увеличиваем опасность для направления противоположному тому
+                            /// Из которого по нам целят
+                            directionDangers[(i + directions.Length / 2) % directions.Length] +=
+                                enemy.Value.Item2 * distanceDanger*0.8;
+                        }
+
                         break;
                     }
                 }

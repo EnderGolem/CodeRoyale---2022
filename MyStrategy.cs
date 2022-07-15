@@ -45,10 +45,10 @@ namespace AiCup22
 
         public AiCup22.Model.Order GetOrder(AiCup22.Model.Game game, DebugInterface debugInterface)
         {
-            int myId = FindMyUnitId();
+            /*int myId = FindMyUnitId();
             if (myId != -1 && (lastGame.Units[myId].Health + lastGame.Units[myId].Shield) - (game.Units[myId].Health + game.Units[myId].Shield) > 0)
                 countHit++;
-            lastGame = game;
+            lastGame = game;*/
             Dictionary<int, AiCup22.Model.UnitOrder> orders = new Dictionary<int, UnitOrder>();
             //try
             //{
@@ -66,7 +66,7 @@ namespace AiCup22
                var timer = Stopwatch.StartNew();
                long nanosecPerTick = (1000L*1000L*1000L) / Stopwatch.Frequency;
                timer.Start();
-               perception.Analyze(game, null);
+               perception.Analyze(game, debugInterface);
                var order = brain.Process(perception, null);
                orders.Add(perception.MyUnints[0].Id, order);
                timer.Stop();
