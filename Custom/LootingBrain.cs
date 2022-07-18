@@ -145,8 +145,6 @@ namespace AiCup22.Custom
         private double CalculateLootValue(Perception perception, Loot loot, DebugInterface debugInterface = null)
         {
 
-
-
             double points = 1;
             switch (loot.Item)
             {
