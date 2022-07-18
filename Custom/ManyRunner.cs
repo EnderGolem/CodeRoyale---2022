@@ -81,7 +81,7 @@ namespace AiCup22.Custom
                 }
 
             }
-            myStrategy.addText("Ver6_02beta.csv");
+            myStrategy.addText("Ver7.csv");
             System.Console.WriteLine("Add_file");
         }
         public static void ManyRuns(string[] args, int countRuns = 50)
