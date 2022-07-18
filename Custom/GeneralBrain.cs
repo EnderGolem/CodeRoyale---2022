@@ -40,6 +40,7 @@ namespace AiCup22.Custom
 
         protected override Processable ChooseNewState(Perception perception, DebugInterface debugInterface)
         {
+            return _radarBrain;
             //return new Evading();
             if (debugInterface != null)
             {
