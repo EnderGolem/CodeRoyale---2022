@@ -244,7 +244,6 @@ namespace AiCup22.Custom
             }
             var vec = _myUnints[0].Position.Substract(game.Zone.CurrentCenter).Normalize().Multi(game.Zone.CurrentRadius * Koefficient.StayAwayFromCenter);
             var point = game.Zone.CurrentCenter.Add(vec);
-            System.Console.WriteLine($"cen {vec}");
             for (int i = 0; i < directions.Length; i++)
             {
                 /*if (dirZoneDist < 0)

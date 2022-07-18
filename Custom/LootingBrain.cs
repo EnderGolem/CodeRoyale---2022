@@ -16,8 +16,8 @@ namespace AiCup22.Custom
 
         private RunToDestination _runToDestination;
         private PickupLoot _pickupLoot;
-        private UseShieldToDestination _useShieldToDestination;
-        private LookAroundAction _lookAroundAction;
+        private UseShieldToDestinationWithEvading _useShieldToDestinationWithEvading;
+        private LookAroundWithEvading _lookAroundWithEvading;
         private Loot desireLoot;
         private Vec2 desiredDestination;
         private double desiredPoints;
@@ -32,17 +32,19 @@ namespace AiCup22.Custom
         {
             _runToDestination = new SteeringRunToDestinationWithEvading();
             _pickupLoot = new PickupLoot();
-            _useShieldToDestination = new UseShieldToDestination();
+            _useShieldToDestinationWithEvading = new UseShieldToDestinationWithEvading();
+            _lookAroundWithEvading = new LookAroundWithEvading();
             allStates.Add(_runToDestination);
             allStates.Add(_pickupLoot);
-            allStates.Add(_useShieldToDestination);
+            allStates.Add(_useShieldToDestinationWithEvading);
+            allStates.Add(_lookAroundWithEvading);
         }
 
 
         protected override Processable ChooseNewState(Perception perception, DebugInterface debugInterface)
         {
             if (perception.Game.Loot.Length == 0)   //Проверка, вдруг вообще ничего нет
-                return _lookAroundAction;
+                return _lookAroundWithEvading;
 
             int bestLootIndex = -1;
             Loot bestLoot = new Loot();
@@ -64,7 +66,7 @@ namespace AiCup22.Custom
                     continue;
                 }
 
-                double curPoints = CalculateLootValue(perception, loot.Value,debugInterface);
+                double curPoints = CalculateLootValue(perception, loot.Value, debugInterface);
 
                 if (debugInterface != null)
                 {
@@ -82,9 +84,9 @@ namespace AiCup22.Custom
 
             if (shieldPoints > bestPoints && perception.MyUnints[id].ShieldPotions > 0 && perception.MyUnints[id].Action == null)
             {
-                _useShieldToDestination.SetDestination(perception.MyUnints[0].Position.Add(perception.Directions[perception.FindIndexMaxSafeDirection()]));
-                _useShieldToDestination.SetDirection(perception.MyUnints[0].Direction);
-                return _useShieldToDestination;
+                _useShieldToDestinationWithEvading.SetDestination(perception.MyUnints[0].Position.Add(perception.Directions[perception.FindIndexMaxSafeDirection()]));
+                // _useShieldToDestinationWithEvading.SetDirection(perception.MyUnints[0].Direction);
+                return _useShieldToDestinationWithEvading;
             }
 
 
