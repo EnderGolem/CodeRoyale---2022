@@ -1,23 +1,25 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using AiCup22.Model;
 
 namespace AiCup22.Custom
 {
-    public class StaySafeBrain : Brain
+    public class StaySafeBrain : EndBrain
     {
         private RunToDestination _runToDestination;
         private UseShieldToDestinationWithEvading _useShieldToDestination;
 
-        public StaySafeBrain()
+        public StaySafeBrain(Perception perception):base(perception)
         {
             _runToDestination = new SteeringRunToDestinationWithEvading();
             _useShieldToDestination = new UseShieldToDestinationWithEvading();
-            allStates.Add(_runToDestination);
-            allStates.Add(_useShieldToDestination);
+            AddState("Run",_runToDestination,perception);
+            AddState("UseShield",_useShieldToDestination,perception);
         }
 
-        protected override Processable ChooseNewState(Perception perception, DebugInterface debugInterface)
+        protected override Dictionary<int,EndAction> CalculateEndActions(Perception perception, DebugInterface debugInterface)
         {
+            Dictionary<int, EndAction> orderedEndActions = new Dictionary<int, EndAction>();
             int safestDir = -1;
             double minDanger = double.MaxValue;
             for (int i = 0; i < perception.Directions.Length; i++) //Мне кажется тут ошибка т.к. сейчас DirectionDangers указывает опасность в дргую сторону
@@ -41,11 +43,12 @@ namespace AiCup22.Custom
             if (perception.MyUnints[0].Shield < 160 && perception.MyUnints[0].ShieldPotions != 0)
             {
                 _useShieldToDestination.SetDestination(perception.MyUnints[0].Position.Add(perception.Directions[safestDir].Multi(100)));
-                return _useShieldToDestination;
+                orderedEndActions[perception.MyUnints[0].Id] = _useShieldToDestination;
+                return orderedEndActions;
             }
             _runToDestination.SetDestination(perception.MyUnints[0].Position.Add(perception.Directions[safestDir].Multi(100)));
-
-            return _runToDestination;
+            orderedEndActions[perception.MyUnints[0].Id] = _runToDestination;
+            return orderedEndActions;
         }
     }
 }

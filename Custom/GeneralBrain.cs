@@ -4,7 +4,7 @@ using AiCup22.Model;
 
 namespace AiCup22.Custom
 {
-    public class GeneralBrain : Brain
+    public class GeneralBrain : SuperBrain
     {
         protected const double healthValueBattle = Koefficient.healthValueBattle;
         protected const double shieldValueBattle = Koefficient.shieldValuefBattle;
@@ -23,12 +23,12 @@ namespace AiCup22.Custom
 
         private double[] stateValues;
 
-        public GeneralBrain()
+        public GeneralBrain(Perception perception) : base(perception)
         {
-            _lootingBrain = new LootingBrain();
-            _battleBrain = new BattleBrain();
-            _radarBrain = new RadarBrain();
-            _staySafe = new StaySafeBrain();
+            _lootingBrain = new LootingBrain(perception);
+            _battleBrain = new BattleBrain(perception);
+            _radarBrain = new RadarBrain(perception);
+            _staySafe = new StaySafeBrain(perception);
             allStates.Add(_lootingBrain);
             allStates.Add(_battleBrain);
             allStates.Add(_radarBrain);
@@ -38,7 +38,7 @@ namespace AiCup22.Custom
             timeStates = new long[allStates.Count];
         }
 
-        protected override Processable ChooseNewState(Perception perception, DebugInterface debugInterface)
+        protected override Brain ChooseNewState(Perception perception, DebugInterface debugInterface)
         {
             //return new Evading();
             if (debugInterface != null)

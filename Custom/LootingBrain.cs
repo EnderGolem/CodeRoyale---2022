@@ -7,7 +7,7 @@ using AiCup22.Model;
 
 namespace AiCup22.Custom
 {
-    public class LootingBrain : Brain
+    public class LootingBrain : EndBrain
     {
         protected const double eps = Koefficient.eps;
         protected const int ShieldLoot = Koefficient.Looting.ShieldLoot;
@@ -28,23 +28,27 @@ namespace AiCup22.Custom
            private Vec2 desiredDestination;
            private double desiredPoints;
         */
-        public LootingBrain()
+        public LootingBrain(Perception perception):base(perception)
         {
             _runToDestination = new SteeringRunToDestinationWithEvading();
             _pickupLoot = new PickupLoot();
             _useShieldToDestinationWithEvading = new UseShieldToDestinationWithEvading();
             _lookAroundWithEvading = new LookAroundWithEvading();
-            allStates.Add(_runToDestination);
-            allStates.Add(_pickupLoot);
-            allStates.Add(_useShieldToDestinationWithEvading);
-            allStates.Add(_lookAroundWithEvading);
+            AddState("Run",_runToDestination,perception);
+            AddState("Pickup",_pickupLoot,perception);
+            AddState("UseShield",_useShieldToDestinationWithEvading,perception);
+            AddState("LookAround",_lookAroundWithEvading,perception);
         }
 
 
-        protected override Processable ChooseNewState(Perception perception, DebugInterface debugInterface)
+        protected override Dictionary<int,EndAction> CalculateEndActions(Perception perception, DebugInterface debugInterface)
         {
-            if (perception.Game.Loot.Length == 0)   //Проверка, вдруг вообще ничего нет
-                return _lookAroundWithEvading;
+            Dictionary<int, EndAction> orderedEndActions = new Dictionary<int, EndAction>();
+            if (perception.Game.Loot.Length == 0) //Проверка, вдруг вообще ничего нет
+            {
+                orderedEndActions[perception.MyUnints[0].Id] = _lookAroundWithEvading;
+                return orderedEndActions;
+            }
 
             int bestLootIndex = -1;
             Loot bestLoot = new Loot();
@@ -86,7 +90,8 @@ namespace AiCup22.Custom
             {
                 _useShieldToDestinationWithEvading.SetDestination(perception.MyUnints[0].Position.Add(perception.Directions[perception.FindIndexMaxSafeDirection()]));
                 // _useShieldToDestinationWithEvading.SetDirection(perception.MyUnints[0].Direction);
-                return _useShieldToDestinationWithEvading;
+                orderedEndActions[perception.MyUnints[0].Id] = _useShieldToDestinationWithEvading;
+                return orderedEndActions;
             }
 
 
@@ -101,7 +106,8 @@ namespace AiCup22.Custom
             {
                 _pickupLoot.SetPickableLootId(bestLoot.Id);
                 perception.MemorizedLoot.Remove(bestLoot.Id);
-                return _pickupLoot;
+                orderedEndActions[perception.MyUnints[0].Id] = _pickupLoot;
+                return orderedEndActions;
             }
             else
             {
@@ -110,8 +116,8 @@ namespace AiCup22.Custom
                     debugInterface.AddRing(bestLoot.Position, 1, 0.5, new Color(0.5, 0.5, 0, 1));
                 }
                 _runToDestination.SetDestination(bestLoot.Position);
-
-                return _runToDestination;
+                orderedEndActions[perception.MyUnints[0].Id] = _runToDestination;
+                return orderedEndActions;
             }
         }
 

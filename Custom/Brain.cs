@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using AiCup22.Custom;
 using AiCup22.Debugging;
 using AiCup22.Model;
 
 namespace AiCup22.Custom
 {
-    public interface Processable
+    public interface Processable<T>
     {
         public int LastActivationTick { get; set; }
 
@@ -16,19 +17,13 @@ namespace AiCup22.Custom
 
         public void Deactivate(int currentGameTick);
 
-        public UnitOrder Process(Perception perception, DebugInterface debugInterface);
+        public T Process(Perception perception, DebugInterface debugInterface);
     }
 
-    public class Brain : Processable
+    public class Brain : Processable<Dictionary<int,UnitOrder>>
     {
         protected int id = 0;// Чтобы не забыли об этом
-        protected Processable previousState;
-        protected Processable currentState;
-
-        protected List<Processable> allStates;
-        protected long[] timeStates;
-
-        public long[] TimeStates => timeStates;
+        
 
         /// <summary>
         /// Здесь дожен быть какой - то общий список всех конечных действий на выбор данного мозга
@@ -36,9 +31,6 @@ namespace AiCup22.Custom
         /// <param name="perception"></param>
         public Brain()
         {
-            previousState = null;
-            currentState = null;
-            allStates = new List<Processable>();
             LastActivationTick = -1000;
             LastDeactivationTick = -1000;
         }
@@ -48,25 +40,12 @@ namespace AiCup22.Custom
         public int LastDeactivationTick { get; set; }
 
         public bool IsActive { get; set; }
-        
-        protected virtual Processable ChooseNewState(Perception perception, DebugInterface debugInterface)
-        {
-            return null;
-        }
 
-        public UnitOrder Process(Perception perception,DebugInterface debugInterface)
+        public virtual Dictionary<int,UnitOrder> Process(Perception perception,DebugInterface debugInterface)
         {
-            Activate(perception.Game.CurrentTick);
-            var newState = ChooseNewState(perception,debugInterface);
-            if (currentState != newState)
-            {
-                currentState?.Deactivate(perception.Game.CurrentTick);
-                previousState = currentState;
-            }
-            
-            currentState = newState;
-            
-            return currentState.Process(perception, debugInterface);
+
+            // return currentState.Process(perception, debugInterface);
+           return null;
         }
 
         public void Activate(int currentGameTick)
@@ -85,6 +64,108 @@ namespace AiCup22.Custom
                 IsActive = false;
                 LastDeactivationTick = currentGameTick;
             }
+        }
+    }
+
+    public class SuperBrain : Brain
+    {
+        protected Brain previousState;
+        protected Brain currentState;
+
+        protected List<Brain> allStates;
+        protected long[] timeStates;
+
+        public long[] TimeStates => timeStates;
+
+        public SuperBrain(Perception perception)
+        {
+            previousState = null;
+            currentState = null;
+            allStates = new List<Brain>();
+        }
+        
+
+        protected virtual Brain ChooseNewState(Perception perception, DebugInterface debugInterface)
+        {
+            return null;
+        }
+        
+        public override Dictionary<int,UnitOrder> Process(Perception perception,DebugInterface debugInterface)
+        {
+            Activate(perception.Game.CurrentTick);
+            var newState = ChooseNewState(perception,debugInterface);
+            if (currentState != newState)
+            {
+                currentState?.Deactivate(perception.Game.CurrentTick);
+                previousState = currentState;
+            }
+            
+            currentState = newState;
+            
+            return currentState.Process(perception, debugInterface);
+        }
+    }
+
+    public class EndBrain : Brain
+    {
+        protected Dictionary<int, EndAction> previousStates;
+        protected Dictionary<int, EndAction> currentStates;
+        
+        private Dictionary<int,Dictionary<string,EndAction>> allStates;
+       
+        public EndBrain(Perception perception)
+        {
+            previousStates = new Dictionary<int, EndAction>();
+            currentStates = new Dictionary<int, EndAction>();
+            allStates=new Dictionary<int, Dictionary<string, EndAction>>();
+            for (int i = 0; i < perception.MyUnints.Count; i++)
+            {
+                allStates[perception.MyUnints[i].Id] = new Dictionary<string, EndAction>();
+                previousStates[perception.MyUnints[i].Id] = null;
+                currentStates[perception.MyUnints[i].Id] = null;
+            }
+        }
+
+        protected void AddState(string actionName,EndAction action,Perception perception)
+        {
+            Console.WriteLine(perception.MyUnints[0]);
+            for (int i = 0; i < perception.MyUnints.Count; i++)
+            {
+                allStates[perception.MyUnints[i].Id][actionName] = action.Copy();
+            }
+        }
+
+        protected EndAction GetAction(int unitId, string actionName)
+        {
+            return allStates[unitId][actionName];
+        }
+
+        protected virtual Dictionary<int,EndAction> CalculateEndActions(Perception perception, DebugInterface debugInterface)
+        {
+            return null;
+        }
+
+        public override Dictionary<int, UnitOrder> Process(Perception perception, DebugInterface debugInterface)
+        {
+            Activate(perception.Game.CurrentTick);
+            Dictionary<int, UnitOrder> orders = new Dictionary<int, UnitOrder>();
+            var actions = CalculateEndActions(perception,debugInterface);
+            for (int i = 0; i < perception.MyUnints.Count; i++)
+            {
+                int id = perception.MyUnints[i].Id;
+                var newState = actions[id];
+                if (currentStates.ContainsKey(id) && currentStates[id] != newState)
+                {
+                    currentStates[id]?.Deactivate(perception.Game.CurrentTick);
+                    previousStates[id] = currentStates[id];
+                }
+            
+                currentStates[id] = newState;
+
+                orders[id] = newState.Process(perception, debugInterface);
+            }
+
+            return orders;
         }
     }
 

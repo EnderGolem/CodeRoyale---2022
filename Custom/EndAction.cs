@@ -5,7 +5,7 @@ using AiCup22.Model;
 
 namespace AiCup22.Custom
 {
-    public class EndAction : Processable
+    public class EndAction : Processable<UnitOrder>
     {
         private int _lastActivationTick;
         private int _lastDeactivationTick;
@@ -50,6 +50,11 @@ namespace AiCup22.Custom
         public virtual UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
             return new UnitOrder();
+        }
+
+        public EndAction Copy()
+        {
+            return (EndAction)this.MemberwiseClone();
         }
     }
 
