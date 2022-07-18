@@ -1,19 +1,22 @@
-﻿using AiCup22.Model;
+﻿using System.Collections.Generic;
+using AiCup22.Model;
 
 namespace AiCup22.Custom
 {
-    public class RadarBrain:Brain
+    public class RadarBrain:EndBrain
     {
         private LookAroundWithEvading _lookAroundAction;
-        public RadarBrain()
+        public RadarBrain(Perception perception):base(perception)
         {
             _lookAroundAction = new LookAroundWithEvading();
-            allStates.Add(_lookAroundAction);
+            AddState("LookAround",_lookAroundAction,perception);
         }
 
-        protected override Processable ChooseNewState(Perception perception, DebugInterface debugInterface)
+        protected override Dictionary<int,EndAction> CalculateEndActions(Perception perception, DebugInterface debugInterface)
         {
-            return _lookAroundAction;
+            Dictionary<int, EndAction> orderedEndActions = new Dictionary<int, EndAction>();
+            orderedEndActions[perception.MyUnints[0].Id] = _lookAroundAction;
+            return orderedEndActions;
         }
         
     }

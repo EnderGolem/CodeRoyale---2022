@@ -24,7 +24,7 @@ namespace AiCup22
         {
             countHit = 0;
             perception = new Perception(constants);
-            brain = new GeneralBrain();
+            //brain = new GeneralBrain();
             lastGame = new Game();
         }
 
@@ -49,7 +49,7 @@ namespace AiCup22
             if (myId != -1 && (lastGame.Units[myId].Health + lastGame.Units[myId].Shield) - (game.Units[myId].Health + game.Units[myId].Shield) > 0)
                 countHit++;
             lastGame = game;*/
-            Dictionary<int, AiCup22.Model.UnitOrder> orders = new Dictionary<int, UnitOrder>();
+            //Dictionary<int, AiCup22.Model.UnitOrder> orders = new Dictionary<int, UnitOrder>();
             //try
             //{
             /*perception.Analyze(game, debugInterface);
@@ -66,9 +66,10 @@ namespace AiCup22
                var timer = Stopwatch.StartNew();
                long nanosecPerTick = (1000L*1000L*1000L) / Stopwatch.Frequency;
                timer.Start();
-               perception.Analyze(game, null);
-               var order = brain.Process(perception, null);
-               orders.Add(perception.MyUnints[0].Id, order);
+               perception.Analyze(game, debugInterface);
+               brain ??= new GeneralBrain(perception);
+               var order = brain.Process(perception, debugInterface);
+               //orders.Add(perception.MyUnints[0].Id, order);
                timer.Stop();
                if (timer.ElapsedMilliseconds > 1)
                {
@@ -78,30 +79,31 @@ namespace AiCup22
                        maxTickTime = timer.ElapsedMilliseconds;
                    }
 
-                   Console.WriteLine($"Simulation took:{timer.ElapsedMilliseconds} ms");
+                   /*Console.WriteLine($"Simulation took:{timer.ElapsedMilliseconds} ms");
                    Console.WriteLine($"Simulation took:{timer.ElapsedTicks * nanosecPerTick} ns");
                    Console.WriteLine($"Max time: {maxTickTime} ms");
-                   Console.WriteLine($"Total time: {totalTime} ms");
-               }  
+                   Console.WriteLine($"Total time: {totalTime} ms");*/
+               }
+               
             //}
             //catch (Exception e)
             //{
             //    if (debugInterface != null)
             //        debugInterface.AddPlacedText(debugInterface.GetState().Camera.Center, $"Message: {e.Message}\nTrace: {e.StackTrace}\nSource: {e.Source}", new Vec2(0, 0), 10, new Debugging.Color(0, 0, 0, 1));
             //}
-            return new Order(orders);
+            return new Order(order);
         }
 
         public void addText(string fileName)
         {
 
-            FileInfo fileInf = new FileInfo(fileName);
+            /*FileInfo fileInf = new FileInfo(fileName);
             var sw = fileInf.AppendText();
             int myPlayersId = FindMyUnitId();
             string s = $"{lastGame.Players[myPlayersId].Score};{lastGame.Players[myPlayersId].Kills};{lastGame.Players[myPlayersId].Damage};{lastGame.Players[myPlayersId].Place};{brain.TimeStates[0]};{brain.TimeStates[1]};{brain.TimeStates[2]};{brain.TimeStates[3]};{countHit};";
             System.Console.WriteLine(s);
             sw.WriteLine(s);
-            sw.Close();
+            sw.Close();*/
         }
 
         public void DebugUpdate(int displayedTick, DebugInterface debugInterface) { }

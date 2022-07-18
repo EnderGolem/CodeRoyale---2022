@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using AiCup22.Custom;
 using AiCup22.Debugging;
 using AiCup22.Model;
 
 namespace AiCup22.Custom
 {
-    class BattleBrain : Brain
+    class BattleBrain : EndBrain
     {
         public const int safeZone = 15;
 
@@ -14,24 +15,35 @@ namespace AiCup22.Custom
         private AimToDestinationDirection _aimToDestinationDirection;
         private SteeringShootToDestinationDirection _steeringShootToDestinationDirection;
         private SteeringAimToDestinationDirection _steeringAimToDestinationDirection;
-        public BattleBrain()
+        public BattleBrain(Perception perception):base(perception)
         {
             _lookAroundAction = new LookAroundAction();
             _steeringRunToDestination = new SteeringRunToDestinationWithEvading();
             _aimToDestinationDirection = new AimToDestinationDirection();
             _steeringAimToDestinationDirection = new SteeringAimToDestinationDirection();
             _steeringShootToDestinationDirection = new SteeringShootToDestinationDirection();
-            allStates.Add(_lookAroundAction);
+            AddState("LookAround",_lookAroundAction,perception);
+            AddState("SteeringRun",_steeringRunToDestination,perception);
+            AddState("Aim",_aimToDestinationDirection,perception);
+            AddState("SteeringAim",_steeringAimToDestinationDirection,perception);
+            AddState("SteeringShoot",_steeringShootToDestinationDirection,perception);
+            /*allStates.Add(_lookAroundAction);
             allStates.Add(_steeringRunToDestination);
             allStates.Add(_aimToDestinationDirection);
             allStates.Add(_steeringAimToDestinationDirection);
-            allStates.Add(_steeringShootToDestinationDirection);
+            allStates.Add(_steeringShootToDestinationDirection);*/
         }
 
-        protected override Processable ChooseNewState(Perception perception, DebugInterface debugInterface)
+        protected override Dictionary<int,EndAction> CalculateEndActions(Perception perception,DebugInterface debugInterface)
         {
-            if (perception.EnemyUnints.Count == 0)   //Проверка, вдруг вообще ничего нет
-                return _lookAroundAction;
+            Dictionary<int, EndAction> orderedEndActions = new Dictionary<int, EndAction>();
+            int unitId = perception.MyUnints[0].Id;///Убрать когда будешь работать над несколькими юнитами
+            if (perception.EnemyUnints.Count == 0) //Проверка, вдруг вообще ничего нет
+            {
+                orderedEndActions[unitId] = GetAction(unitId,"LookAround");
+                return orderedEndActions;
+            }
+
             double bestPoints = double.MinValue;
             int bestEnemyIndex = -1;
             double point = 0;
@@ -64,11 +76,13 @@ namespace AiCup22.Custom
                 debugInterface.AddPlacedText(enemy.Position.Add(new Vec2(0, 1)), enemy.Velocity.Length().ToString(), new Vec2(0.5, 0.5), 0.5, new Color(1, 0.4, 0.6, 0.5));
                 debugInterface.AddSegment(enemy.Position, estimatedEnemyPosition, 0.1, new Color(1, 0.4, 0.6, 0.5));
             }
-            if (((currentState != _steeringAimToDestinationDirection && currentState != _steeringShootToDestinationDirection) && distanceToEnemy > 30 * 30) ||
-                ((currentState == _steeringAimToDestinationDirection || currentState == _steeringShootToDestinationDirection) && distanceToEnemy > 35 * 35)) //Приблежаемся, возможно нужно стрелять. Можно красивее через Active
+            
+            if (((currentStates[unitId] != _steeringAimToDestinationDirection && currentStates[unitId] != _steeringShootToDestinationDirection) && distanceToEnemy > 30 * 30) ||
+                ((currentStates[unitId] == _steeringAimToDestinationDirection || currentStates[unitId] == _steeringShootToDestinationDirection) && distanceToEnemy > 35 * 35)) //Приблежаемся, возможно нужно стрелять. Можно красивее через Active
             {
                 _steeringRunToDestination.SetDestination(perception.EnemyUnints[bestEnemyIndex].Position);
-                return _steeringRunToDestination;
+                orderedEndActions[unitId] = GetAction(unitId,"SteeringRun");
+                return orderedEndActions;
             }
             else if (safeZone * safeZone < distanceToEnemy) //Стреляем
             {
@@ -79,7 +93,8 @@ namespace AiCup22.Custom
                 {
                     _steeringShootToDestinationDirection.SetDestination(perception.MyUnints[id].Position.Add(safeDirection));
                     _steeringShootToDestinationDirection.SetDirection(estimatedEnemyPosition);
-                    return _steeringShootToDestinationDirection;
+                    orderedEndActions[unitId] = GetAction(unitId,"SteeringRun");
+                    return orderedEndActions;
                 }
 
                 if (Tools.RaycastObstacle(perception.MyUnints[id].Position, estimatedEnemyPosition, perception.Constants.Obstacles, true) == null) //Если нет укрытия, просто прицеливаемся, уклоняясь
@@ -93,7 +108,8 @@ namespace AiCup22.Custom
 
                 }
                 _steeringAimToDestinationDirection.SetDirection(estimatedEnemyPosition);
-                return _steeringAimToDestinationDirection;
+                orderedEndActions[unitId] = GetAction(unitId,"SteeringAim");
+                return orderedEndActions;
             }
             else  //Отступаем
             {
@@ -102,13 +118,14 @@ namespace AiCup22.Custom
                 {
                     _steeringShootToDestinationDirection.SetDestination(perception.MyUnints[id].Position.FindMirrorPoint(enemy.Position));
                     _steeringShootToDestinationDirection.SetDirection(estimatedEnemyPosition);
-                    return _steeringShootToDestinationDirection;
+                    orderedEndActions[unitId] = _steeringShootToDestinationDirection;
+                    return orderedEndActions;
                 }
                 _steeringAimToDestinationDirection.SetDestination(perception.MyUnints[id].Position.FindMirrorPoint(enemy.Position));
                 _steeringAimToDestinationDirection.SetDirection(estimatedEnemyPosition);
-
-                return _steeringAimToDestinationDirection;
-
+                orderedEndActions[unitId] = GetAction(unitId,"SteeringAim");
+                return orderedEndActions;
+                
             }
 
         }
