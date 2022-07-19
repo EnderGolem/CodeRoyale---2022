@@ -90,7 +90,7 @@ namespace AiCup22.Custom
 
                 if (shieldPoints > bestPoints && unit.ShieldPotions > 0 && unit.Action == null)
                 {
-                    useShield.SetDestination(unit.Position.Add(perception.Directions[perception.FindIndexMaxSafeDirection()]));
+                    useShield.SetDestination(bestLoot.Position);
                     orderedEndActions[unit.Id] = useShield;
                     continue;
                 }

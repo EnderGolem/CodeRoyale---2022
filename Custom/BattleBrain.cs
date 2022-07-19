@@ -24,7 +24,7 @@ namespace AiCup22.Custom
             Dictionary<int, EndAction> orderedEndActions = new Dictionary<int, EndAction>();
             foreach (var unit in perception.MyUnints)
             {
-                System.Console.WriteLine(unit.Id);
+                
                 int unitId = unit.Id;
 
                 var stShoot = (SteeringShootToDestinationDirection)GetAction(unitId, "SteeringShoot");
@@ -41,7 +41,7 @@ namespace AiCup22.Custom
                 double point = 0;
                 for (int i = 0; i < perception.EnemyUnints.Count; i++)
                 {
-                    point = CalculateEnemyValue(perception, perception.EnemyUnints[i]);
+                    point = CalculateEnemyValue(perception, perception.EnemyUnints[i], unit);
                     if (debugInterface != null)
                         debugInterface.AddPlacedText(perception.EnemyUnints[i].Position, (point).ToString(), new Vec2(0, 0), 0.5, new Color(0, 1, 0.5, 0.7));
                     if (bestPoints < point)
@@ -53,16 +53,16 @@ namespace AiCup22.Custom
 
 
                 var enemy = perception.EnemyUnints[bestEnemyIndex];
-                var safeDirection = CalculateDodge(perception, debugInterface);
-                var distanceToEnemy = perception.MyUnints[id].Position.SqrDistance(perception.EnemyUnints[bestEnemyIndex].Position);
-                var estimatedEnemyPosition = CalculateAimToTargetPrediction(ref enemy, perception.Constants.Weapons[perception.MyUnints[0].Weapon.Value].ProjectileSpeed, perception.MyUnints[0].Position);
+                var safeDirection = CalculateDodge(perception, debugInterface,unit);
+                var distanceToEnemy = unit.Position.SqrDistance(perception.EnemyUnints[bestEnemyIndex].Position);
+                var estimatedEnemyPosition = CalculateAimToTargetPrediction(ref enemy, perception.Constants.Weapons[unit.Weapon.Value].ProjectileSpeed, unit.Position);
 
 
                 if (debugInterface != null)
                 {
                     debugInterface.AddSegment(unit.Position, unit.Position.Add(unit.Direction.Multi(100)), 0.3, new Color(0, 1, 0, 0.5));
-                    debugInterface.AddRing(perception.MyUnints[id].Position, safeZone, 0.5, new Color(0, 1, 0.5, 1));
-                    debugInterface.AddRing(perception.MyUnints[id].Position, 30, 0.5, new Color(0, 1, 0.5, 1));
+                    debugInterface.AddRing(unit.Position, safeZone, 0.5, new Color(0, 1, 0.5, 1));
+                    debugInterface.AddRing(unit.Position, 30, 0.5, new Color(0, 1, 0.5, 1));
                     debugInterface.AddCircle(estimatedEnemyPosition, 0.4, new Color(1, 0, 0, 1));
                     debugInterface.AddPlacedText(enemy.Position.Add(new Vec2(0, 1)), enemy.Velocity.Length().ToString(), new Vec2(0.5, 0.5), 0.5, new Color(1, 0.4, 0.6, 0.5));
                     debugInterface.AddSegment(enemy.Position, estimatedEnemyPosition, 0.1, new Color(1, 0.4, 0.6, 0.5));
@@ -78,22 +78,22 @@ namespace AiCup22.Custom
                 else if (safeZone * safeZone < distanceToEnemy) //Стреляем
                 {
                     int maxSafeIndex = perception.FindIndexMaxSafeDirection();
-                    if (perception.MyUnints[id].Aim == 1 && Tools.RaycastObstacle(perception.MyUnints[id].Position, estimatedEnemyPosition,
+                    if (unit.Aim == 1 && Tools.RaycastObstacle(unit.Position, estimatedEnemyPosition,
                                                        perception.Constants.Obstacles, true) == null)
                     {
-                        stShoot.SetDestination(perception.MyUnints[id].Position.Add(safeDirection));
+                        stShoot.SetDestination(unit.Position.Add(safeDirection));
                         stShoot.SetDirection(estimatedEnemyPosition);
                         orderedEndActions[unitId] = stShoot; 
                         continue;
                     }
 
 
-                    if (Tools.RaycastObstacle(perception.MyUnints[id].Position, estimatedEnemyPosition, perception.Constants.Obstacles, true) == null) //Если нет укрытия, просто прицеливаемся, уклоняясь
-                        stAim.SetDestination(perception.MyUnints[id].Position.Add(safeDirection));
-                    if (Tools.RaycastObstacle(perception.MyUnints[id].Position, estimatedEnemyPosition, perception.Constants.Obstacles, true) != null) //Если есть укрытие то
+                    if (Tools.RaycastObstacle(unit.Position, estimatedEnemyPosition, perception.Constants.Obstacles, true) == null) //Если нет укрытия, просто прицеливаемся, уклоняясь
+                        stAim.SetDestination(unit.Position.Add(safeDirection));
+                    if (Tools.RaycastObstacle(unit.Position, estimatedEnemyPosition, perception.Constants.Obstacles, true) != null) //Если есть укрытие то
                     {
                         if (perception.EnemiesAimingYou.Contains(enemy.Id))
-                            stAim.SetDestination(perception.MyUnints[id].Position.FindMirrorPoint(enemy.Position)); //Если Смотрит на нас, то отходим, отдалясь от укрытия
+                            stAim.SetDestination(unit.Position.FindMirrorPoint(enemy.Position)); //Если Смотрит на нас, то отходим, отдалясь от укрытия
                         else                                                                                                                    //Если не смотрит, то приближаемся
                             stAim.SetDestination(enemy.Position);
 
@@ -104,15 +104,15 @@ namespace AiCup22.Custom
                 }
                 else  //Отступаем
                 {
-                    if (perception.MyUnints[id].Aim == 1 && Tools.RaycastObstacle(perception.MyUnints[id].Position, estimatedEnemyPosition,
+                    if (unit.Aim == 1 && Tools.RaycastObstacle(unit.Position, estimatedEnemyPosition,
                             perception.Constants.Obstacles, true) == null)
                     {
-                        stShoot.SetDestination(perception.MyUnints[id].Position.FindMirrorPoint(enemy.Position));
+                        stShoot.SetDestination(unit.Position.FindMirrorPoint(enemy.Position));
                         stShoot.SetDirection(estimatedEnemyPosition);
                         orderedEndActions[unitId] = stShoot;
                         continue;
                     }
-                    stShoot.SetDestination(perception.MyUnints[id].Position.FindMirrorPoint(enemy.Position));
+                    stShoot.SetDestination(unit.Position.FindMirrorPoint(enemy.Position));
                     stShoot.SetDirection(estimatedEnemyPosition);
                     orderedEndActions[unitId] = stAim;
                     continue;
@@ -122,10 +122,10 @@ namespace AiCup22.Custom
             return orderedEndActions;
         }
 
-        double CalculateEnemyValue(Perception perception, Unit enemy)
+        double CalculateEnemyValue(Perception perception, Unit enemy, Unit unit)
         {
-            double points = 1 / enemy.Position.SqrDistance(perception.MyUnints[id].Position);
-            points *= Tools.RaycastObstacle(perception.MyUnints[id].Position, (enemy.Position), perception.Constants.Obstacles, true) == null ? 2 : 1; //Под вопросом такое
+            double points = 1 / enemy.Position.SqrDistance(unit.Position);
+            points *= Tools.RaycastObstacle(unit.Position, (enemy.Position), perception.Constants.Obstacles, true) == null ? 2 : 1; //Под вопросом такое
             //Просчет по тому, насколько он близок к выходу из укрытия, как идея, ведь в финале это не нужно будет
             //Высчитывается ценность противника
             return points;
@@ -146,7 +146,7 @@ namespace AiCup22.Custom
             return estimatedEnemyPosition.Add(estimatedEnemyPosition.Substract(enemy.Position).Multi(0.45));
         }
 
-        Vec2 CalculateDodge(Perception perception, DebugInterface debugInterface)
+        Vec2 CalculateDodge(Perception perception, DebugInterface debugInterface,Unit unit)
         {
             if (perception.Game.Projectiles.Length == 0)
                 return new Vec2(0, 0);
@@ -154,22 +154,22 @@ namespace AiCup22.Custom
             for (int i = 0; i < perception.Game.Projectiles.Length; i++)
             {
                 if (perception.Game.Projectiles[i].Id != perception.Game.MyId)
-                    if (perception.Game.Projectiles[i].Position.SqrDistance(perception.MyUnints[0].Position) <
-                        perception.Game.Projectiles[indexNearest].Position.SqrDistance(perception.MyUnints[0].Position))
+                    if (perception.Game.Projectiles[i].Position.SqrDistance(unit.Position) <
+                        perception.Game.Projectiles[indexNearest].Position.SqrDistance(unit.Position))
                     {
                         indexNearest = i;
                     }
             }
             var bullet = perception.Game.Projectiles[indexNearest];
-            var safeDirection1 = bullet.Position.FindPerpendicularWithX(perception.MyUnints[0].Position.X);
-            var safeDirection2 = bullet.Position.FindPerpendicularWithX(perception.MyUnints[0].Position.X).Multi(-1);
+            var safeDirection1 = bullet.Position.FindPerpendicularWithX(unit.Position.X);
+            var safeDirection2 = bullet.Position.FindPerpendicularWithX(unit.Position.X).Multi(-1);
             var lineBullet = new Straight(bullet.Velocity, bullet.Position);
-            var lineDirection = new Straight(safeDirection1, perception.MyUnints[0].Position);
+            var lineDirection = new Straight(safeDirection1, unit.Position);
             var point = lineBullet.GetIntersection(lineDirection);
             //  System.Console.WriteLine($"SafeDirection1 {safeDirection1} SafeDirection{safeDirection2}");
             if (debugInterface != null)
                 debugInterface.AddSegment(bullet.Position, bullet.Position.Add(bullet.Velocity), 0.1, new Color(0.7, 0.3, 0, 0.8));
-            if (point.Value.SqrDistance(perception.MyUnints[0].Position.Add(safeDirection1)) > point.Value.SqrDistance(perception.MyUnints[0].Position.Add(safeDirection2)))
+            if (point.Value.SqrDistance(unit.Position.Add(safeDirection1)) > point.Value.SqrDistance(unit.Position.Add(safeDirection2)))
                 return safeDirection1;
             else
                 return safeDirection2;
