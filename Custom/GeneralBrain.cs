@@ -19,6 +19,7 @@ namespace AiCup22.Custom
         private BattleBrain _battleBrain;
         private RadarBrain _radarBrain;
         private StaySafeBrain _staySafe; //Для теста
+        private WanderingBrain _wanderingBrain;
 
 
         private double[] stateValues;
@@ -29,10 +30,12 @@ namespace AiCup22.Custom
             _battleBrain = new BattleBrain(perception);
             _radarBrain = new RadarBrain(perception);
             _staySafe = new StaySafeBrain(perception);
+            _wanderingBrain = new WanderingBrain(perception);
             allStates.Add(_lootingBrain);
             allStates.Add(_battleBrain);
             allStates.Add(_radarBrain);
             allStates.Add(_staySafe);
+            allStates.Add(_wanderingBrain);
 
             stateValues = new double[allStates.Count];
             timeStates = new long[allStates.Count];
@@ -40,6 +43,7 @@ namespace AiCup22.Custom
 
         protected override Brain ChooseNewState(Perception perception, DebugInterface debugInterface)
         {
+            return _wanderingBrain;
             //return new Evading();
             if (debugInterface != null)
             {

@@ -25,6 +25,8 @@ namespace AiCup22.Custom
         private const int closeObstaclesRecalculationDelay = 10;
         private int lastObstacleRecalculationTick = -100;
 
+        private Vec2 _averageUnitPosition;
+
         public Constants Constants => _constants;
         public Game Game => _game;
         public DebugInterface Debug => _debug;
@@ -43,6 +45,12 @@ namespace AiCup22.Custom
         public Dictionary<int, MemorizedProjectile> MemorizedProjectiles => memorizedProjectiles;
         public List<int> EnemiesAimingYou => enemiesAimingYou;
         public Dictionary<int, (int, double, Unit)> MemorizedEnemies => memorizedEnemies;
+
+        public Vec2 AverageUnitPosition
+        {
+            get => _averageUnitPosition;
+            private set => _averageUnitPosition = value;
+        }
 
         private Dictionary<int, Loot> memorizedLoot;
         /// <summary>
@@ -96,7 +104,7 @@ namespace AiCup22.Custom
 
                 MyUnints.Add(unit);
             }
-
+            CalculateAverageUnitPosition();
             for (int i = 0; i < game.Loot.Length; i++)
             {
                 memorizedLoot.TryAdd(game.Loot[i].Id, game.Loot[i]);
@@ -626,6 +634,17 @@ namespace AiCup22.Custom
             }
 
             return res;
+        }
+
+        protected void CalculateAverageUnitPosition()
+        {
+            Vec2 sum = new Vec2();
+            for (int i = 0; i < _myUnints.Count; i++)
+            {
+                sum = sum.Add(_myUnints[i].Position);
+            }
+
+            AverageUnitPosition = sum.Multi((double) 1 / _myUnints.Count);
         }
 
     }
