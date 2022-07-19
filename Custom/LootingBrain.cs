@@ -14,10 +14,6 @@ namespace AiCup22.Custom
         protected const int AmmoLoot = Koefficient.Looting.AmmoLoot;
         protected const int BowLoot = Koefficient.Looting.BowLoot;
 
-        private RunToDestination _runToDestination;
-        private PickupLoot _pickupLoot;
-        private UseShieldToDestinationWithEvading _useShieldToDestinationWithEvading;
-        private LookAroundWithEvading _lookAroundWithEvading;
         private Loot desireLoot;
         private Vec2 desiredDestination;
         private double desiredPoints;
@@ -30,14 +26,10 @@ namespace AiCup22.Custom
         */
         public LootingBrain(Perception perception) : base(perception)
         {
-            _runToDestination = new SteeringRunToDestinationWithEvading();
-            _pickupLoot = new PickupLoot();
-            _useShieldToDestinationWithEvading = new UseShieldToDestinationWithEvading();
-            _lookAroundWithEvading = new LookAroundWithEvading();
-            AddState("Run", _runToDestination, perception);
-            AddState("Pickup", _pickupLoot, perception);
-            AddState("UseShield", _useShieldToDestinationWithEvading, perception);
-            AddState("LookAround", _lookAroundWithEvading, perception);
+            AddState("Run", new SteeringRunToDestinationWithEvading(), perception);
+            AddState("Pickup", new PickupLoot(), perception);
+            AddState("UseShield", new UseShieldToDestinationWithEvading(), perception);
+            AddState("LookAround", new LookAroundWithEvading(), perception);
         }
 
 
@@ -54,7 +46,7 @@ namespace AiCup22.Custom
 
                 if (perception.Game.Loot.Length == 0) //Проверка, вдруг вообще ничего нет
                 {
-                    orderedEndActions[unit.Id] = _lookAroundWithEvading;
+                    orderedEndActions[unit.Id] = lookAround;
                     continue;
                 }
 
