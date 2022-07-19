@@ -18,6 +18,7 @@ namespace AiCup22.Custom
         private Vec2 desiredDestination;
         private double desiredPoints;
 
+        private List<Loot> occupiedLoot;
 
         /* Скрыл, так как мне надоели предупреждения
            private Loot desireLoot;
@@ -37,6 +38,7 @@ namespace AiCup22.Custom
         {
             Dictionary<int, EndAction> orderedEndActions = new Dictionary<int, EndAction>();
 
+            occupiedLoot = new List<Loot>();
             foreach (var unit in perception.MyUnints)
             {
                 var run = (SteeringRunToDestinationWithEvading)GetAction(unit.Id, "Run");
@@ -69,7 +71,7 @@ namespace AiCup22.Custom
                         continue;
                     }
 
-                    double curPoints = CalculateLootValue(perception, loot.Value, debugInterface);
+                    double curPoints = CalculateLootValue(perception, loot.Value, unit);
 
                     if (debugInterface != null)
                     {
@@ -83,11 +85,12 @@ namespace AiCup22.Custom
                         bestLoot = loot.Value;
                     }
                 }
-                double shieldPoints = perception.MyUnints[id].Shield < 140 ? 1500 : 0; //Чтобы пил, нужна формула, ну или перенести мозгу, но хз..
+                occupiedLoot.Add(bestLoot);
+                double shieldPoints = unit.Shield < 140 ? 1500 : 0; //Чтобы пил, нужна формула, ну или перенести мозгу, но хз..
 
-                if (shieldPoints > bestPoints && perception.MyUnints[id].ShieldPotions > 0 && perception.MyUnints[id].Action == null)
+                if (shieldPoints > bestPoints && unit.ShieldPotions > 0 && unit.Action == null)
                 {
-                    useShield.SetDestination(perception.MyUnints[0].Position.Add(perception.Directions[perception.FindIndexMaxSafeDirection()]));                
+                    useShield.SetDestination(unit.Position.Add(perception.Directions[perception.FindIndexMaxSafeDirection()]));
                     orderedEndActions[unit.Id] = useShield;
                     continue;
                 }
@@ -98,9 +101,7 @@ namespace AiCup22.Custom
                     perception.MemorizedLoot.Remove(lootToRemove[i]);
                 }
 
-                if (bestLoot.Position.Distance(perception.MyUnints[id].Position) <
-
-                    perception.Constants.UnitRadius / 2)
+                if (bestLoot.Position.Distance(unit.Position) < perception.Constants.UnitRadius / 2)
                 {
                     pickUp.SetPickableLootId(bestLoot.Id);
                     perception.MemorizedLoot.Remove(bestLoot.Id);
@@ -121,22 +122,22 @@ namespace AiCup22.Custom
             return orderedEndActions;
         }
 
-        private double CalculateAmmoValue(Perception perception, Item.Ammo ammo)
+        private double CalculateAmmoValue(Perception perception, Item.Ammo ammo, Unit unit)
         {
-            double procentage = perception.MyUnints[id].Ammo[ammo.WeaponTypeIndex] / perception.Constants.Weapons[ammo.WeaponTypeIndex].MaxInventoryAmmo * 100;
+            double procentage = unit.Ammo[ammo.WeaponTypeIndex] / perception.Constants.Weapons[ammo.WeaponTypeIndex].MaxInventoryAmmo * 100;
             if (procentage == 100)
                 return 1;
             double points = procentage != 0 ? AmmoLoot / procentage : 10000;
             return points;
         }
-        private double CalculateShieldValue(Perception perception, Item.ShieldPotions potions)
+        private double CalculateShieldValue(Perception perception, Item.ShieldPotions potions, Unit unit)
         {
-            double procentage = perception.MyUnints[id].ShieldPotions / perception.Constants.MaxShieldPotionsInInventory * 100;
+            double procentage = unit.ShieldPotions / perception.Constants.MaxShieldPotionsInInventory * 100;
             if (procentage == 100)
                 return 1;
             double points = procentage != 0 ? (ShieldLoot * potions.Amount) / procentage : 10000;
-            if ((double)perception.MyUnints[id].Shield > 1)
-                points *= (-0.005 * (perception.Constants.MaxShield / (double)perception.MyUnints[id].Shield)) + 2;
+            if ((double)unit.Shield > 1)
+                points *= (-0.005 * (perception.Constants.MaxShield / (double)unit.Shield)) + 2;
             else
                 points *= 2;
 
@@ -150,18 +151,21 @@ namespace AiCup22.Custom
                 return -1;
             return 20 / (-distance - 4) + 5;
         }
-        private double CalculateLootValue(Perception perception, Loot loot, DebugInterface debugInterface = null)
+        private double CalculateLootValue(Perception perception, Loot loot, Unit unit, DebugInterface debugInterface = null)
         {
-
+            if (occupiedLoot.Contains(loot))
+            {
+                return 0;
+            }
             double points = 1;
             switch (loot.Item)
             {
                 case Item.Weapon weapon:
                     ///Можно также рассмотреть ситуацию когда нет патронов для нашего оружия
                     /// Но рядом есть патроны для другого
-                    if ((perception.MyUnints[id].Weapon.HasValue) &&
-                        (weapon.TypeIndex == perception.MyUnints[id].Weapon.Value) ||
-                        (perception.MyUnints[id].Weapon.Value == 2))
+                    if ((unit.Weapon.HasValue) &&
+                        (weapon.TypeIndex == unit.Weapon.Value) ||
+                        (unit.Weapon.Value == 2))
                     {
                         points = eps;
                     }
@@ -184,12 +188,12 @@ namespace AiCup22.Custom
 
                     break;
                 case Item.Ammo ammo:
-                    if (perception.MyUnints[id].Weapon.HasValue &&
+                    if (unit.Weapon.HasValue &&
                         ammo.WeaponTypeIndex == 2) //ТОЛЬКО ПАТРОНЫ ДЛЯ ЛУКА
                     {
                         ///Надо написать формулу очков в зависимости от кол-ва патронов и других
                         /// факторов
-                        points *= CalculateAmmoValue(perception, ammo);
+                        points *= CalculateAmmoValue(perception, ammo, unit);
                     }
                     else
                     {
@@ -198,14 +202,14 @@ namespace AiCup22.Custom
 
                     break;
                 case Item.ShieldPotions potion:
-                    points *= CalculateShieldValue(perception, potion);
+                    points *= CalculateShieldValue(perception, potion, unit);
                     break;
             }
             if (debugInterface != null)
             {
                 debugInterface.AddPlacedText(loot.Position.Add(new Vec2(1, -1)), Math.Round(points).ToString(), new Vec2(0, 0), 0.7, new Color(0.2, 0.72, 0.8, 0.7));
             }
-            points *= 1 / loot.Position.SqrDistance(perception.MyUnints[id].Position);
+            points *= 1 / loot.Position.SqrDistance(unit.Position);
             points *= CalculateZoneValue(perception, loot.Position);
             return points;
         }
