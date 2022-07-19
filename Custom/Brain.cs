@@ -153,6 +153,11 @@ namespace AiCup22.Custom
             for (int i = 0; i < perception.MyUnints.Count; i++)
             {
                 int id = perception.MyUnints[i].Id;
+                if (!actions.ContainsKey(id))
+                {
+                    currentStates[id]?.Deactivate(perception.Game.CurrentTick);
+                    continue;
+                }
                 var newState = actions[id];
                 if (currentStates.ContainsKey(id) && currentStates[id] != newState)
                 {
@@ -161,7 +166,7 @@ namespace AiCup22.Custom
                 }
             
                 currentStates[id] = newState;
-
+                newState.SetActingUnit(perception.MyUnints[i]);
                 orders[id] = newState.Process(perception, debugInterface);
             }
 

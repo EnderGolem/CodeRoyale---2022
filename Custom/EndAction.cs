@@ -10,6 +10,7 @@ namespace AiCup22.Custom
         private int _lastActivationTick;
         private int _lastDeactivationTick;
         private bool _isActive;
+        protected Unit actingUnit;
 
         public int LastActivationTick
         {
@@ -52,6 +53,11 @@ namespace AiCup22.Custom
             return new UnitOrder();
         }
 
+        public void SetActingUnit(Unit unit)
+        {
+            actingUnit = unit;
+        }
+
         public EndAction Copy()
         {
             return (EndAction)this.MemberwiseClone();
@@ -63,7 +69,7 @@ namespace AiCup22.Custom
         public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
             ActionOrder action = new ActionOrder.Aim(false);
-            Unit unit = perception.MyUnints[0];
+            Unit unit = actingUnit;
             return new UnitOrder(new Vec2(-unit.Position.X, -unit.Position.Y),
                 new Vec2(-unit.Position.X, -unit.Position.Y), action);
         }
@@ -74,7 +80,7 @@ namespace AiCup22.Custom
         public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
             ActionOrder action = new ActionOrder.Aim(false);
-            Unit unit = perception.MyUnints[0];
+            Unit unit = actingUnit;
             return new UnitOrder(new Vec2(-unit.Position.X, -unit.Position.Y),
                 new Vec2(-unit.Position.X, -unit.Position.Y), action);
         }
@@ -85,7 +91,7 @@ namespace AiCup22.Custom
         public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
             ActionOrder action = new ActionOrder.Aim(false);
-            Unit unit = perception.MyUnints[0];
+            Unit unit = actingUnit;
             return new UnitOrder(new Vec2(-unit.Position.X, -unit.Position.Y),
                new Vec2(-unit.Direction.Y, unit.Direction.X), action);
         }
@@ -96,7 +102,7 @@ namespace AiCup22.Custom
         public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
             ActionOrder action = new ActionOrder.Aim(true);
-            Unit unit = perception.MyUnints[0];
+            Unit unit = actingUnit;
             return new UnitOrder(new Vec2(-unit.Position.X, -unit.Position.Y),
                new Vec2(-unit.Direction.Y, unit.Direction.X), action);
         }
@@ -109,7 +115,7 @@ namespace AiCup22.Custom
 
         public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
-            Unit unit = perception.MyUnints[0];
+            Unit unit = actingUnit;
             var dir = destination.Substract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed);
             return new UnitOrder(dir, dir, null);
         }
@@ -164,7 +170,7 @@ namespace AiCup22.Custom
 
         protected Vec2 CalculateDirToDestinationWithObstAvoidance(Perception perception, DebugInterface debugInterface)
         {
-            Unit unit = perception.MyUnints[0];
+            Unit unit = actingUnit;
             Obstacle? obst = Tools.RaycastObstacle2Point(unit.Position, destination,
                 perception.Constants.UnitRadius * 2, perception.Constants.Obstacles, false);
 
@@ -237,7 +243,7 @@ namespace AiCup22.Custom
         protected Vec2 direction;
         public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
-            Unit unit = perception.MyUnints[0];
+            Unit unit = actingUnit;
             var dir = destination.Substract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed);
             var enemy = direction.Substract(unit.Position);
             return new UnitOrder(dir, enemy, null);
@@ -251,7 +257,7 @@ namespace AiCup22.Custom
     {
         public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
-            Unit unit = perception.MyUnints[0];
+            Unit unit = actingUnit;
             var dir = destination.Substract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed);
             var enemy = direction.Substract(unit.Position);
             ActionOrder action = new ActionOrder.Aim(false);
@@ -263,7 +269,7 @@ namespace AiCup22.Custom
     {
         public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
-            Unit unit = perception.MyUnints[0];
+            Unit unit = actingUnit;
             var dir = destination.Substract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed);
             var enemy = direction.Substract(unit.Position);
             ActionOrder action = new ActionOrder.Aim(true);
@@ -276,15 +282,15 @@ namespace AiCup22.Custom
     {
         public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
-            Obstacle? obst = Tools.RaycastObstacle2Point(perception.MyUnints[0].Position, destination, perception.Constants.UnitRadius * 2, perception.Constants.Obstacles, false);
-            if (!obst.HasValue || obst.Value.Position.SqrDistance(perception.MyUnints[0].Position) > obst.Value.Radius * obst.Value.Radius * 9)
+            Obstacle? obst = Tools.RaycastObstacle2Point(actingUnit.Position, destination, perception.Constants.UnitRadius * 2, perception.Constants.Obstacles, false);
+            if (!obst.HasValue || obst.Value.Position.SqrDistance(actingUnit.Position) > obst.Value.Radius * obst.Value.Radius * 9)
             {
                 return base.Process(perception, debugInterface);
             }
             else
             {
 
-                Unit unit = perception.MyUnints[0];
+                Unit unit = actingUnit;
                 var dir = destination.Substract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed);
                 Straight perpS = new Straight();
                 perpS.SetByNormalAndPoint(dir, obst.Value.Position);
@@ -313,15 +319,15 @@ namespace AiCup22.Custom
     {
         public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
-            Obstacle? obst = Tools.RaycastObstacle2Point(perception.MyUnints[0].Position, destination, perception.Constants.UnitRadius * 2, perception.Constants.Obstacles, false);
-            if (!obst.HasValue || obst.Value.Position.SqrDistance(perception.MyUnints[0].Position) > obst.Value.Radius * obst.Value.Radius * 9)
+            Obstacle? obst = Tools.RaycastObstacle2Point(actingUnit.Position, destination, perception.Constants.UnitRadius * 2, perception.Constants.Obstacles, false);
+            if (!obst.HasValue || obst.Value.Position.SqrDistance(actingUnit.Position) > obst.Value.Radius * obst.Value.Radius * 9)
             {
                 return base.Process(perception, debugInterface);
             }
             else
             {
 
-                Unit unit = perception.MyUnints[0];
+                Unit unit = actingUnit;
                 var dir = destination.Substract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed);
                 Straight perpS = new Straight();
                 perpS.SetByNormalAndPoint(dir, obst.Value.Position);
@@ -350,9 +356,9 @@ namespace AiCup22.Custom
     {
         public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
-            var unit = perception.MyUnints[0];
+            var unit = actingUnit;
             Vec2 dir = new Vec2(-unit.Direction.Y, unit.Direction.X);
-            if (perception.MyUnints[0].Shield < 150)
+            if (actingUnit.Shield < 150)
             {
                 ActionOrder action = new ActionOrder.UseShieldPotion();
                 return new UnitOrder(dir, dir, action);
@@ -365,13 +371,13 @@ namespace AiCup22.Custom
     {
         public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
-            Unit unit = perception.MyUnints[0];
+            Unit unit = actingUnit;
             if (perception.MemorizedProjectiles.Count == 0)
             {
                 return new UnitOrder(new Vec2(),new Vec2(-unit.Direction.Y, unit.Direction.X),null );
             }
 
-            Vec2 dir = perception.SimulateEvading(perception.MyUnints[0],0,perception.CloseObstacles,
+            Vec2 dir = perception.SimulateEvading(actingUnit,0,perception.CloseObstacles,
                 perception.MemorizedProjectiles.Values.ToList(),3,perception.Game.Zone.CurrentCenter.Substract(unit.Position).Normalize(),1, 10, debugInterface);
             debugInterface?.AddSegment(unit.Position,unit.Position.Add(dir.Multi(5)),0.5,new Color(1,1,0,0.3));
             //Console.WriteLine(dir);
@@ -384,18 +390,18 @@ namespace AiCup22.Custom
         public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
                 var targetDir = CalculateDirToDestinationWithObstAvoidance(perception, debugInterface);
-                var projs = perception.ClipSafeProjectiles();
+                var projs = perception.ClipSafeProjectiles(ref actingUnit);
                 if (projs.Count == 0)
                 {
                     return new UnitOrder(targetDir, targetDir, null);
                 }
                 else
                 {
-                    Vec2 d = perception.SimulateEvading(perception.MyUnints[0],0,perception.CloseObstacles,
+                    Vec2 d = perception.SimulateEvading(actingUnit,0,perception.CloseObstacles,
                             projs,3,targetDir.Normalize(),1, 10, debugInterface);
-                    debugInterface?.AddSegment(perception.MyUnints[0].Position,perception.MyUnints[0].Position.Add(d.Multi(5)),0.5,new Color(1,1,0,0.3));
+                    debugInterface?.AddSegment(actingUnit.Position,actingUnit.Position.Add(d.Multi(5)),0.5,new Color(1,1,0,0.3));
                     //Console.WriteLine(dir);
-                    return new UnitOrder(d.Multi(perception.Constants.MaxUnitForwardSpeed),perception.MyUnints[0].Direction, null);
+                    return new UnitOrder(d.Multi(perception.Constants.MaxUnitForwardSpeed),actingUnit.Direction, null);
                 }
         }
     }
@@ -405,18 +411,18 @@ namespace AiCup22.Custom
         public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
             var targetDir = CalculateDirToDestinationWithObstAvoidance(perception, debugInterface);
-            var projs = perception.ClipSafeProjectiles();
+            var projs = perception.ClipSafeProjectiles(ref actingUnit);
             if (projs.Count == 0)
             {
                 return new UnitOrder(targetDir, targetDir, null);
             }
             else
             {
-                Vec2 d = perception.SimulateEvading(perception.MyUnints[0],0,perception.CloseObstacles,
+                Vec2 d = perception.SimulateEvading(actingUnit,0,perception.CloseObstacles,
                     projs,3,targetDir.Normalize(),1,10,debugInterface);
-                debugInterface?.AddSegment(perception.MyUnints[0].Position,perception.MyUnints[0].Position.Add(d.Multi(5)),0.5,new Color(1,1,0,0.3));
+                debugInterface?.AddSegment(actingUnit.Position,actingUnit.Position.Add(d.Multi(5)),0.5,new Color(1,1,0,0.3));
                 //Console.WriteLine(dir);
-                return new UnitOrder(d.Multi(perception.Constants.MaxUnitForwardSpeed),perception.MyUnints[0].Direction, new ActionOrder.UseShieldPotion());
+                return new UnitOrder(d.Multi(perception.Constants.MaxUnitForwardSpeed),actingUnit.Direction, new ActionOrder.UseShieldPotion());
             }
         }
     }
@@ -425,24 +431,24 @@ namespace AiCup22.Custom
     {
         public override UnitOrder Process(Perception perception, DebugInterface debugInterface)
         {
-            var unit = perception.MyUnints[0];
+            var unit = actingUnit;
             Vec2 dir = new Vec2(-unit.Direction.Y, unit.Direction.X);
             Vec2 dirToCenter = perception.Game.Zone.CurrentCenter.Substract(unit.Position);
-            var projs = perception.ClipSafeProjectiles();
+            var projs = perception.ClipSafeProjectiles(ref actingUnit);
             if (projs.Count == 0)
             {
-                if (perception.MyUnints[0].Shield < 150)
+                if (actingUnit.Shield < 150)
                 {
                     ActionOrder action = new ActionOrder.UseShieldPotion();
                     return new UnitOrder(dirToCenter, dir, action);
                 }
                 return new UnitOrder(dirToCenter, dir, null);
             }
-            Vec2 d = perception.SimulateEvading(perception.MyUnints[0],-1,perception.CloseObstacles,
+            Vec2 d = perception.SimulateEvading(actingUnit,-1,perception.CloseObstacles,
                 projs,3,dirToCenter,1, 10, debugInterface);
-                debugInterface?.AddSegment(perception.MyUnints[0].Position,perception.MyUnints[0].Position.Add(d.Multi(5)),0.5,new Color(1,1,0,0.3));
+                debugInterface?.AddSegment(actingUnit.Position,actingUnit.Position.Add(d.Multi(5)),0.5,new Color(1,1,0,0.3));
             ActionOrder a = null;
-            if (perception.MyUnints[0].Shield < 160)
+            if (actingUnit.Shield < 160)
             {
                 a = new ActionOrder.UseShieldPotion();
             }

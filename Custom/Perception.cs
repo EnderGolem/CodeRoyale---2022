@@ -613,13 +613,13 @@ namespace AiCup22.Custom
             return (simulatedUnits[bestIndex], bestList);
         }
 
-        public List<MemorizedProjectile> ClipSafeProjectiles()
+        public List<MemorizedProjectile> ClipSafeProjectiles(ref Unit unit)
         {
             List<MemorizedProjectile> res = new List<MemorizedProjectile>();
 
             foreach (var projectile in memorizedProjectiles)
             {
-                if (projectile.Value.actualPosition.SqrDistance(_myUnints[0].Position)<800)
+                if (projectile.Value.actualPosition.SqrDistance(unit.Position)<800)
                 {
                     res.Add(projectile.Value);
                 }
