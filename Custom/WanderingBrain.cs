@@ -17,6 +17,7 @@ namespace AiCup22.Custom
         {
             AddState("Run",new SteeringRunToDestinationWithEvading(), perception);
             AddState("LookAround", new LookAroundWithEvading(), perception);
+            AddState("UseShield", new UseShieldToDestinationWithEvading(), perception);
         }
 
         protected override Dictionary<int, EndAction> CalculateEndActions(Perception perception, DebugInterface debugInterface)
@@ -61,8 +62,14 @@ namespace AiCup22.Custom
                 var curUnit = perception.MyUnints[i];
                 var run = (SteeringRunToDestinationWithEvading) GetAction(curUnit.Id, "Run");
                 var lookAround = (LookAroundWithEvading) GetAction(curUnit.Id,"LookAround");
+                var useShield = (UseShieldToDestinationWithEvading) GetAction(curUnit.Id, "UseShield");
                 if (!gapping[i])
                 {
+                    if (curUnit.Shield < 160 && curUnit.ShieldPotions > 0)
+                    {
+                     useShield.SetDestination(wanderPositions[i]);
+                     orderedEndActions[curUnit.Id] = useShield;
+                    }
                     run.SetDestination(wanderPositions[i]);
                     orderedEndActions[curUnit.Id] = run;
                 }
@@ -93,6 +100,13 @@ namespace AiCup22.Custom
             for (int i = 1; i < perception.MyUnints.Count; i++)
             {
                 res.Add(res[i-1].Substract(vecToZoneEdgeNor.Multi(wanderUnitDistance)));
+            }
+            ///Делаем так, чтобы по внешней траектории шел тот юнит, у которого осталось больше возрождений
+            if (perception.MyUnints.Count > 1 && perception.MyUnints[0].ExtraLives > perception.MyUnints[1].ExtraLives)
+            {
+                var t = res[0];
+                res[0] = res[1];
+                res[1] = t;
             }
 
             return res;

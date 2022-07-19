@@ -66,9 +66,9 @@ namespace AiCup22
                var timer = Stopwatch.StartNew();
                long nanosecPerTick = (1000L*1000L*1000L) / Stopwatch.Frequency;
                timer.Start();
-               perception.Analyze(game, debugInterface);
+               perception.Analyze(game, null);
                brain ??= new GeneralBrain(perception);
-               var order = brain.Process(perception, debugInterface);
+               var order = brain.Process(perception, null);
                //orders.Add(perception.MyUnints[0].Id, order);
                timer.Stop();
                if (timer.ElapsedMilliseconds > 1)
@@ -79,10 +79,10 @@ namespace AiCup22
                        maxTickTime = timer.ElapsedMilliseconds;
                    }
 
-                   /*Console.WriteLine($"Simulation took:{timer.ElapsedMilliseconds} ms");
+                   Console.WriteLine($"Simulation took:{timer.ElapsedMilliseconds} ms");
                    Console.WriteLine($"Simulation took:{timer.ElapsedTicks * nanosecPerTick} ns");
                    Console.WriteLine($"Max time: {maxTickTime} ms");
-                   Console.WriteLine($"Total time: {totalTime} ms");*/
+                   Console.WriteLine($"Total time: {totalTime} ms");
                }
                
             //}
