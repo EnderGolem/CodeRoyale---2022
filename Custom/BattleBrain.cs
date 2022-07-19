@@ -80,7 +80,7 @@ namespace AiCup22.Custom
             if (((currentStates[unitId] != _steeringAimToDestinationDirection && currentStates[unitId] != _steeringShootToDestinationDirection) && distanceToEnemy > 30 * 30) ||
                 ((currentStates[unitId] == _steeringAimToDestinationDirection || currentStates[unitId] == _steeringShootToDestinationDirection) && distanceToEnemy > 35 * 35)) //Приблежаемся, возможно нужно стрелять. Можно красивее через Active
             {
-                _steeringRunToDestination.SetDestination(perception.EnemyUnints[bestEnemyIndex].Position);
+                ((SteeringRunToDestinationWithEvading)GetAction(unitId,"SteeringRun")).SetDestination(perception.EnemyUnints[bestEnemyIndex].Position);
                 orderedEndActions[unitId] = GetAction(unitId,"SteeringRun");
                 return orderedEndActions;
             }
@@ -91,23 +91,24 @@ namespace AiCup22.Custom
                 if (perception.MyUnints[id].Aim == 1 && Tools.RaycastObstacle(perception.MyUnints[id].Position, estimatedEnemyPosition,
                                                    perception.Constants.Obstacles, true) == null)
                 {
-                    _steeringShootToDestinationDirection.SetDestination(perception.MyUnints[id].Position.Add(safeDirection));
-                    _steeringShootToDestinationDirection.SetDirection(estimatedEnemyPosition);
-                    orderedEndActions[unitId] = GetAction(unitId,"SteeringRun");
+                    ((SteeringShootToDestinationDirection)GetAction(unitId,"SteeringShoot")).SetDestination(perception.MyUnints[id].Position.Add(safeDirection));
+                    ((SteeringShootToDestinationDirection)GetAction(unitId,"SteeringShoot")).SetDirection(estimatedEnemyPosition);
+                    orderedEndActions[unitId] = GetAction(unitId,"SteeringShoot");
                     return orderedEndActions;
                 }
 
+                var stAim = (SteeringAimToDestinationDirection)GetAction(unitId,"SteeringAim");
                 if (Tools.RaycastObstacle(perception.MyUnints[id].Position, estimatedEnemyPosition, perception.Constants.Obstacles, true) == null) //Если нет укрытия, просто прицеливаемся, уклоняясь
-                    _steeringAimToDestinationDirection.SetDestination(perception.MyUnints[id].Position.Add(safeDirection));
+                    stAim.SetDestination(perception.MyUnints[id].Position.Add(safeDirection));
                 if (Tools.RaycastObstacle(perception.MyUnints[id].Position, estimatedEnemyPosition, perception.Constants.Obstacles, true) != null) //Если есть укрытие то
                 {
                     if (perception.EnemiesAimingYou.Contains(enemy.Id))
-                        _steeringAimToDestinationDirection.SetDestination(perception.MyUnints[id].Position.FindMirrorPoint(enemy.Position)); //Если Смотрит на нас, то отходим, отдалясь от укрытия
+                        stAim.SetDestination(perception.MyUnints[id].Position.FindMirrorPoint(enemy.Position)); //Если Смотрит на нас, то отходим, отдалясь от укрытия
                     else                                                                                                                    //Если не смотрит, то приближаемся
-                        _steeringAimToDestinationDirection.SetDestination(enemy.Position);
+                        stAim.SetDestination(enemy.Position);
 
                 }
-                _steeringAimToDestinationDirection.SetDirection(estimatedEnemyPosition);
+                stAim.SetDirection(estimatedEnemyPosition);
                 orderedEndActions[unitId] = GetAction(unitId,"SteeringAim");
                 return orderedEndActions;
             }
