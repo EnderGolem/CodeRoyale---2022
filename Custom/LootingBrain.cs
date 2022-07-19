@@ -13,10 +13,8 @@ namespace AiCup22.Custom
         protected const int ShieldLoot = Koefficient.Looting.ShieldLoot;
         protected const int AmmoLoot = Koefficient.Looting.AmmoLoot;
         protected const int BowLoot = Koefficient.Looting.BowLoot;
-
-        private Loot desireLoot;
-        private Vec2 desiredDestination;
-        private double desiredPoints;
+        protected const int StaffLoot = Koefficient.Looting.StaffLoot;
+        protected const int WandLoot = Koefficient.Looting.WandLoot;
 
         private List<Loot> occupiedLoot;
 
@@ -39,8 +37,9 @@ namespace AiCup22.Custom
             Dictionary<int, EndAction> orderedEndActions = new Dictionary<int, EndAction>();
 
             occupiedLoot = new List<Loot>();
-            foreach (var unit in perception.MyUnints)
+            for (int idInMyUnints = 0; idInMyUnints < perception.MyUnints.Count; idInMyUnints++)
             {
+                var unit = perception.MyUnints[idInMyUnints];
                 var run = (SteeringRunToDestinationWithEvading)GetAction(unit.Id, "Run");
                 var pickUp = (PickupLoot)GetAction(unit.Id, "Pickup");
                 var useShield = (UseShieldToDestinationWithEvading)GetAction(unit.Id, "UseShield");
@@ -52,22 +51,20 @@ namespace AiCup22.Custom
                     continue;
                 }
 
-                int bestLootIndex = -1;
                 Loot bestLoot = new Loot();
                 double bestPoints = double.MinValue;
                 foreach (var loot in perception.MemorizedLoot)
-                {   
+                {
                     double curPoints = CalculateLootValue(perception, loot.Value, unit);
 
                     if (debugInterface != null)
                     {
-                        debugInterface.AddPlacedText(loot.Value.Position, Math.Round(curPoints).ToString(), new Vec2(0, 0), 1, new Color(1, 0, 0.5, 1));
+                        debugInterface.AddPlacedText(loot.Value.Position.Add(new Vec2(0, idInMyUnints * 0.7)), Math.Round(curPoints).ToString(), new Vec2(0, 0), 0.7, new Color(1, 0, 0.5, 1));
                     }
 
                     if (bestPoints < curPoints)
                     {
                         bestPoints = curPoints;
-                        bestLootIndex = loot.Key;
                         bestLoot = loot.Value;
                     }
                 }
@@ -82,7 +79,7 @@ namespace AiCup22.Custom
                 }
 
 
-               
+
 
                 if (bestLoot.Position.Distance(unit.Position) < perception.Constants.UnitRadius / 2)
                 {
@@ -110,7 +107,12 @@ namespace AiCup22.Custom
             double procentage = unit.Ammo[ammo.WeaponTypeIndex] / perception.Constants.Weapons[ammo.WeaponTypeIndex].MaxInventoryAmmo * 100;
             if (procentage == 100)
                 return 1;
+
             double points = procentage != 0 ? AmmoLoot / procentage : 10000;
+            if (ammo.WeaponTypeIndex == unit.Weapon.Value)
+            {
+                points *= 4;
+            }
             return points;
         }
         private double CalculateShieldValue(Perception perception, Item.ShieldPotions potions, Unit unit)
@@ -120,7 +122,7 @@ namespace AiCup22.Custom
                 return 1;
             double points = procentage != 0 ? (ShieldLoot * potions.Amount) / procentage : 10000;
             if ((double)unit.Shield > 1)
-                points *= (-0.005 * (perception.Constants.MaxShield / (double)unit.Shield)) + 2;
+                points *= (-0.02 * (perception.Constants.MaxShield / (double)unit.Shield)) + 2;
             else
                 points *= 2;
 
@@ -131,8 +133,33 @@ namespace AiCup22.Custom
             var distance = Tools.CurrentZoneDistance(perception.Game.Zone, vec2);
 
             if (distance < 0)
-                return -1;
+                return 0.0;
             return 20 / (-distance - 4) + 5;
+        }
+        /// <summary>
+        /// Коэффицент получаемый относительно их средней точки
+        /// </summary>
+        private double CalculateValueCentralPoint(Perception perception, Vec2 loot)
+        {
+            var distance = loot.Distance(perception.AverageUnitPosition);
+            if (distance >= 30)
+                return 0;
+            return 30 / (distance - 40) + 3;
+        }
+        private double CalculateLootNearEnemy(Perception perception, Vec2 loot)
+        {
+            var points = 1.0;
+            foreach (var enemy in perception.EnemyUnints)
+            {
+                var distance = loot.Distance(enemy.Position);
+                if (distance < 5)
+                    points = 0;
+                else if (distance > 15)
+                    points *= 1;
+                else
+                    points *= 0.1 * distance - 0.5;
+            }
+            return points;
         }
         private double CalculateLootValue(Perception perception, Loot loot, Unit unit, DebugInterface debugInterface = null)
         {
@@ -148,7 +175,7 @@ namespace AiCup22.Custom
                     /// Но рядом есть патроны для другого
                     if ((unit.Weapon.HasValue) &&
                         (weapon.TypeIndex == unit.Weapon.Value) ||
-                        (unit.Weapon.Value == 2))
+                        (unit.Weapon.Value == 2))  //Все еще приоритет луку
                     {
                         points = eps;
                     }
@@ -157,10 +184,10 @@ namespace AiCup22.Custom
                         switch (weapon.TypeIndex)
                         {
                             case 0:
-                                points *= 1;
+                                points *= WandLoot;
                                 break;
                             case 1:
-                                points *= 1;
+                                points *= StaffLoot;
                                 break;
                             case 2:
                                 points *= BowLoot;
@@ -171,16 +198,20 @@ namespace AiCup22.Custom
 
                     break;
                 case Item.Ammo ammo:
-                    if (unit.Weapon.HasValue &&
-                        ammo.WeaponTypeIndex == 2) //ТОЛЬКО ПАТРОНЫ ДЛЯ ЛУКА
+
+                    ///Надо написать формулу очков в зависимости от кол-ва патронов и других
+                    /// факторов
+                    if (ammo.WeaponTypeIndex == 0)
                     {
-                        ///Надо написать формулу очков в зависимости от кол-ва патронов и других
-                        /// факторов
-                        points *= CalculateAmmoValue(perception, ammo, unit);
+                        points *= CalculateAmmoValue(perception, ammo, unit) * 0.1;
                     }
-                    else
+                    if (ammo.WeaponTypeIndex == 1)
                     {
-                        points = eps;
+                        points *= CalculateAmmoValue(perception, ammo, unit) * 0.25;
+                    }
+                    if (ammo.WeaponTypeIndex == 2)
+                    {
+                        points *= CalculateAmmoValue(perception, ammo, unit) * 1;
                     }
 
                     break;
@@ -194,6 +225,8 @@ namespace AiCup22.Custom
             }
             points *= 1 / loot.Position.SqrDistance(unit.Position);
             points *= CalculateZoneValue(perception, loot.Position);
+            points *= CalculateValueCentralPoint(perception, loot.Position);
+            points *= CalculateLootNearEnemy(perception, loot.Position);
             return points;
         }
     }
