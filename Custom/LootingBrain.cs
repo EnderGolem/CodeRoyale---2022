@@ -14,10 +14,6 @@ namespace AiCup22.Custom
         protected const int AmmoLoot = Koefficient.Looting.AmmoLoot;
         protected const int BowLoot = Koefficient.Looting.BowLoot;
 
-        private Loot desireLoot;
-        private Vec2 desiredDestination;
-        private double desiredPoints;
-
         private List<Loot> occupiedLoot;
 
         /* Скрыл, так как мне надоели предупреждения
