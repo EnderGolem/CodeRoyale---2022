@@ -260,7 +260,7 @@ namespace AiCup22.Custom
             if (perception.EnemiesAimingYou.Count > 0)
             {
 
-                foreach (var enemy in perception.EnemiesAimingYou)
+                foreach (var enemy in perception.EnemiesAimingYou[0])  //Должно по другому быть, но я исправил, чтобы не было ошибок и не пришлось большой кусок кода коммитить
                 {
                     i++;
                     sum += i;
