@@ -128,7 +128,6 @@ namespace AiCup22.Custom
 
         protected void AddState(string actionName,EndAction action,Perception perception)
         {
-            Console.WriteLine(perception.MyUnints[0]);
             for (int i = 0; i < perception.MyUnints.Count; i++)
             {
                 allStates[perception.MyUnints[i].Id][actionName] = action.Copy();
