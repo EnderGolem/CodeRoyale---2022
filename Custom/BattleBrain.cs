@@ -22,9 +22,9 @@ namespace AiCup22.Custom
         protected override Dictionary<int, EndAction> CalculateEndActions(Perception perception, DebugInterface debugInterface)
         {
             Dictionary<int, EndAction> orderedEndActions = new Dictionary<int, EndAction>();
-            foreach (var unit in perception.MyUnints)
+            for (int idInMyUnints = 0; idInMyUnints < perception.MyUnints.Count; idInMyUnints++)
             {
-                
+                var unit = perception.MyUnints[idInMyUnints];
                 int unitId = unit.Id;
 
                 var stShoot = (SteeringShootToDestinationDirection)GetAction(unitId, "SteeringShoot");
@@ -53,7 +53,7 @@ namespace AiCup22.Custom
 
 
                 var enemy = perception.EnemyUnints[bestEnemyIndex];
-                var safeDirection = CalculateDodge(perception, debugInterface,unit);
+                var safeDirection = CalculateDodge(perception, debugInterface, unit);
                 var distanceToEnemy = unit.Position.SqrDistance(perception.EnemyUnints[bestEnemyIndex].Position);
                 var estimatedEnemyPosition = CalculateAimToTargetPrediction(ref enemy, perception.Constants.Weapons[unit.Weapon.Value].ProjectileSpeed, unit.Position);
 
@@ -83,7 +83,7 @@ namespace AiCup22.Custom
                     {
                         stShoot.SetDestination(unit.Position.Add(safeDirection));
                         stShoot.SetDirection(estimatedEnemyPosition);
-                        orderedEndActions[unitId] = stShoot; 
+                        orderedEndActions[unitId] = stShoot;
                         continue;
                     }
 
@@ -92,14 +92,14 @@ namespace AiCup22.Custom
                         stAim.SetDestination(unit.Position.Add(safeDirection));
                     if (Tools.RaycastObstacle(unit.Position, estimatedEnemyPosition, perception.Constants.Obstacles, true) != null) //Если есть укрытие то
                     {
-                        if (perception.EnemiesAimingYou.Contains(enemy.Id))
+                        if (perception.EnemiesAimingYou[idInMyUnints].Contains(enemy.Id))
                             stAim.SetDestination(unit.Position.FindMirrorPoint(enemy.Position)); //Если Смотрит на нас, то отходим, отдалясь от укрытия
                         else                                                                                                                    //Если не смотрит, то приближаемся
                             stAim.SetDestination(enemy.Position);
 
                     }
                     stAim.SetDirection(estimatedEnemyPosition);
-                    orderedEndActions[unitId] = stAim;   
+                    orderedEndActions[unitId] = stAim;
                     continue;
                 }
                 else  //Отступаем
@@ -146,7 +146,7 @@ namespace AiCup22.Custom
             return estimatedEnemyPosition.Add(estimatedEnemyPosition.Substract(enemy.Position).Multi(0.45));
         }
 
-        Vec2 CalculateDodge(Perception perception, DebugInterface debugInterface,Unit unit)
+        Vec2 CalculateDodge(Perception perception, DebugInterface debugInterface, Unit unit)
         {
             if (perception.Game.Projectiles.Length == 0)
                 return new Vec2(0, 0);

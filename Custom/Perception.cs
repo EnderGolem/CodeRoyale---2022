@@ -133,7 +133,7 @@ namespace AiCup22.Custom
             {
                 CalculateCloseObstacles(_myUnints[0].Position, obstacleSearchRadius);
             }
-            //EstimateDirections(game, debugInterface); Пока не нужно...
+            EstimateDirections(game, debugInterface);//Пока не нужно...
             if (debugInterface != null)
                 DebugOutput(game, debugInterface);
         }
@@ -210,7 +210,7 @@ namespace AiCup22.Custom
             return distance * damageDanger * 1500; // ХУЕЕЕТА
         }
 
-        protected void EstimateDirections(Game game, DebugInterface debugInterface, int idInMyUnints)
+        protected void EstimateDirections(Game game, DebugInterface debugInterface, int idInMyUnints = 0)
         {
             directionDangers.Clear(); //Зачем тут Clear?
             for (int i = 0; i < directions.Length; i++)
@@ -473,7 +473,7 @@ namespace AiCup22.Custom
                         upUnit.Health -= (damage - shieldDamage);
                         destroyedProjectiles.Add(i);
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
 
                     }
