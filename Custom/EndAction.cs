@@ -156,14 +156,6 @@ namespace AiCup22.Custom
                  Console.WriteLine($"Перпендикулярный вектор: {perpDir}");
                  Console.WriteLine($"Целевая позиция: {targetPos}");
                  Console.WriteLine($"Целевой вектор: {targetDir}");*/
-            /*if (debugInterface != null)
-            {
-                debugInterface.AddRing(intersectPoint.Value, 1, 0.5, new Color(1, 0, 0, 1));
-                debugInterface.AddRing(targetPos, 1, 0.5, new Color(0, 0.5, 0.5, 1));
-                debugInterface.AddSegment(obst.Value.Position, obst.Value.Position.Substract(perpDir.Normalize()), 0.5, new Color(0, 0, 1, 1));
-                debugInterface.AddSegment(unit.Position, destination, 0.5, new Color(0, 1, 0, 1));
-                debugInterface.AddSegment(obst.Value.Position, targetPos, 0.5, new Color(1, 0, 0, 1));
-            }*/
             var targetDir = CalculateDirToDestinationWithObstAvoidance(perception, debugInterface);
             return new UnitOrder(targetDir, targetDir, null);
         }
@@ -174,11 +166,10 @@ namespace AiCup22.Custom
             Obstacle? obst = Tools.RaycastObstacle2Point(unit.Position, destination,
                 perception.Constants.UnitRadius * 2, perception.Constants.Obstacles, false);
 
-            if (!obst.HasValue || obst.Value.Position.SqrDistance(perception.MyUnints[0].Position) >
+            if (!obst.HasValue || obst.Value.Position.SqrDistance(unit.Position) >
                 obst.Value.Radius * obst.Value.Radius * 9)
             {
                 return destination.Substract(unit.Position).Normalize().Multi(perception.Constants.MaxUnitForwardSpeed);
-                ;
             }
             else
             {
@@ -202,6 +193,15 @@ namespace AiCup22.Custom
                  Console.WriteLine($"Целевая позиция: {targetPos}");
                  Console.WriteLine($"Целевой вектор: {targetDir}");*/
 
+                if (debugInterface != null)
+                {
+                    debugInterface.AddRing(intersectPoint.Value, 1, 0.5, new Color(1, 0, 0, 1));
+                    debugInterface.AddRing(targetPos, 1, 0.5, new Color(0, 0.5, 0.5, 1));
+                    debugInterface.AddSegment(obst.Value.Position, obst.Value.Position.Substract(perpDir.Normalize()), 0.5, new Color(0, 0, 1, 1));
+                    debugInterface.AddSegment(unit.Position, destination, 0.5, new Color(0, 1, 0, 1));
+                    debugInterface.AddSegment(obst.Value.Position, targetPos, 0.5, new Color(1, 0, 0, 1));
+                }
+                
                 return targetDir;
             }
         }
@@ -391,7 +391,8 @@ namespace AiCup22.Custom
         {
                 var targetDir = CalculateDirToDestinationWithObstAvoidance(perception, debugInterface);
                 var projs = perception.ClipSafeProjectiles(ref actingUnit);
-                if (projs.Count == 0)
+
+                if (projs.Count == 0 || actingUnit.RemainingSpawnTime.HasValue)
                 {
                     return new UnitOrder(targetDir, targetDir, null);
                 }

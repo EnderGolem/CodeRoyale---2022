@@ -60,6 +60,7 @@ namespace AiCup22.Custom
 
                 if (debugInterface != null)
                 {
+
                     debugInterface.AddSegment(unit.Position, unit.Position.Add(unit.Direction.Multi(100)), 0.3, new Color(0, 1, 0, 0.5));
                     debugInterface.AddRing(unit.Position, safeZone, 0.5, new Color(0, 1, 0.5, 1));
                     debugInterface.AddRing(unit.Position, 30, 0.5, new Color(0, 1, 0.5, 1));
@@ -97,12 +98,14 @@ namespace AiCup22.Custom
                         else                                                                                                                    //Если не смотрит, то приближаемся
                             stAim.SetDestination(enemy.Position);
 
+
                     }
                     stAim.SetDirection(estimatedEnemyPosition);
                     orderedEndActions[unitId] = stAim;
                     continue;
                 }
-                else  //Отступаем
+
+                else  
                 {
                     if (unit.Aim == 1 && Tools.RaycastObstacle(unit.Position, estimatedEnemyPosition,
                             perception.Constants.Obstacles, true) == null)
