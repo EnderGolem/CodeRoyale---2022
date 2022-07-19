@@ -13,6 +13,8 @@ namespace AiCup22.Custom
         protected const int ShieldLoot = Koefficient.Looting.ShieldLoot;
         protected const int AmmoLoot = Koefficient.Looting.AmmoLoot;
         protected const int BowLoot = Koefficient.Looting.BowLoot;
+        protected const int StaffLoot = Koefficient.Looting.StaffLoot;
+        protected const int WandLoot = Koefficient.Looting.WandLoot;
 
         private List<Loot> occupiedLoot;
 
@@ -48,11 +50,10 @@ namespace AiCup22.Custom
                     continue;
                 }
 
-                int bestLootIndex = -1;
                 Loot bestLoot = new Loot();
                 double bestPoints = double.MinValue;
                 foreach (var loot in perception.MemorizedLoot)
-                {   
+                {
                     double curPoints = CalculateLootValue(perception, loot.Value, unit);
 
                     if (debugInterface != null)
@@ -63,7 +64,6 @@ namespace AiCup22.Custom
                     if (bestPoints < curPoints)
                     {
                         bestPoints = curPoints;
-                        bestLootIndex = loot.Key;
                         bestLoot = loot.Value;
                     }
                 }
@@ -78,7 +78,7 @@ namespace AiCup22.Custom
                 }
 
 
-               
+
 
                 if (bestLoot.Position.Distance(unit.Position) < perception.Constants.UnitRadius / 2)
                 {
@@ -106,7 +106,12 @@ namespace AiCup22.Custom
             double procentage = unit.Ammo[ammo.WeaponTypeIndex] / perception.Constants.Weapons[ammo.WeaponTypeIndex].MaxInventoryAmmo * 100;
             if (procentage == 100)
                 return 1;
+
             double points = procentage != 0 ? AmmoLoot / procentage : 10000;
+            if (ammo.WeaponTypeIndex == unit.Weapon.Value)
+            {
+                points *= 4;
+            }
             return points;
         }
         private double CalculateShieldValue(Perception perception, Item.ShieldPotions potions, Unit unit)
@@ -116,7 +121,7 @@ namespace AiCup22.Custom
                 return 1;
             double points = procentage != 0 ? (ShieldLoot * potions.Amount) / procentage : 10000;
             if ((double)unit.Shield > 1)
-                points *= (-0.005 * (perception.Constants.MaxShield / (double)unit.Shield)) + 2;
+                points *= (-0.02 * (perception.Constants.MaxShield / (double)unit.Shield)) + 2;
             else
                 points *= 2;
 
@@ -144,7 +149,7 @@ namespace AiCup22.Custom
                     /// Но рядом есть патроны для другого
                     if ((unit.Weapon.HasValue) &&
                         (weapon.TypeIndex == unit.Weapon.Value) ||
-                        (unit.Weapon.Value == 2))
+                        (unit.Weapon.Value == 2))  //Все еще приоритет луку
                     {
                         points = eps;
                     }
@@ -153,10 +158,10 @@ namespace AiCup22.Custom
                         switch (weapon.TypeIndex)
                         {
                             case 0:
-                                points *= 1;
+                                points *= WandLoot;
                                 break;
                             case 1:
-                                points *= 1;
+                                points *= StaffLoot;
                                 break;
                             case 2:
                                 points *= BowLoot;
@@ -167,16 +172,20 @@ namespace AiCup22.Custom
 
                     break;
                 case Item.Ammo ammo:
-                    if (unit.Weapon.HasValue &&
-                        ammo.WeaponTypeIndex == 2) //ТОЛЬКО ПАТРОНЫ ДЛЯ ЛУКА
+
+                    ///Надо написать формулу очков в зависимости от кол-ва патронов и других
+                    /// факторов
+                    if (ammo.WeaponTypeIndex == 0)
                     {
-                        ///Надо написать формулу очков в зависимости от кол-ва патронов и других
-                        /// факторов
-                        points *= CalculateAmmoValue(perception, ammo, unit);
+                        points *= CalculateAmmoValue(perception, ammo, unit) * 0.1;
                     }
-                    else
+                    if (ammo.WeaponTypeIndex == 1)
                     {
-                        points = eps;
+                        points *= CalculateAmmoValue(perception, ammo, unit) * 0.25;
+                    }
+                    if (ammo.WeaponTypeIndex == 2)
+                    {
+                        points *= CalculateAmmoValue(perception, ammo, unit) * 1;
                     }
 
                     break;

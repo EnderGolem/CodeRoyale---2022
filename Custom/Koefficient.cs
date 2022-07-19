@@ -32,6 +32,8 @@ namespace AiCup22.Custom
             public const int ShieldLoot = 45;
             public const int AmmoLoot = 800;
             public const int BowLoot = 50000;
+            public const int StaffLoot = 10000;
+            public const int WandLoot = 1;
         }
     }
 }
