@@ -10,125 +10,116 @@ namespace AiCup22.Custom
     {
         public const int safeZone = 15;
 
-        private LookAroundAction _lookAroundAction;
-        private SteeringRunToDestination _steeringRunToDestination;
-        private AimToDestinationDirection _aimToDestinationDirection;
-        private SteeringShootToDestinationDirection _steeringShootToDestinationDirection;
-        private SteeringAimToDestinationDirection _steeringAimToDestinationDirection;
-        public BattleBrain(Perception perception):base(perception)
+        public BattleBrain(Perception perception) : base(perception)
         {
-            _lookAroundAction = new LookAroundAction();
-            _steeringRunToDestination = new SteeringRunToDestinationWithEvading();
-            _aimToDestinationDirection = new AimToDestinationDirection();
-            _steeringAimToDestinationDirection = new SteeringAimToDestinationDirection();
-            _steeringShootToDestinationDirection = new SteeringShootToDestinationDirection();
-            AddState("LookAround",_lookAroundAction,perception);
-            AddState("SteeringRun",_steeringRunToDestination,perception);
-            AddState("Aim",_aimToDestinationDirection,perception);
-            AddState("SteeringAim",_steeringAimToDestinationDirection,perception);
-            AddState("SteeringShoot",_steeringShootToDestinationDirection,perception);
-            /*allStates.Add(_lookAroundAction);
-            allStates.Add(_steeringRunToDestination);
-            allStates.Add(_aimToDestinationDirection);
-            allStates.Add(_steeringAimToDestinationDirection);
-            allStates.Add(_steeringShootToDestinationDirection);*/
+            AddState("LookAround", new LookAroundAction(), perception);
+            AddState("SteeringRun", new SteeringRunToDestinationWithEvading(), perception);
+            AddState("Aim", new AimToDestinationDirection(), perception);
+            AddState("SteeringAim", new SteeringAimToDestinationDirection(), perception);
+            AddState("SteeringShoot", new SteeringShootToDestinationDirection(), perception);
         }
 
-        protected override Dictionary<int,EndAction> CalculateEndActions(Perception perception,DebugInterface debugInterface)
+        protected override Dictionary<int, EndAction> CalculateEndActions(Perception perception, DebugInterface debugInterface)
         {
             Dictionary<int, EndAction> orderedEndActions = new Dictionary<int, EndAction>();
-            int unitId = perception.MyUnints[0].Id;///Убрать когда будешь работать над несколькими юнитами
-            if (perception.EnemyUnints.Count == 0) //Проверка, вдруг вообще ничего нет
+            foreach (var unit in perception.MyUnints)
             {
-                orderedEndActions[unitId] = GetAction(unitId,"LookAround");
-                return orderedEndActions;
-            }
+                System.Console.WriteLine(unit.Id);
+                int unitId = unit.Id;
 
-            double bestPoints = double.MinValue;
-            int bestEnemyIndex = -1;
-            double point = 0;
-            for (int i = 0; i < perception.EnemyUnints.Count; i++)
-            {
-                point = CalculateEnemyValue(perception, perception.EnemyUnints[i]);
+                var stShoot = (SteeringShootToDestinationDirection)GetAction(unitId, "SteeringShoot");
+                var stAim = (SteeringAimToDestinationDirection)GetAction(unitId, "SteeringAim");
+
+                if (perception.EnemyUnints.Count == 0) //Проверка, вдруг вообще ничего нет
+                {
+                    orderedEndActions[unitId] = GetAction(unitId, "LookAround");
+                    continue;
+                }
+
+                double bestPoints = double.MinValue;
+                int bestEnemyIndex = -1;
+                double point = 0;
+                for (int i = 0; i < perception.EnemyUnints.Count; i++)
+                {
+                    point = CalculateEnemyValue(perception, perception.EnemyUnints[i]);
+                    if (debugInterface != null)
+                        debugInterface.AddPlacedText(perception.EnemyUnints[i].Position, (point).ToString(), new Vec2(0, 0), 0.5, new Color(0, 1, 0.5, 0.7));
+                    if (bestPoints < point)
+                    {
+                        bestEnemyIndex = i;
+                        bestPoints = point;
+                    }
+                }
+
+
+                var enemy = perception.EnemyUnints[bestEnemyIndex];
+                var safeDirection = CalculateDodge(perception, debugInterface);
+                var distanceToEnemy = perception.MyUnints[id].Position.SqrDistance(perception.EnemyUnints[bestEnemyIndex].Position);
+                var estimatedEnemyPosition = CalculateAimToTargetPrediction(ref enemy, perception.Constants.Weapons[perception.MyUnints[0].Weapon.Value].ProjectileSpeed, perception.MyUnints[0].Position);
+
+
                 if (debugInterface != null)
-                    debugInterface.AddPlacedText(perception.EnemyUnints[i].Position, (point).ToString(), new Vec2(0, 0), 0.5, new Color(0, 1, 0.5, 0.7));
-                if (bestPoints < point)
                 {
-                    bestEnemyIndex = i;
-                    bestPoints = point;
-                }
-            }
-
-            var unit = perception.MyUnints[0];
-            var enemy = perception.EnemyUnints[bestEnemyIndex];
-            var safeDirection = CalculateDodge(perception, debugInterface);
-            var distanceToEnemy = perception.MyUnints[id].Position.SqrDistance(perception.EnemyUnints[bestEnemyIndex].Position);
-            var estimatedEnemyPosition = CalculateAimToTargetPrediction(ref enemy, perception.Constants.Weapons[perception.MyUnints[0].Weapon.Value].ProjectileSpeed, perception.MyUnints[0].Position);
-            // Console.WriteLine("CurrentState " + (currentState == _steeringAimToDestinationDirection));
-
-
-            if (debugInterface != null)
-            {
-                debugInterface.AddSegment(unit.Position, unit.Position.Add(unit.Direction.Multi(100)), 0.3, new Color(0, 1, 0, 0.5));
-                debugInterface.AddRing(perception.MyUnints[id].Position, safeZone, 0.5, new Color(0, 1, 0.5, 1));
-                debugInterface.AddRing(perception.MyUnints[id].Position, 30, 0.5, new Color(0, 1, 0.5, 1));
-                debugInterface.AddCircle(estimatedEnemyPosition, 0.4, new Color(1, 0, 0, 1));
-                debugInterface.AddPlacedText(enemy.Position.Add(new Vec2(0, 1)), enemy.Velocity.Length().ToString(), new Vec2(0.5, 0.5), 0.5, new Color(1, 0.4, 0.6, 0.5));
-                debugInterface.AddSegment(enemy.Position, estimatedEnemyPosition, 0.1, new Color(1, 0.4, 0.6, 0.5));
-            }
-            
-            if (((currentStates[unitId] != _steeringAimToDestinationDirection && currentStates[unitId] != _steeringShootToDestinationDirection) && distanceToEnemy > 30 * 30) ||
-                ((currentStates[unitId] == _steeringAimToDestinationDirection || currentStates[unitId] == _steeringShootToDestinationDirection) && distanceToEnemy > 35 * 35)) //Приблежаемся, возможно нужно стрелять. Можно красивее через Active
-            {
-                ((SteeringRunToDestinationWithEvading)GetAction(unitId,"SteeringRun")).SetDestination(perception.EnemyUnints[bestEnemyIndex].Position);
-                orderedEndActions[unitId] = GetAction(unitId,"SteeringRun");
-                return orderedEndActions;
-            }
-            else if (safeZone * safeZone < distanceToEnemy) //Стреляем
-            {
-                int maxSafeIndex = perception.FindIndexMaxSafeDirection();
-
-                if (perception.MyUnints[id].Aim == 1 && Tools.RaycastObstacle(perception.MyUnints[id].Position, estimatedEnemyPosition,
-                                                   perception.Constants.Obstacles, true) == null)
-                {
-                    ((SteeringShootToDestinationDirection)GetAction(unitId,"SteeringShoot")).SetDestination(perception.MyUnints[id].Position.Add(safeDirection));
-                    ((SteeringShootToDestinationDirection)GetAction(unitId,"SteeringShoot")).SetDirection(estimatedEnemyPosition);
-                    orderedEndActions[unitId] = GetAction(unitId,"SteeringShoot");
-                    return orderedEndActions;
+                    debugInterface.AddSegment(unit.Position, unit.Position.Add(unit.Direction.Multi(100)), 0.3, new Color(0, 1, 0, 0.5));
+                    debugInterface.AddRing(perception.MyUnints[id].Position, safeZone, 0.5, new Color(0, 1, 0.5, 1));
+                    debugInterface.AddRing(perception.MyUnints[id].Position, 30, 0.5, new Color(0, 1, 0.5, 1));
+                    debugInterface.AddCircle(estimatedEnemyPosition, 0.4, new Color(1, 0, 0, 1));
+                    debugInterface.AddPlacedText(enemy.Position.Add(new Vec2(0, 1)), enemy.Velocity.Length().ToString(), new Vec2(0.5, 0.5), 0.5, new Color(1, 0.4, 0.6, 0.5));
+                    debugInterface.AddSegment(enemy.Position, estimatedEnemyPosition, 0.1, new Color(1, 0.4, 0.6, 0.5));
                 }
 
-                var stAim = (SteeringAimToDestinationDirection)GetAction(unitId,"SteeringAim");
-                if (Tools.RaycastObstacle(perception.MyUnints[id].Position, estimatedEnemyPosition, perception.Constants.Obstacles, true) == null) //Если нет укрытия, просто прицеливаемся, уклоняясь
-                    stAim.SetDestination(perception.MyUnints[id].Position.Add(safeDirection));
-                if (Tools.RaycastObstacle(perception.MyUnints[id].Position, estimatedEnemyPosition, perception.Constants.Obstacles, true) != null) //Если есть укрытие то
+                if (((currentStates[unitId] != stAim && currentStates[unitId] != stShoot) && distanceToEnemy > 30 * 30) ||
+                    ((currentStates[unitId] == stAim || currentStates[unitId] == stShoot) && distanceToEnemy > 35 * 35)) //Приблежаемся, возможно нужно стрелять. Можно красивее через Active
                 {
-                    if (perception.EnemiesAimingYou.Contains(enemy.Id))
-                        stAim.SetDestination(perception.MyUnints[id].Position.FindMirrorPoint(enemy.Position)); //Если Смотрит на нас, то отходим, отдалясь от укрытия
-                    else                                                                                                                    //Если не смотрит, то приближаемся
-                        stAim.SetDestination(enemy.Position);
+                    ((SteeringRunToDestinationWithEvading)GetAction(unitId, "SteeringRun")).SetDestination(perception.EnemyUnints[bestEnemyIndex].Position);
+                    orderedEndActions[unitId] = GetAction(unitId, "SteeringRun");
+                    continue;
+                }
+                else if (safeZone * safeZone < distanceToEnemy) //Стреляем
+                {
+                    int maxSafeIndex = perception.FindIndexMaxSafeDirection();
+                    if (perception.MyUnints[id].Aim == 1 && Tools.RaycastObstacle(perception.MyUnints[id].Position, estimatedEnemyPosition,
+                                                       perception.Constants.Obstacles, true) == null)
+                    {
+                        stShoot.SetDestination(perception.MyUnints[id].Position.Add(safeDirection));
+                        stShoot.SetDirection(estimatedEnemyPosition);
+                        orderedEndActions[unitId] = stShoot; 
+                        continue;
+                    }
+
+
+                    if (Tools.RaycastObstacle(perception.MyUnints[id].Position, estimatedEnemyPosition, perception.Constants.Obstacles, true) == null) //Если нет укрытия, просто прицеливаемся, уклоняясь
+                        stAim.SetDestination(perception.MyUnints[id].Position.Add(safeDirection));
+                    if (Tools.RaycastObstacle(perception.MyUnints[id].Position, estimatedEnemyPosition, perception.Constants.Obstacles, true) != null) //Если есть укрытие то
+                    {
+                        if (perception.EnemiesAimingYou.Contains(enemy.Id))
+                            stAim.SetDestination(perception.MyUnints[id].Position.FindMirrorPoint(enemy.Position)); //Если Смотрит на нас, то отходим, отдалясь от укрытия
+                        else                                                                                                                    //Если не смотрит, то приближаемся
+                            stAim.SetDestination(enemy.Position);
+
+                    }
+                    stAim.SetDirection(estimatedEnemyPosition);
+                    orderedEndActions[unitId] = stAim;   
+                    continue;
+                }
+                else  //Отступаем
+                {
+                    if (perception.MyUnints[id].Aim == 1 && Tools.RaycastObstacle(perception.MyUnints[id].Position, estimatedEnemyPosition,
+                            perception.Constants.Obstacles, true) == null)
+                    {
+                        stShoot.SetDestination(perception.MyUnints[id].Position.FindMirrorPoint(enemy.Position));
+                        stShoot.SetDirection(estimatedEnemyPosition);
+                        orderedEndActions[unitId] = stShoot;
+                        continue;
+                    }
+                    stShoot.SetDestination(perception.MyUnints[id].Position.FindMirrorPoint(enemy.Position));
+                    stShoot.SetDirection(estimatedEnemyPosition);
+                    orderedEndActions[unitId] = stAim;
+                    continue;
 
                 }
-                stAim.SetDirection(estimatedEnemyPosition);
-                orderedEndActions[unitId] = GetAction(unitId,"SteeringAim");
-                return orderedEndActions;
             }
-            else  //Отступаем
-            {
-                if (perception.MyUnints[id].Aim == 1 && Tools.RaycastObstacle(perception.MyUnints[id].Position, estimatedEnemyPosition,
-                        perception.Constants.Obstacles, true) == null)
-                {
-                    _steeringShootToDestinationDirection.SetDestination(perception.MyUnints[id].Position.FindMirrorPoint(enemy.Position));
-                    _steeringShootToDestinationDirection.SetDirection(estimatedEnemyPosition);
-                    orderedEndActions[unitId] = _steeringShootToDestinationDirection;
-                    return orderedEndActions;
-                }
-                _steeringAimToDestinationDirection.SetDestination(perception.MyUnints[id].Position.FindMirrorPoint(enemy.Position));
-                _steeringAimToDestinationDirection.SetDirection(estimatedEnemyPosition);
-                orderedEndActions[unitId] = GetAction(unitId,"SteeringAim");
-                return orderedEndActions;
-                
-            }
-
+            return orderedEndActions;
         }
 
         double CalculateEnemyValue(Perception perception, Unit enemy)
