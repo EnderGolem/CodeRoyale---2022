@@ -9,17 +9,18 @@ namespace AiCup22.Custom
     class BattleBrain : EndBrain
     {
         public const int safeZone = 15;
+        protected const double focusDistance = 10;
 
         public BattleBrain(Perception perception) : base(perception)
         {
-            AddState("LookAround", new LookAroundAction(), perception);
+            AddState("LookAround", new LookAroundWithEvading(), perception);
             AddState("SteeringRun", new SteeringRunToDestinationWithEvading(), perception);
             AddState("Aim", new AimToDestinationDirection(), perception);
             AddState("SteeringAim", new SteeringAimToDestinationDirection(), perception);
             AddState("SteeringShoot", new SteeringShootToDestinationDirection(), perception);
         }
 
-        protected override Dictionary<int, EndAction> CalculateEndActions(Perception perception, DebugInterface debugInterface)
+        /*protected override Dictionary<int, EndAction> CalculateEndActions(Perception perception, DebugInterface debugInterface)
         {
             Dictionary<int, EndAction> orderedEndActions = new Dictionary<int, EndAction>();
             for (int idInMyUnints = 0; idInMyUnints < perception.MyUnints.Count; idInMyUnints++)
@@ -123,6 +124,106 @@ namespace AiCup22.Custom
                 }
             }
             return orderedEndActions;
+        }*/
+        
+
+        protected override Dictionary<int, EndAction> CalculateEndActions(Perception perception, DebugInterface debugInterface)
+        {
+            Dictionary<int, EndAction> orderedEndActions = new Dictionary<int, EndAction>();
+            var fUnit = FindTastiestUnit(perception, debugInterface);
+            if (!fUnit.HasValue)
+            {
+                for (int i = 0; i < perception.MyUnints.Count; i++)
+                {
+                    var lookAround = (LookAroundWithEvading) GetAction(perception.MyUnints[i].Id,"LookAround");
+                    orderedEndActions[perception.MyUnints[i].Id] = lookAround;
+                }
+
+                return orderedEndActions;
+            }
+            var focusUnit = fUnit.Value;
+            for (int i = 0; i < perception.MyUnints.Count; i++)
+            {
+                Unit unit = perception.MyUnints[i];
+                var steeringShoot = (SteeringShootToDestinationDirection) GetAction(unit.Id, "SteeringShoot");
+                var evadingRun = (SteeringRunToDestinationWithEvading) GetAction(unit.Id, "SteeringRun");
+                var steeringAim = (SteeringAimToDestinationDirection) GetAction(unit.Id,"SteeringAim");
+
+                var safeDir = CalculateDodge(perception, debugInterface, unit);
+                if (unit.RemainingSpawnTime.HasValue)
+                {
+                    double minDist = 100000;
+                    Loot bestLoot = new Loot();
+                    foreach (var loot in perception.MemorizedLoot)
+                    {
+                        double dist = loot.Value.Position.SqrDistance(unit.Position);
+                        if (dist < minDist)
+                        {
+                            minDist = dist;
+                            bestLoot = loot.Value;
+                        }
+                    }
+                    evadingRun.SetDestination(bestLoot.Position);
+                    orderedEndActions[unit.Id] = evadingRun;
+                }
+                else if ((currentStates[unit.Id] == steeringShoot || currentStates[unit.Id] == steeringAim) && unit.Position.Distance(focusUnit.Position)<focusDistance+4 ||
+                    unit.Position.Distance(focusUnit.Position)<focusDistance)
+                {
+                    if (unit.Aim == 1 &&
+                        !Tools.RaycastObstacleWithAllies(unit.Position, focusUnit.Position,
+                            perception.CloseObstacles.ToArray(), perception.MyUnints, unit.Id, perception.Constants.UnitRadius,
+                            true).HasValue)
+                    {
+                        steeringShoot.SetDestination(unit.Position.Add(safeDir));
+                        steeringShoot.SetDirection(focusUnit.Position);
+                        orderedEndActions[unit.Id] = steeringShoot;
+                    }
+                    else
+                    {
+                        steeringAim.SetDestination(unit.Position.Add(safeDir));
+                        steeringAim.SetDirection(focusUnit.Position);
+                        orderedEndActions[unit.Id] = steeringAim;
+                    }
+                }
+                else
+                {
+                    evadingRun.SetDestination(focusUnit.Position);
+                    orderedEndActions[unit.Id] = evadingRun;
+                }
+            }
+            return orderedEndActions;
+        }
+        
+        protected Unit? FindTastiestUnit(Perception perception, DebugInterface debugInterface)
+        {
+            double minDist = 10000000;
+            Unit? bestEnemy = null;
+            foreach (var enemy in perception.MemorizedEnemies)
+            {
+                if (enemy.Value.Item3.RemainingSpawnTime.HasValue || perception.Game.CurrentTick - enemy.Value.Item1>10)
+                {
+                    continue;
+                }
+
+                double maxDist = -1000000;
+                for (int i = 0; i < perception.MyUnints.Count; i++)
+                {
+                    double dist = perception.MyUnints[i].Position.SqrDistance(enemy.Value.Item3.Position);
+
+                    if (dist > maxDist)
+                    {
+                        maxDist = dist;
+                    }
+                }
+
+                if (maxDist < minDist)
+                {
+                    minDist = maxDist;
+                    bestEnemy = enemy.Value.Item3;
+                }
+            }
+
+            return bestEnemy;
         }
 
         double CalculateEnemyValue(Perception perception, Unit enemy, Unit unit)

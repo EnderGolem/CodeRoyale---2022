@@ -68,6 +68,62 @@ namespace AiCup22.Custom
                 return hitObstacles.OrderBy((Obstacle o) => startPoint.SqrDistance(o.Position)).First();
             }
         }
+
+        public static Obstacle? RaycastObstacleWithAllies(Vec2 startPoint, Vec2 endPoint, Obstacle[] obstacles,List<Unit> myUnits,
+            int unitId,double unitRadius,
+            bool ignoreLowObstacles)
+        {
+            var obst = RaycastObstacle(startPoint, endPoint, obstacles, ignoreLowObstacles);
+            var allieObst = RaycastAllies(startPoint, endPoint, myUnits,unitId,unitRadius, ignoreLowObstacles);
+            if (!obst.HasValue)
+            {
+                return allieObst;
+            }
+            else if(!allieObst.HasValue)
+            {
+                return obst;
+            }
+            else
+            {
+                if (allieObst.Value.Position.SqrDistance(startPoint) < obst.Value.Position.SqrDistance(startPoint))
+                {
+                    return allieObst;
+                }
+                else
+                {
+                    return obst;
+                }
+            }
+        }
+
+        public static Obstacle? RaycastAllies(Vec2 startPoint, Vec2 endPoint,
+            List<Unit> myUnits,
+            int unitId, double unitRadius,
+            bool ignoreLowObstacles)
+        {
+            Obstacle[] allies = new Obstacle[myUnits.Count-1];
+            bool flag = false;
+            for (int i = 0; i < myUnits.Count; i++)
+            {
+                if (myUnits[i].Id != unitId)
+                {
+                    var ind = (flag) ? i - 1 : i;
+                    var r = unitRadius;
+                    if (myUnits[i].RemainingSpawnTime.HasValue)
+                    {
+                        r = 0;
+                    }
+
+                    allies[ind] = new Obstacle(0,myUnits[i].Position,r,false,false);
+                }
+                else
+                {
+                    flag = true;
+                }
+            }
+           return RaycastObstacle(startPoint, endPoint, allies, ignoreLowObstacles);
+        }
+
         /// <summary>
         /// Обнаружение препятствий по 2-м точкам
         /// </summary>

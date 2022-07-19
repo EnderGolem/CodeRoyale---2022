@@ -43,7 +43,7 @@ namespace AiCup22.Custom
 
         protected override Brain ChooseNewState(Perception perception, DebugInterface debugInterface)
         {
-            return _wanderingBrain;
+            return _battleBrain;
             //return new Evading();
             if (debugInterface != null)
             {
