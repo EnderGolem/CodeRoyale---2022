@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using AiCup22.Debugging;
 using AiCup22.Model;
@@ -96,6 +96,7 @@ namespace AiCup22.Custom
             }
 
             return res;
+
         }
     }
 }
