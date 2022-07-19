@@ -28,97 +28,105 @@ namespace AiCup22.Custom
            private Vec2 desiredDestination;
            private double desiredPoints;
         */
-        public LootingBrain(Perception perception):base(perception)
+        public LootingBrain(Perception perception) : base(perception)
         {
             _runToDestination = new SteeringRunToDestinationWithEvading();
             _pickupLoot = new PickupLoot();
             _useShieldToDestinationWithEvading = new UseShieldToDestinationWithEvading();
             _lookAroundWithEvading = new LookAroundWithEvading();
-            AddState("Run",_runToDestination,perception);
-            AddState("Pickup",_pickupLoot,perception);
-            AddState("UseShield",_useShieldToDestinationWithEvading,perception);
-            AddState("LookAround",_lookAroundWithEvading,perception);
+            AddState("Run", _runToDestination, perception);
+            AddState("Pickup", _pickupLoot, perception);
+            AddState("UseShield", _useShieldToDestinationWithEvading, perception);
+            AddState("LookAround", _lookAroundWithEvading, perception);
         }
 
 
-        protected override Dictionary<int,EndAction> CalculateEndActions(Perception perception, DebugInterface debugInterface)
+        protected override Dictionary<int, EndAction> CalculateEndActions(Perception perception, DebugInterface debugInterface)
         {
             Dictionary<int, EndAction> orderedEndActions = new Dictionary<int, EndAction>();
-            if (perception.Game.Loot.Length == 0) //Проверка, вдруг вообще ничего нет
-            {
-                orderedEndActions[perception.MyUnints[0].Id] = _lookAroundWithEvading;
-                return orderedEndActions;
-            }
 
-            int bestLootIndex = -1;
-            Loot bestLoot = new Loot();
-            double bestPoints = double.MinValue;
-            Unit unit = perception.MyUnints[id];
-            List<int> lootToRemove = new List<int>();
-            foreach (var loot in perception.MemorizedLoot)
+            foreach (var unit in perception.MyUnints)
             {
-                if (loot.Value.Position.SqrDistance(unit.Position) > 2000 ||
-                    (Tools.BelongConeOfVision(loot.Value.Position, unit.Position,
-                        unit.Direction, perception.Constants.ViewDistance,
-                        perception.Constants.FieldOfView) &&
-                     perception.Game.Loot.Count(
-                         (Loot l) => l.Id == loot.Key &&
-                                   l.Position.X == loot.Value.Position.X
-                                   && l.Position.Y == loot.Value.Position.Y) == 0))
+                var run = (SteeringRunToDestinationWithEvading)GetAction(unit.Id, "Run");
+                var pickUp = (PickupLoot)GetAction(unit.Id, "Pickup");
+                var useShield = (UseShieldToDestinationWithEvading)GetAction(unit.Id, "UseShield");
+                var lookAround = (LookAroundWithEvading)GetAction(unit.Id, "LookAround");
+
+                if (perception.Game.Loot.Length == 0) //Проверка, вдруг вообще ничего нет
                 {
-                    lootToRemove.Add(loot.Key);
+                    orderedEndActions[unit.Id] = _lookAroundWithEvading;
                     continue;
                 }
 
-                double curPoints = CalculateLootValue(perception, loot.Value, debugInterface);
-
-                if (debugInterface != null)
+                int bestLootIndex = -1;
+                Loot bestLoot = new Loot();
+                double bestPoints = double.MinValue;
+                List<int> lootToRemove = new List<int>();
+                foreach (var loot in perception.MemorizedLoot)
                 {
-                    debugInterface.AddPlacedText(loot.Value.Position, Math.Round(curPoints).ToString(), new Vec2(0, 0), 1, new Color(1, 0, 0.5, 1));
+                    if (loot.Value.Position.SqrDistance(unit.Position) > 2000 ||
+                        (Tools.BelongConeOfVision(loot.Value.Position, unit.Position,
+                            unit.Direction, perception.Constants.ViewDistance,
+                            perception.Constants.FieldOfView) &&
+                         perception.Game.Loot.Count(
+                             (Loot l) => l.Id == loot.Key &&
+                                       l.Position.X == loot.Value.Position.X
+                                       && l.Position.Y == loot.Value.Position.Y) == 0))
+                    {
+                        lootToRemove.Add(loot.Key);
+                        continue;
+                    }
+
+                    double curPoints = CalculateLootValue(perception, loot.Value, debugInterface);
+
+                    if (debugInterface != null)
+                    {
+                        debugInterface.AddPlacedText(loot.Value.Position, Math.Round(curPoints).ToString(), new Vec2(0, 0), 1, new Color(1, 0, 0.5, 1));
+                    }
+
+                    if (bestPoints < curPoints)
+                    {
+                        bestPoints = curPoints;
+                        bestLootIndex = loot.Key;
+                        bestLoot = loot.Value;
+                    }
+                }
+                double shieldPoints = perception.MyUnints[id].Shield < 140 ? 1500 : 0; //Чтобы пил, нужна формула, ну или перенести мозгу, но хз..
+
+                if (shieldPoints > bestPoints && perception.MyUnints[id].ShieldPotions > 0 && perception.MyUnints[id].Action == null)
+                {
+                    useShield.SetDestination(perception.MyUnints[0].Position.Add(perception.Directions[perception.FindIndexMaxSafeDirection()]));                
+                    orderedEndActions[unit.Id] = useShield;
+                    continue;
                 }
 
-                if (bestPoints < curPoints)
+
+                for (int i = 0; i < lootToRemove.Count; i++)
                 {
-                    bestPoints = curPoints;
-                    bestLootIndex = loot.Key;
-                    bestLoot = loot.Value;
+                    perception.MemorizedLoot.Remove(lootToRemove[i]);
+                }
+
+                if (bestLoot.Position.Distance(perception.MyUnints[id].Position) <
+
+                    perception.Constants.UnitRadius / 2)
+                {
+                    pickUp.SetPickableLootId(bestLoot.Id);
+                    perception.MemorizedLoot.Remove(bestLoot.Id);
+                    orderedEndActions[unit.Id] = pickUp;
+                    continue;
+                }
+                else
+                {
+                    if (debugInterface != null)
+                    {
+                        debugInterface.AddRing(bestLoot.Position, 1, 0.5, new Color(0.5, 0.5, 0, 1));
+                    }
+                    run.SetDestination(bestLoot.Position);
+                    orderedEndActions[unit.Id] = run;
+                    continue;
                 }
             }
-            double shieldPoints = perception.MyUnints[id].Shield < 140 ? 1500 : 0; //Чтобы пил, нужна формула, ну или перенести мозгу, но хз..
-
-            if (shieldPoints > bestPoints && perception.MyUnints[id].ShieldPotions > 0 && perception.MyUnints[id].Action == null)
-            {
-                _useShieldToDestinationWithEvading.SetDestination(perception.MyUnints[0].Position.Add(perception.Directions[perception.FindIndexMaxSafeDirection()]));
-                // _useShieldToDestinationWithEvading.SetDirection(perception.MyUnints[0].Direction);
-                orderedEndActions[perception.MyUnints[0].Id] = _useShieldToDestinationWithEvading;
-                return orderedEndActions;
-            }
-
-
-            for (int i = 0; i < lootToRemove.Count; i++)
-            {
-                perception.MemorizedLoot.Remove(lootToRemove[i]);
-            }
-
-            if (bestLoot.Position.Distance(perception.MyUnints[id].Position) <
-
-                perception.Constants.UnitRadius / 2)
-            {
-                _pickupLoot.SetPickableLootId(bestLoot.Id);
-                perception.MemorizedLoot.Remove(bestLoot.Id);
-                orderedEndActions[perception.MyUnints[0].Id] = _pickupLoot;
-                return orderedEndActions;
-            }
-            else
-            {
-                if (debugInterface != null)
-                {
-                    debugInterface.AddRing(bestLoot.Position, 1, 0.5, new Color(0.5, 0.5, 0, 1));
-                }
-                _runToDestination.SetDestination(bestLoot.Position);
-                orderedEndActions[perception.MyUnints[0].Id] = _runToDestination;
-                return orderedEndActions;
-            }
+            return orderedEndActions;
         }
 
         private double CalculateAmmoValue(Perception perception, Item.Ammo ammo)

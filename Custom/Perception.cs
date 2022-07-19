@@ -271,7 +271,7 @@ namespace AiCup22.Custom
 
 
         }
-        public int FindIndexMaxSafeDirection()
+        public int FindIndexMaxSafeDirection() //Удалить, вроде бы это был мой костыль...
         {
             int maxSafeIndex = 0;
             for (int i = 0; i < DirectionDangers.Count; i++)
