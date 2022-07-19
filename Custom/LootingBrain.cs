@@ -37,8 +37,9 @@ namespace AiCup22.Custom
             Dictionary<int, EndAction> orderedEndActions = new Dictionary<int, EndAction>();
 
             occupiedLoot = new List<Loot>();
-            foreach (var unit in perception.MyUnints)
+            for(int idInMyUnints = 0; idInMyUnints < perception.MyUnints.Count; idInMyUnints++)
             {
+                var unit = perception.MyUnints[idInMyUnints];
                 var run = (SteeringRunToDestinationWithEvading)GetAction(unit.Id, "Run");
                 var pickUp = (PickupLoot)GetAction(unit.Id, "Pickup");
                 var useShield = (UseShieldToDestinationWithEvading)GetAction(unit.Id, "UseShield");
@@ -58,7 +59,7 @@ namespace AiCup22.Custom
 
                     if (debugInterface != null)
                     {
-                        debugInterface.AddPlacedText(loot.Value.Position, Math.Round(curPoints).ToString(), new Vec2(0, 0), 1, new Color(1, 0, 0.5, 1));
+                        debugInterface.AddPlacedText(loot.Value.Position.Add(new Vec2(0,idInMyUnints * 0.7)), Math.Round(curPoints).ToString(), new Vec2(0, 0), 0.7, new Color(1, 0, 0.5, 1));
                     }
 
                     if (bestPoints < curPoints)
@@ -132,8 +133,19 @@ namespace AiCup22.Custom
             var distance = Tools.CurrentZoneDistance(perception.Game.Zone, vec2);
 
             if (distance < 0)
-                return -1;
+                return 0.0;
             return 20 / (-distance - 4) + 5;
+        }
+        /// <summary>
+        /// Коэффицент получаемый относительно их средней точки
+        /// </summary>
+        private double CalculateValueCentralPoint(Perception perception, Vec2 loot)
+        {
+            var distance = loot.Distance(perception.AverageUnitPosition);
+
+            if (distance >= 30)
+                return 0;
+            return 30 / (distance - 40) + 3;
         }
         private double CalculateLootValue(Perception perception, Loot loot, Unit unit, DebugInterface debugInterface = null)
         {
@@ -199,6 +211,7 @@ namespace AiCup22.Custom
             }
             points *= 1 / loot.Position.SqrDistance(unit.Position);
             points *= CalculateZoneValue(perception, loot.Position);
+            points *= CalculateValueCentralPoint(perception, loot.Position);
             return points;
         }
     }
