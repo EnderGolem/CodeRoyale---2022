@@ -15,7 +15,10 @@ namespace AiCup22.Custom
         protected override Dictionary<int,EndAction> CalculateEndActions(Perception perception, DebugInterface debugInterface)
         {
             Dictionary<int, EndAction> orderedEndActions = new Dictionary<int, EndAction>();
-            orderedEndActions[perception.MyUnints[0].Id] = _lookAroundAction;
+            foreach (var unit in perception.MyUnints)
+            {
+                orderedEndActions[unit.Id] = (LookAroundWithEvading)GetAction(unit.Id, "LookAround");
+            }
             return orderedEndActions;
         }
         
