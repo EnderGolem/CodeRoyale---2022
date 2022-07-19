@@ -55,22 +55,8 @@ namespace AiCup22.Custom
                 int bestLootIndex = -1;
                 Loot bestLoot = new Loot();
                 double bestPoints = double.MinValue;
-                List<int> lootToRemove = new List<int>();
                 foreach (var loot in perception.MemorizedLoot)
-                {
-                    if (loot.Value.Position.SqrDistance(unit.Position) > 2000 ||
-                        (Tools.BelongConeOfVision(loot.Value.Position, unit.Position,
-                            unit.Direction, perception.Constants.ViewDistance,
-                            perception.Constants.FieldOfView) &&
-                         perception.Game.Loot.Count(
-                             (Loot l) => l.Id == loot.Key &&
-                                       l.Position.X == loot.Value.Position.X
-                                       && l.Position.Y == loot.Value.Position.Y) == 0))
-                    {
-                        lootToRemove.Add(loot.Key);
-                        continue;
-                    }
-
+                {   
                     double curPoints = CalculateLootValue(perception, loot.Value, unit);
 
                     if (debugInterface != null)
@@ -96,10 +82,7 @@ namespace AiCup22.Custom
                 }
 
 
-                for (int i = 0; i < lootToRemove.Count; i++)
-                {
-                    perception.MemorizedLoot.Remove(lootToRemove[i]);
-                }
+               
 
                 if (bestLoot.Position.Distance(unit.Position) < perception.Constants.UnitRadius / 2)
                 {

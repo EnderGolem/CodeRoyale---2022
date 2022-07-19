@@ -153,6 +153,40 @@ namespace AiCup22.Custom
                 memorizedEnemies.Remove(memEnemiesToRemove[i]);
             }
         }
+        private void removeLoot()
+        {
+            List<int> lootToRemove = new List<int>();
+            foreach (var unit in MyUnints) //Удаление по видимости
+            {
+                foreach (var loot in MemorizedLoot)
+                {
+                    if ((Tools.BelongConeOfVision(loot.Value.Position, unit.Position,
+                            unit.Direction, Constants.ViewDistance,
+                            Constants.FieldOfView) &&
+                              Game.Loot.Count(
+                             (Loot l) => l.Id == loot.Key &&
+                                       l.Position.X == loot.Value.Position.X
+                                       && l.Position.Y == loot.Value.Position.Y) == 0))
+                    {
+                        lootToRemove.Add(loot.Key);
+
+                    }
+                }
+            }
+            foreach (var loot in MemorizedLoot)  //Удаление по расстоянию
+            {
+                var minDistance = _myUnints.Select((Unit unit) => unit.Position.SqrDistance(loot.Value.Position)).Min();
+                if(minDistance > 2000)
+                {
+                    lootToRemove.Add(loot.Key);
+                }
+            }
+            for (int i = 0; i < lootToRemove.Count; i++)
+            {
+                MemorizedLoot.Remove(lootToRemove[i]);
+            }
+
+        }
         private void removeProjectiles()
         {
             List<int> memProjToRemove = new List<int>();
@@ -201,7 +235,7 @@ namespace AiCup22.Custom
         }
 
 
-        public double EstimateBulletDanger(Projectile bullet,int idInMyUnints)
+        public double EstimateBulletDanger(Projectile bullet, int idInMyUnints)
         {
             //Рассчет сделать исходя из скорости, позиции, урона и еще можно добавить погрешность на жизнь(пуля может не долететь)
             double distance = 1 / MyUnints[idInMyUnints].Position.SqrDistance(bullet.Position);
