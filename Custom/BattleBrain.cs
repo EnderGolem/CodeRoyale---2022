@@ -160,7 +160,7 @@ namespace AiCup22.Custom
             {
                 int i = g.Key;
                 System.Console.WriteLine(g.Key);
-                if (g.Value.projData.Id != perception.Game.MyId)
+                if (g.Value.projData.ShooterId != perception.Game.MyId)
                     if (g.Value.actualPosition.SqrDistance(unit.Position) <
                         perception.MemorizedProjectiles[indexNearest].actualPosition.SqrDistance(unit.Position))
                     {
