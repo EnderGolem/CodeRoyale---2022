@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using AiCup22.Custom;
 using AiCup22.Debugging;
 using AiCup22.Model;
+using System.Linq;
 
 namespace AiCup22.Custom
 {
@@ -151,27 +152,31 @@ namespace AiCup22.Custom
 
         Vec2 CalculateDodge(Perception perception, DebugInterface debugInterface, Unit unit)
         {
-            if (perception.Game.Projectiles.Length == 0)
+            if (perception.MemorizedProjectiles.Count == 0)
                 return new Vec2(0, 0);
-            int indexNearest = 0;
-            for (int i = 0; i < perception.Game.Projectiles.Length; i++)
+            var indexNearest = perception.MemorizedProjectiles.First().Key;
+            System.Console.WriteLine($"{indexNearest}");
+            foreach(var g in perception.MemorizedProjectiles)
             {
-                if (perception.Game.Projectiles[i].Id != perception.Game.MyId)
-                    if (perception.Game.Projectiles[i].Position.SqrDistance(unit.Position) <
-                        perception.Game.Projectiles[indexNearest].Position.SqrDistance(unit.Position))
+                int i = g.Key;
+                System.Console.WriteLine(g.Key);
+                if (g.Value.projData.Id != perception.Game.MyId)
+                    if (g.Value.actualPosition.SqrDistance(unit.Position) <
+                        perception.MemorizedProjectiles[indexNearest].actualPosition.SqrDistance(unit.Position))
                     {
                         indexNearest = i;
                     }
             }
-            var bullet = perception.Game.Projectiles[indexNearest];
-            var safeDirection1 = bullet.Position.FindPerpendicularWithX(unit.Position.X);
-            var safeDirection2 = bullet.Position.FindPerpendicularWithX(unit.Position.X).Multi(-1);
-            var lineBullet = new Straight(bullet.Velocity, bullet.Position);
+            
+            var bullet = perception.MemorizedProjectiles[indexNearest];
+            var safeDirection1 = bullet.actualPosition.FindPerpendicularWithX(unit.Position.X);
+            var safeDirection2 = bullet.actualPosition.FindPerpendicularWithX(unit.Position.X).Multi(-1);
+            var lineBullet = new Straight(bullet.projData.Velocity, bullet.actualPosition);
             var lineDirection = new Straight(safeDirection1, unit.Position);
             var point = lineBullet.GetIntersection(lineDirection);
             //  System.Console.WriteLine($"SafeDirection1 {safeDirection1} SafeDirection{safeDirection2}");
             if (debugInterface != null)
-                debugInterface.AddSegment(bullet.Position, bullet.Position.Add(bullet.Velocity), 0.1, new Color(0.7, 0.3, 0, 0.8));
+                debugInterface.AddSegment(bullet.actualPosition, bullet.actualPosition.Add(bullet.projData.Velocity), 0.1, new Color(0.7, 0.3, 0, 0.8));
             if (point.Value.SqrDistance(unit.Position.Add(safeDirection1)) > point.Value.SqrDistance(unit.Position.Add(safeDirection2)))
                 return safeDirection1;
             else
