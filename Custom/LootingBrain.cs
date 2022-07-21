@@ -106,7 +106,7 @@ namespace AiCup22.Custom
         {
             double procentage = unit.Ammo[ammo.WeaponTypeIndex] / perception.Constants.Weapons[ammo.WeaponTypeIndex].MaxInventoryAmmo * 100;
             if (procentage == 100)
-                return 1;
+                return 0;
 
             double points = procentage != 0 ? AmmoLoot / procentage : 10000;
             if (ammo.WeaponTypeIndex == unit.Weapon.Value)
@@ -119,7 +119,7 @@ namespace AiCup22.Custom
         {
             double procentage = unit.ShieldPotions / perception.Constants.MaxShieldPotionsInInventory * 100;
             if (procentage == 100)
-                return 1;
+                return 0;
             double points = procentage != 0 ? (ShieldLoot * potions.Amount) / procentage : 10000;
             if ((double)unit.Shield > 1)
                 points *= (-0.02 * (perception.Constants.MaxShield / (double)unit.Shield)) + 2;
