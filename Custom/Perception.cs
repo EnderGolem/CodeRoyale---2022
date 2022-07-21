@@ -115,6 +115,7 @@ namespace AiCup22.Custom
 
             removeProjectiles();
             removeEnemies();
+            removeLoot();
 
             for (int i = 0; i < game.Projectiles.Length; i++)
             {
