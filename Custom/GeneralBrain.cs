@@ -44,7 +44,8 @@ namespace AiCup22.Custom
 
         protected override Brain ChooseNewState(Perception perception, DebugInterface debugInterface)
         {
-            if (perception.MyUnints[0].RemainingSpawnTime.HasValue && perception.MyUnints[1].RemainingSpawnTime.HasValue)
+
+            if (perception.MyUnints.Count((Unit u) => u.RemainingSpawnTime.HasValue) == perception.MyUnints.Count()) 
             {
                 return _wanderingBrain;
             }
@@ -70,7 +71,6 @@ namespace AiCup22.Custom
                     timeStates[3] += 1;
                 }
             }
-
             stateValues[4] = CalculateWanderingBrain(perception, debugInterface);
             stateValues[3] = CalculateStaySafeValue(perception, debugInterface);
             stateValues[2] = CalculateRadarValue(perception, debugInterface);
@@ -114,7 +114,6 @@ namespace AiCup22.Custom
                     $"CurrentStay {allStates[bestState].GetType().Name}",
                     new Vec2(0.5, 0.5), textSize, new Color(1, 0, 1, 1));
             }
-
             return allStates[bestState];
         }
 
