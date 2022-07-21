@@ -10,10 +10,12 @@ namespace AiCup22.Custom
     class BattleBrain : EndBrain
     {
         public const int safeZone = 15;
-        protected double[][] focusTable = new double[][] {new double[] { 12,12,12}, new double[] { 12,12,10}, new double[]{20,20,20}};
+        protected double[][] focusTable = new double[][] {new double[] { 12,12,12}, new double[] { 14,14,10}, new double[]{22,22,20}};
 
         private Dictionary<int,bool> isEvading ;
         private Dictionary<int,Vec2> evadingNullPosition;
+
+        private Dictionary<int, Unit?> curTarget;
 
         public BattleBrain(Perception perception) : base(perception)
         {
@@ -27,6 +29,12 @@ namespace AiCup22.Custom
             {
                 evadingNullPosition[perception.MyUnints[i].Id] = new Vec2();
             }
+            curTarget = new Dictionary<int, Unit?>();
+            for (int i = 0; i < perception.MyUnints.Count; i++)
+            {
+                curTarget[perception.MyUnints[i].Id] = null;
+            }
+
             AddState("LookAround", new LookAroundWithEvading(), perception);
             AddState("SteeringRun", new SteeringRunToDestinationWithEvading(), perception);
             AddState("Aim", new AimToDestinationDirection(), perception);
@@ -34,6 +42,7 @@ namespace AiCup22.Custom
             AddState("SteeringShoot", new SteeringShootToDestinationDirection(), perception);
             AddState("UsePotion", new UseShieldToDestinationWithEvading(), perception);
             AddState("Evading", new Evading(), perception);
+            AddState("Pickup",new PickupLoot(), perception);
         }
 
         /*protected override Dictionary<int, EndAction> CalculateEndActions(Perception perception, DebugInterface debugInterface)
@@ -152,8 +161,17 @@ namespace AiCup22.Custom
                 for (int i = 0; i < perception.MyUnints.Count; i++)
                 {
                     isEvading[perception.MyUnints[i].Id] = false;
-                    var lookAround = (LookAroundWithEvading) GetAction(perception.MyUnints[i].Id,"LookAround");
-                    orderedEndActions[perception.MyUnints[i].Id] = lookAround;
+                    if (perception.MyUnints[i].Shield < 160 && perception.MyUnints[i].ShieldPotions > 0)
+                    {
+                        var useShield = (UseShieldToDestinationWithEvading) GetAction(perception.MyUnints[i].Id, "UsePotion");
+                        useShield.SetDestination(perception.Game.Zone.NextCenter);
+                        orderedEndActions[perception.MyUnints[i].Id] = useShield;
+                    }
+                    else
+                    {
+                        var lookAround = (LookAroundWithEvading) GetAction(perception.MyUnints[i].Id,"LookAround");
+                        orderedEndActions[perception.MyUnints[i].Id] = lookAround;
+                    }
                 }
 
                 return orderedEndActions;
@@ -166,11 +184,14 @@ namespace AiCup22.Custom
                 var evadingRun = (SteeringRunToDestinationWithEvading) GetAction(unit.Id, "SteeringRun");
                 var steeringAim = (SteeringAimToDestinationDirection) GetAction(unit.Id,"SteeringAim");
                 var useShield = (UseShieldToDestinationWithEvading) GetAction(unit.Id, "UsePotion");
+                var pickup = (PickupLoot) GetAction(unit.Id, "Pickup");
                 /*var evading = (Evading) GetAction(unit.Id, "Evading");
                 orderedEndActions[unit.Id] = evading;*/
-                var focusDistance = GetFocusDistance(unit.Weapon.Value, focusUnit.Weapon);
+                var targetUnit = TryToFindBetterTargetToUnit(unit, focusUnit, perception);
+                curTarget[unit.Id] = targetUnit;
+                var focusDistance = GetFocusDistance(unit.Weapon.Value, targetUnit.Weapon);
                 var safeDir = CalculateDodge(perception, debugInterface, unit);
-                debugInterface?.AddRing(focusUnit.Position,focusDistance,0.1,new Color(1,0,0,0.5));
+                debugInterface?.AddRing(targetUnit.Position,focusDistance,0.1,new Color(1,0,0,0.5));
                 if (unit.RemainingSpawnTime.HasValue)
                 {
                     isEvading[unit.Id] = false;
@@ -188,11 +209,84 @@ namespace AiCup22.Custom
                     evadingRun.SetDestination(bestLoot.Position);
                     orderedEndActions[unit.Id] = evadingRun;
                 }
-                else if ((currentStates[unit.Id] == steeringShoot || currentStates[unit.Id] == steeringAim) && unit.Position.Distance(focusUnit.Position)<focusDistance+4 ||
-                    unit.Position.Distance(focusUnit.Position)<focusDistance)
+                else if(NeedLooting(unit))
+                {
+                    if (!unit.Weapon.HasValue || unit.Weapon == 0)
+                    {
+                        double minDist = 1000000;
+                        Loot bestLoot = new Loot();
+                        foreach (var loot in perception.MemorizedLoot)
+                        {
+                            if (loot.Value.Item is Item.Weapon w)
+                            {
+                                if (w.TypeIndex != 0 && loot.Value.Position.SqrDistance(unit.Position)<minDist)
+                                {
+                                    minDist = loot.Value.Position.SqrDistance(unit.Position);
+                                    bestLoot = loot.Value;
+                                }
+                            }
+                        }
+
+                        if (minDist != 1000000)
+                        {
+                            if (minDist > perception.Constants.UnitRadius / 2)
+                            {
+                                evadingRun.SetDestination(bestLoot.Position);
+                                orderedEndActions[unit.Id] = evadingRun;
+                            }
+                            else
+                            {
+                                pickup.SetPickableLootId(bestLoot.Id);
+                                orderedEndActions[unit.Id] = pickup;
+                            }
+                        }
+                        else
+                        {
+                            evadingRun.SetDestination(perception.Game.Zone.CurrentCenter);
+                            orderedEndActions[unit.Id] = evadingRun;
+                        }
+                    }
+                    else
+                    {
+                        double minDist = 1000000;
+                        Loot bestLoot = new Loot();
+                        foreach (var loot in perception.MemorizedLoot)
+                        {
+                            if (loot.Value.Item is Item.Ammo a)
+                            {
+                                if (a.WeaponTypeIndex == unit.Weapon.Value && loot.Value.Position.SqrDistance(unit.Position)<minDist)
+                                {
+                                    minDist = loot.Value.Position.SqrDistance(unit.Position);
+                                    bestLoot = loot.Value;
+                                }
+                            }
+                        }
+
+                        if (minDist != 1000000)
+                        {
+                            if (minDist > perception.Constants.UnitRadius / 2)
+                            {
+                                evadingRun.SetDestination(bestLoot.Position);
+                                orderedEndActions[unit.Id] = evadingRun;
+                            }
+                            else
+                            {
+                                pickup.SetPickableLootId(bestLoot.Id);
+                                orderedEndActions[unit.Id] = pickup;
+                            }
+                        }
+                        else
+                        {
+                            evadingRun.SetDestination(perception.Game.Zone.CurrentCenter);
+                            orderedEndActions[unit.Id] = evadingRun;
+                        }
+                    }
+                }
+                else if ((currentStates[unit.Id] == steeringShoot || currentStates[unit.Id] == steeringAim) && unit.Position.Distance(targetUnit.Position)<focusDistance+4 ||
+                    unit.Position.Distance(targetUnit.Position)<focusDistance)
                 {
                     isEvading[unit.Id] = false;
-                    var estimatedEnemyPosition = CalculateAimToTargetPrediction(ref focusUnit, perception.Constants.Weapons[unit.Weapon.Value].ProjectileSpeed, unit.Position);
+                    var estimatedEnemyPosition = CalculateAimToTargetPrediction(ref targetUnit, perception.Constants.Weapons[unit.Weapon.Value].ProjectileSpeed, unit.Position);
                     var raycast = Tools.RaycastObstacleWithAllies(unit.Position, estimatedEnemyPosition,
                         perception.CloseObstacles.ToArray(), perception.MyUnints, unit.Id,
                         perception.Constants.UnitRadius,
@@ -201,7 +295,7 @@ namespace AiCup22.Custom
                     {
                         if (unit.Shield <= 0 && unit.ShieldPotions > 0)
                         {
-                            useShield.SetDestination(raycast.Value.Position.Add(raycast.Value.Position.Substract(focusUnit.Position).Normalize().Multi(raycast.Value.Radius+1.5)));
+                            useShield.SetDestination(raycast.Value.Position.Add(raycast.Value.Position.Substract(targetUnit.Position).Normalize().Multi(raycast.Value.Radius+1.5)));
                             orderedEndActions[unit.Id] = useShield;
                         }
                         else
@@ -230,14 +324,14 @@ namespace AiCup22.Custom
                 else
                 {
                     Vec2 dest = new Vec2();
-                    if (isEvading[unit.Id] && evadingNullPosition[unit.Id].SqrDistance(focusUnit.Position)<6*6)
+                    if (isEvading[unit.Id] && evadingNullPosition[unit.Id].SqrDistance(targetUnit.Position)<6*6)
                     {
                         dest = evadingNullPosition[unit.Id];
                     }
                     else
                     {
                         isEvading[unit.Id] = true;
-                        dest = focusUnit.Position;
+                        dest = targetUnit.Position;
                         evadingNullPosition[unit.Id] = dest;
                     }
                     debugInterface?.AddCircle(dest,3,new Color(0,1,0,0.5));
@@ -266,6 +360,21 @@ namespace AiCup22.Custom
             return focusTable[yourWeapon][ew];
         }
 
+        protected bool NeedLooting(Unit unit)
+        {
+            if (unit.Weapon.HasValue)
+            {
+                if (unit.Weapon.Value == 0 || unit.Ammo[unit.Weapon.Value] == 0)
+                {
+                    return true;
+                }
+                
+                return false;
+            }
+
+            return true;
+        }
+
         protected Unit? FindTastiestUnit(Perception perception, DebugInterface debugInterface)
         {
             double minDist = 10000000;
@@ -280,6 +389,8 @@ namespace AiCup22.Custom
                 double maxDist = -1000000;
                 for (int i = 0; i < perception.MyUnints.Count; i++)
                 {
+                    if(perception.MyUnints[i].RemainingSpawnTime.HasValue)
+                        continue;
                     double dist = perception.MyUnints[i].Position.SqrDistance(enemy.Value.Item3.Position);
 
                     if (dist > maxDist)
@@ -297,6 +408,24 @@ namespace AiCup22.Custom
 
             return bestEnemy;
         }
+
+        protected Unit TryToFindBetterTargetToUnit(Unit myUnit, Unit focusUnit,Perception perception)
+        {
+            if (curTarget[myUnit.Id].HasValue && perception.EnemyUnints.Count((e)=>e.Id==curTarget[myUnit.Id].Value.Id)>0 )
+            {
+                for (int i = 0; i < perception.EnemyUnints.Count; i++)
+                {
+                    if (perception.EnemyUnints[i].Id == curTarget[myUnit.Id].Value.Id && !perception.EnemyUnints[i].RemainingSpawnTime.HasValue &&(perception.EnemyUnints[i].Shield + perception.EnemyUnints[i].Health)<=300)
+                    {
+                        return perception.EnemyUnints[i];
+                    }
+                }
+            }
+
+            return focusUnit;
+        }
+        
+        
 
         double CalculateEnemyValue(Perception perception, Unit enemy, Unit unit)
         {
@@ -319,7 +448,7 @@ namespace AiCup22.Custom
                 estimatedFlyTime = estimatedEnemyPosition.Distance(shotPosition) / bulletSpeed;
                 estimatedEnemyPosition = enemy.Position.Add(enemy.Velocity.Multi(estimatedFlyTime));
             }
-            return estimatedEnemyPosition.Add(estimatedEnemyPosition.Substract(enemy.Position).Multi(0.45));
+            return estimatedEnemyPosition.Add(estimatedEnemyPosition.Substract(enemy.Position).Multi(0.35));
         }
 
         Vec2 CalculateDodge(Perception perception, DebugInterface debugInterface, Unit unit)
