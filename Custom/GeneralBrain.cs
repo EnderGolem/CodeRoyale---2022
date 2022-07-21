@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using AiCup22.Debugging;
 using AiCup22.Model;
 
@@ -43,13 +44,6 @@ namespace AiCup22.Custom
 
         protected override Brain ChooseNewState(Perception perception, DebugInterface debugInterface)
         {
-            if (perception.MyUnints[0].RemainingSpawnTime.HasValue && perception.MyUnints[1].RemainingSpawnTime.HasValue)
-            {
-                return _wanderingBrain;
-            }
-
-            //return _battleBrain;
-            //return new Evading();
             if (debugInterface != null)
             {
                 if (currentState == _lootingBrain)
@@ -73,6 +67,7 @@ namespace AiCup22.Custom
                 }
             }
 
+            stateValues[4] = CalculateWanderingBrain(perception, debugInterface);
             stateValues[3] = CalculateStaySafeValue(perception, debugInterface);
             stateValues[2] = CalculateRadarValue(perception, debugInterface);
             stateValues[1] = CalculateBattleValue(perception, debugInterface);
@@ -109,6 +104,9 @@ namespace AiCup22.Custom
                     $"StayAway {stateValues[3]}",
                     new Vec2(0.5, 0.5), textSize, new Color(1, 1, 0, 1));
                 debugInterface.AddPlacedText(center.Add(new Vec2(0, 8)),
+                    $"Wandering {stateValues[4]}",
+                    new Vec2(0.5, 0.5), textSize, new Color(1, 1, 0, 1));
+                debugInterface.AddPlacedText(center.Add(new Vec2(0, -1.5)),
                     $"CurrentStay {allStates[bestState].GetType().Name}",
                     new Vec2(0.5, 0.5), textSize, new Color(1, 0, 1, 1));
             }
@@ -164,7 +162,7 @@ namespace AiCup22.Custom
         protected virtual double CalculateBattleValue(Perception perception, DebugInterface debugInterface)
         {
             Unit unit = perception.MyUnints[0];
-            double value = 0;
+
             bool hasEnemy = false;
             foreach (var enemy in perception.MemorizedEnemies)
             {
@@ -180,38 +178,8 @@ namespace AiCup22.Custom
                 return -100000;
             }
 
-            if (unit.Ammo[unit.Weapon.Value] == 0)
-            {
-                return -100000;
-            }
 
-            if (!unit.Weapon.HasValue)
-
-            {
-                value -= 10000;
-            }
-            else
-            {
-                value += (unit.Weapon.Value * WeaponValueBattle);
-                if (unit.Weapon.Value == 0)
-                    value += 60 * (
-                        unit.Ammo[unit.Weapon.Value] /
-                        perception.Constants.Weapons[unit.Weapon.Value].MaxInventoryAmmo) * 100;
-                if (unit.Weapon.Value == 2)
-                    value += maxAmmoValue * 3 * (
-                        unit.Ammo[unit.Weapon.Value] /
-                        perception.Constants.Weapons[unit.Weapon.Value].MaxInventoryAmmo) * 100;
-
-            }
-
-            //System.Console.WriteLine($"AmmoValue {30 * (unit.Ammo[unit.Weapon.Value] / perception.Constants.Weapons[unit.Weapon.Value].MaxInventoryAmmo) * 100}" +
-            //    "\nHP/SH " + healthValueBattle * (1 / 100 - unit.Health + 1) + shieldValueBattle * (1 / perception.Constants.MaxShield - unit.Shield + 1));
-            value += healthValueBattle * (1 / (100 - unit.Health + 1)) +
-                     shieldValueBattle *
-                     (1 / (perception.Constants.MaxShield - unit.Shield +
-                           1)); //С -1 при максимуме будет не максимум увернности
-            value += _battleBrain.IsActive ? PunishmentForLeavingBattle : 0;
-            return value;
+            return 10000;
         }
 
         protected virtual double CalculateLootingValue(Perception perception, DebugInterface debugInterface)
@@ -220,33 +188,17 @@ namespace AiCup22.Custom
                 return -10000;
             Unit unit = perception.MyUnints[0];
             double value = 0;
-            //if (currentState == _battleBrain)
-            //    value -= 1000;
-            if (!unit.Weapon.HasValue) //??? справедливо
+
+            if (perception.MyUnints.Count((Unit u) => u.ShieldPotions == 10) != 2)
             {
-                value += 6000;
+                return 3750;
             }
-            else
+            if (perception.MyUnints.Count((Unit u) => u.Ammo[u.Weapon.Value] == perception.Constants.Weapons[u.Weapon.Value].MaxInventoryAmmo) != 2)
             {
-                //Только для лука считается
-                //С другой стороны, может быть такое, что нужно сражаться без лука
-                double maxValue = maxAmmoValue * perception.Constants.Weapons[2].MaxInventoryAmmo +
-                                  maxPotionsValueLoot * perception.Constants.MaxShieldPotionsInInventory + bowValue +
-                                  1000;
-
-                double weaponValue = unit.Weapon.Value == 2 ? bowValue : 1;
-                double ammoValue = maxAmmoValue * (unit.Ammo[2]);
-                if ((unit.Ammo[2] == 0)) //Пока что
-                {
-                    maxValue += perception.Constants.Weapons[2].MaxInventoryAmmo * maxAmmoValue;
-                }
-
-                double potionsValue = maxPotionsValueLoot * (unit.ShieldPotions);
-                value += (maxValue - weaponValue - ammoValue - potionsValue);
-                //      System.Console.WriteLine($"Weapong {weaponValue} ammoValue {ammoValue} po"):
+                return 4000;
             }
+            //Добавить еще проверку на качество оружия, но позже
 
-            //value += healthValueKoefBattle * unit.Health + shieldValueKoefBattle * unit.Shield;
             return value < 9999 ? value : 9999;
         }
 
@@ -290,7 +242,10 @@ namespace AiCup22.Custom
 
             return value-100000;
         }
-
+        protected virtual double CalculateWanderingBrain(Perception perception, DebugInterface debugInterface)
+        {
+            return 3000;
+        }
     }
 }
 

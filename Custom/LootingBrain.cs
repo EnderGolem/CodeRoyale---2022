@@ -203,7 +203,7 @@ namespace AiCup22.Custom
                     /// факторов
                     if (ammo.WeaponTypeIndex == 0)
                     {
-                        points *= CalculateAmmoValue(perception, ammo, unit) * 0.1;
+                        points *= CalculateAmmoValue(perception, ammo, unit) * 0.05;
                     }
                     if (ammo.WeaponTypeIndex == 1)
                     {
