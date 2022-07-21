@@ -43,7 +43,7 @@ namespace AiCup22.Custom
 
                 double a = d.X * d.X + d.Y * d.Y;
                 double b = 2 * (sp.X * d.X + sp.Y * d.Y);
-                double c = sp.X * sp.X + sp.Y * sp.Y - obstacles[i].Radius * obstacles[i].Radius;
+                double c = sp.X * sp.X + sp.Y * sp.Y - 1.1*(obstacles[i].Radius * obstacles[i].Radius);
 
                 bool flag;
                 if (-b < 0)
