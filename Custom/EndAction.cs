@@ -377,11 +377,11 @@ namespace AiCup22.Custom
                 return new UnitOrder(new Vec2(),new Vec2(-unit.Direction.Y, unit.Direction.X),null );
             }
 
-            Vec2 dir = perception.SimulateEvading(actingUnit,0,perception.CloseObstacles,
+            Vec2 dir = perception.SimulateEvading(actingUnit,SimRotationMode.RotationToMovement,0,perception.CloseObstacles,
                 perception.MemorizedProjectiles.Values.ToList(),3,perception.Game.Zone.CurrentCenter.Substract(unit.Position).Normalize(),1, 10, debugInterface);
             debugInterface?.AddSegment(unit.Position,unit.Position.Add(dir.Multi(5)),0.5,new Color(1,1,0,0.3));
             //Console.WriteLine(dir);
-            return new UnitOrder(dir.Multi(perception.Constants.MaxUnitForwardSpeed),new Vec2(), null);
+            return new UnitOrder(dir.Multi(perception.Constants.MaxUnitForwardSpeed),dir, null);
         }
     }
 
@@ -398,11 +398,11 @@ namespace AiCup22.Custom
                 }
                 else
                 {
-                    Vec2 d = perception.SimulateEvading(actingUnit,0,perception.CloseObstacles,
+                    Vec2 d = perception.SimulateEvading(actingUnit,SimRotationMode.RotationToMovement,0,perception.CloseObstacles,
                             projs,3,targetDir.Normalize(),1, 10, debugInterface);
                     debugInterface?.AddSegment(actingUnit.Position,actingUnit.Position.Add(d.Multi(5)),0.5,new Color(1,1,0,0.3));
                     //Console.WriteLine(dir);
-                    return new UnitOrder(d.Multi(perception.Constants.MaxUnitForwardSpeed),actingUnit.Direction, null);
+                    return new UnitOrder(d.Multi(perception.Constants.MaxUnitForwardSpeed),d, null);
                 }
         }
     }
@@ -419,11 +419,11 @@ namespace AiCup22.Custom
             }
             else
             {
-                Vec2 d = perception.SimulateEvading(actingUnit,0,perception.CloseObstacles,
+                Vec2 d = perception.SimulateEvading(actingUnit,SimRotationMode.RotationToMovement,0,perception.CloseObstacles,
                     projs,3,targetDir.Normalize(),1,10,debugInterface);
                 debugInterface?.AddSegment(actingUnit.Position,actingUnit.Position.Add(d.Multi(5)),0.5,new Color(1,1,0,0.3));
                 //Console.WriteLine(dir);
-                return new UnitOrder(d.Multi(perception.Constants.MaxUnitForwardSpeed),actingUnit.Direction, new ActionOrder.UseShieldPotion());
+                return new UnitOrder(d.Multi(perception.Constants.MaxUnitForwardSpeed),d, new ActionOrder.UseShieldPotion());
             }
         }
     }
@@ -445,7 +445,7 @@ namespace AiCup22.Custom
                 }
                 return new UnitOrder(dirToCenter, dir, null);
             }
-            Vec2 d = perception.SimulateEvading(actingUnit,-1,perception.CloseObstacles,
+            Vec2 d = perception.SimulateEvading(actingUnit,SimRotationMode.ConstantRotation,-1,perception.CloseObstacles,
                 projs,3,dirToCenter,1, 10, debugInterface);
                 debugInterface?.AddSegment(actingUnit.Position,actingUnit.Position.Add(d.Multi(5)),0.5,new Color(1,1,0,0.3));
             ActionOrder a = null;

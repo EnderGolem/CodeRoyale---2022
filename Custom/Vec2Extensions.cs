@@ -50,6 +50,11 @@ namespace AiCup22
             return new Vec2(a.X*cos-a.Y*sin,a.Y*cos+a.X*sin);
         }
 
+        public static double AngleToVector(this Vec2 a, Vec2 b)
+        {
+            return Math.Acos((a.X * b.X + a.Y * b.Y) / a.Length() * b.Length())*(180/Math.PI);
+        }
+
         public static bool Compare(this Vec2 a, Vec2 b)
         {
             return (a.X == b.X) && (a.Y == b.Y);
