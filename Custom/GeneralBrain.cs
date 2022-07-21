@@ -34,7 +34,7 @@ namespace AiCup22.Custom
             allStates.Add(_lootingBrain);
             allStates.Add(_battleBrain);
             allStates.Add(_radarBrain);
-            allStates.Add(_staySafe);
+            //allStates.Add(_staySafe);
             allStates.Add(_wanderingBrain);
 
             stateValues = new double[allStates.Count];
@@ -43,7 +43,12 @@ namespace AiCup22.Custom
 
         protected override Brain ChooseNewState(Perception perception, DebugInterface debugInterface)
         {
-            return _wanderingBrain;
+            if (perception.MyUnints[0].RemainingSpawnTime.HasValue && perception.MyUnints[1].RemainingSpawnTime.HasValue)
+            {
+                return _wanderingBrain;
+            }
+
+            //return _battleBrain;
             //return new Evading();
             if (debugInterface != null)
             {
@@ -113,6 +118,7 @@ namespace AiCup22.Custom
 
         protected virtual double CalculateRadarValue(Perception perception, DebugInterface debugInterface)
         {
+            return -100000;
             var soundBullet = false;
             foreach (var sound in perception.Game.Sounds)
             {
@@ -151,13 +157,12 @@ namespace AiCup22.Custom
                     result *= 10;
                 }
 
-                return result;
+                return result-10000;
             }
         }
 
         protected virtual double CalculateBattleValue(Perception perception, DebugInterface debugInterface)
         {
-
             Unit unit = perception.MyUnints[0];
             double value = 0;
             bool hasEnemy = false;
@@ -169,7 +174,7 @@ namespace AiCup22.Custom
                     hasEnemy = true;
                 }
             }
-
+            
             if (!hasEnemy && perception.EnemyUnints.Count == 0)
             {
                 return -100000;
@@ -283,7 +288,7 @@ namespace AiCup22.Custom
                 value += Koefficient.PunishmentForLeavingStaySafe;
             }
 
-            return value;
+            return value-100000;
         }
 
     }

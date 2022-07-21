@@ -79,10 +79,10 @@ namespace AiCup22
                        maxTickTime = timer.ElapsedMilliseconds;
                    }
 
-                   /*Console.WriteLine($"Simulation took:{timer.ElapsedMilliseconds} ms");
+                   Console.WriteLine($"Simulation took:{timer.ElapsedMilliseconds} ms");
                    Console.WriteLine($"Simulation took:{timer.ElapsedTicks * nanosecPerTick} ns");
                    Console.WriteLine($"Max time: {maxTickTime} ms");
-                   Console.WriteLine($"Total time: {totalTime} ms");*/
+                   Console.WriteLine($"Total time: {totalTime} ms");
                }
                
             //}
