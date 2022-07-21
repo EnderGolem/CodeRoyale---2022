@@ -35,7 +35,7 @@ namespace AiCup22.Custom
             allStates.Add(_lootingBrain);
             allStates.Add(_battleBrain);
             allStates.Add(_radarBrain);
-            //allStates.Add(_staySafe);
+            allStates.Add(_staySafe);
             allStates.Add(_wanderingBrain);
 
             stateValues = new double[allStates.Count];
