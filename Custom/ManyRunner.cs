@@ -81,7 +81,7 @@ namespace AiCup22.Custom
                 }
 
             }
-            myStrategy.addText("Ver7.csv");
+            myStrategy.addText("Battle_Brain2_1.csv");
             System.Console.WriteLine("Add_file");
         }
         public static void ManyRuns(string[] args, int countRuns = 50)

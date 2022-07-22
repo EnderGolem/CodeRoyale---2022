@@ -45,10 +45,7 @@ namespace AiCup22
 
         public AiCup22.Model.Order GetOrder(AiCup22.Model.Game game, DebugInterface debugInterface)
         {
-            /*int myId = FindMyUnitId();
-            if (myId != -1 && (lastGame.Units[myId].Health + lastGame.Units[myId].Shield) - (game.Units[myId].Health + game.Units[myId].Shield) > 0)
-                countHit++;
-            lastGame = game;*/
+            lastGame = game;
             //Dictionary<int, AiCup22.Model.UnitOrder> orders = new Dictionary<int, UnitOrder>();
             //try
             //{
@@ -79,10 +76,10 @@ namespace AiCup22
                        maxTickTime = timer.ElapsedMilliseconds;
                    }
 
-                   Console.WriteLine($"Simulation took:{timer.ElapsedMilliseconds} ms");
-                   Console.WriteLine($"Simulation took:{timer.ElapsedTicks * nanosecPerTick} ns");
-                   Console.WriteLine($"Max time: {maxTickTime} ms");
-                   Console.WriteLine($"Total time: {totalTime} ms");
+                   //Console.WriteLine($"Simulation took:{timer.ElapsedMilliseconds} ms");
+                   //Console.WriteLine($"Simulation took:{timer.ElapsedTicks * nanosecPerTick} ns");
+                   //Console.WriteLine($"Max time: {maxTickTime} ms");
+                   //Console.WriteLine($"Total time: {totalTime} ms");
                }
                
             //}
@@ -97,13 +94,13 @@ namespace AiCup22
         public void addText(string fileName)
         {
 
-            /*FileInfo fileInf = new FileInfo(fileName);
+            FileInfo fileInf = new FileInfo(fileName);
             var sw = fileInf.AppendText();
             int myPlayersId = FindMyUnitId();
-            string s = $"{lastGame.Players[myPlayersId].Score};{lastGame.Players[myPlayersId].Kills};{lastGame.Players[myPlayersId].Damage};{lastGame.Players[myPlayersId].Place};{brain.TimeStates[0]};{brain.TimeStates[1]};{brain.TimeStates[2]};{brain.TimeStates[3]};{countHit};";
+            string s = $"{lastGame.Players[myPlayersId].Score};{lastGame.Players[myPlayersId].Kills};{lastGame.Players[myPlayersId].Damage};{lastGame.Players[myPlayersId].Place};";
             System.Console.WriteLine(s);
             sw.WriteLine(s);
-            sw.Close();*/
+            sw.Close();
         }
 
         public void DebugUpdate(int displayedTick, DebugInterface debugInterface) { }
