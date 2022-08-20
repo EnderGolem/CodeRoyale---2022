@@ -1,2 +1,2 @@
-# Nothing-interesting-honestly
-Nothing interesting honestly
+# CodeRoyale - 2022
+Написание исскуственного интеллекта для участия в сорвеновании CodeRoyale - 2022. Бот вылетел во 2 раунде.
